@@ -25,3 +25,7 @@ export type ComponentCall = {
   processingTime: ProcessingTime;
   characteristics: Characteristics;
 };
+
+export type FlowContext = {
+    level: number;
+}

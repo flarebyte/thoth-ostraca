@@ -1,8 +1,8 @@
-import { ComponentCall } from "./common.mts";
+import { ComponentCall, FlowContext } from "./common.mts";
 
 const calls: ComponentCall[] = [];
 
-const cliArgsMetaFind = () => {
+const cliArgsMetaFind = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta find",
     title: "Parse CLI args for metadata find",
@@ -23,7 +23,7 @@ const cliArgsMetaFind = () => {
   findMetaFiles();
 };
 
-const findMetaFiles = () => {
+const findMetaFiles = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "find meta files",
     title: "Find individual meta files",
