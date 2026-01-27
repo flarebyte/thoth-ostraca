@@ -20,6 +20,26 @@ const cliArgsMetaFind = () => {
     },
   };
   calls.push(call);
+  findMetaFiles();
+};
+
+const findMetaFiles = () => {
+  const call: ComponentCall = {
+    name: "find meta files",
+    title: "Find individual meta files",
+    mustHave: ["yaml meta file"],
+    processingTime: {
+      minMilli: 1,
+      maxMilli: 1000,
+    },
+    characteristics: {
+      evolution: 0.8,
+      maintenance: 0.8,
+      security: 0.8,
+      operations: 0.8,
+    },
+  };
+  calls.push(call);
 };
 
 cliArgsMetaFind();
