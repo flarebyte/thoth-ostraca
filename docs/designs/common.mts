@@ -4,24 +4,24 @@ export type ProcessingTime = {
 };
 
 export type Characteristics = {
-  evolution: number | undefined;
-  maintenance: number | undefined;
-  security: number | undefined;
-  operations: number | undefined;
-  monitoring: number | undefined;
-  accessibility: number | undefined;
-  internationalisation: number | undefined;
+  evolution?: number;
+  maintenance?: number;
+  security?: number;
+  operations?: number;
+  monitoring?: number;
+  accessibility?: number;
+  internationalisation?: number;
 };
 
 export type ComponentCall = {
   name: string;
   title: string;
-  directory: string | undefined;
-  mustHave: string[] | undefined;
-  shouldHave: string[] | undefined;
-  couldHave: string[] | undefined;
-  wontHave: string[] | undefined;
-  drawbacks: string[] | undefined;
+  directory?: string;
+  mustHave?: string[];
+  shouldHave?: string[];
+  couldHave?: string[];
+  wontHave?: string[];
+  drawbacks?: string[];
   processingTime: ProcessingTime;
   characteristics: Characteristics;
 };
