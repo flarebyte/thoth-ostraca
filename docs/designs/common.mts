@@ -1,31 +1,22 @@
-export type ProcessingTime = {
-  minMilli: number;
-  maxMilli: number;
+export type Stickie = {
+  id?: string;
+  name?: string;
+  note: string;
+  labels?: string[];
+  priority_level?: "must" | "should" | "could";
 };
 
-export type Characteristics = {
-  evolution?: number;
-  maintenance?: number;
-  security?: number;
-  operations?: number;
-  monitoring?: number;
-  accessibility?: number;
-  internationalisation?: number;
-};
+export type UseCase = Stickie;
 
-export type ComponentCall = {
-  name: string;
+export type ComponentCall = Stickie & {
   title: string;
   directory?: string;
-  mustHave?: string[];
-  shouldHave?: string[];
-  couldHave?: string[];
-  wontHave?: string[];
-  drawbacks?: string[];
-  processingTime: ProcessingTime;
-  characteristics: Characteristics;
 };
 
 export type FlowContext = {
-    level: number;
-}
+  level: number;
+};
+
+export const incrContext = (flowContext: FlowContext) => ({
+  level: flowContext.level + 1,
+});

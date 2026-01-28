@@ -1,4 +1,4 @@
-import { ComponentCall, FlowContext } from "./common.mts";
+import { ComponentCall, FlowContext, incrContext } from "./common.mts";
 
 const calls: ComponentCall[] = [];
 
@@ -7,41 +7,21 @@ const cliArgsMetaFind = (context: FlowContext) => {
     name: "meta find",
     title: "Parse CLI args for metadata find",
     directory: "cmd",
-    mustHave: ["Use cobra lib"],
-    processingTime: {
-      minMilli: 1,
-      maxMilli: 1,
-    },
-    characteristics: {
-      evolution: 0.8,
-      maintenance: 0.8,
-      security: 0.8,
-      operations: 0.8,
-    },
+    note: "Use cobra lib",
   };
   calls.push(call);
-  findMetaFiles();
+  findMetaFiles(incrContext(context));
 };
 
 const findMetaFiles = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "find meta files",
     title: "Find individual meta files",
-    mustHave: ["yaml meta file"],
-    processingTime: {
-      minMilli: 1,
-      maxMilli: 1000,
-    },
-    characteristics: {
-      evolution: 0.8,
-      maintenance: 0.8,
-      security: 0.8,
-      operations: 0.8,
-    },
+    note: "yaml meta file",
   };
   calls.push(call);
 };
 
-cliArgsMetaFind();
+cliArgsMetaFind({level: 0});
 
 console.log(calls);
