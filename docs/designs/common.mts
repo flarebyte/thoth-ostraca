@@ -11,6 +11,7 @@ export type UseCase = Stickie;
 export type ComponentCall = Stickie & {
   title: string;
   directory?: string;
+  level: number;
 };
 
 export type FlowContext = {
@@ -20,3 +21,10 @@ export type FlowContext = {
 export const incrContext = (flowContext: FlowContext) => ({
   level: flowContext.level + 1,
 });
+
+export const displayAsText = (calls: ComponentCall[]) => {
+  for (const call of calls) {
+    const spaces = " ".repeat(call.level * 2);
+    console.log(`${spaces}${call.title}`);
+  }
+};

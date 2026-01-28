@@ -1,4 +1,4 @@
-import { ComponentCall, FlowContext, incrContext } from "./common.mts";
+import { ComponentCall, displayAsText, FlowContext, incrContext } from "./common.mts";
 
 const calls: ComponentCall[] = [];
 
@@ -8,6 +8,7 @@ const cliArgsMetaFind = (context: FlowContext) => {
     title: "Parse CLI args for metadata find",
     directory: "cmd",
     note: "Use cobra lib",
+    level: context.level,
   };
   calls.push(call);
   findMetaFiles(incrContext(context));
@@ -18,10 +19,11 @@ const findMetaFiles = (context: FlowContext) => {
     name: "find meta files",
     title: "Find individual meta files",
     note: "yaml meta file",
+    level: context.level,
   };
   calls.push(call);
 };
 
 cliArgsMetaFind({level: 0});
 
-console.log(calls);
+displayAsText(calls);
