@@ -1,6 +1,22 @@
-import { ComponentCall, displayAsText, FlowContext, incrContext } from "./common.mts";
+import {
+  ComponentCall,
+  displayAsText,
+  FlowContext,
+  incrContext,
+  UseCase,
+} from "./common.mts";
 
 const calls: ComponentCall[] = [];
+
+const useCases = {
+  filterByMeta: {
+    name: "filter by meta",
+    note: "Filter metadata associated with file",
+    priority_level: "must",
+  },
+};
+
+const mustUseCases: UseCase[] = [useCases.filterByMeta];
 
 const cliArgsMetaFind = (context: FlowContext) => {
   const call: ComponentCall = {
@@ -9,6 +25,7 @@ const cliArgsMetaFind = (context: FlowContext) => {
     directory: "cmd",
     note: "Use cobra lib",
     level: context.level,
+    useCases: mustUseCases,
   };
   calls.push(call);
   findMetaFiles(incrContext(context));
@@ -20,10 +37,11 @@ const findMetaFiles = (context: FlowContext) => {
     title: "Find individual meta files",
     note: "yaml meta file",
     level: context.level,
+    useCases: mustUseCases,
   };
   calls.push(call);
 };
 
-cliArgsMetaFind({level: 0});
+cliArgsMetaFind({ level: 0 });
 
 displayAsText(calls);

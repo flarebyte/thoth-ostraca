@@ -3,7 +3,7 @@ export type Stickie = {
   name?: string;
   note: string;
   labels?: string[];
-  priority_level?: "must" | "should" | "could";
+  priority_level?: string;
 };
 
 export type UseCase = Stickie;
@@ -12,6 +12,7 @@ export type ComponentCall = Stickie & {
   title: string;
   directory?: string;
   level: number;
+  useCases: UseCase[];
 };
 
 export type FlowContext = {
