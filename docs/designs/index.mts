@@ -11,8 +11,47 @@ const calls: ComponentCall[] = [];
 const useCases = {
   filterByMeta: {
     name: "filter by meta",
-    note: "Filter metadata associated with file",
-    priority_level: "must",
+    note: "Filter metadata associated with locator",
+  },
+  mapMeta: {
+    name: "map meta",
+    note: "Map metadata associated with locator",
+  },
+  reduceMeta: {
+    name: "reduce meta",
+    note: "reduce metadata for all locators",
+  },
+  mapReduceActionConfig: {
+    name: "map reduce action config",
+    note: "load map reduce action config from file (YAML)",
+  },
+  scripting: {
+    name: "scripting",
+    note: "filter map and reduce can be scripted (Lua)",
+  },
+  mapShell: {
+    name: "map with shell",
+    note: "use map metadata for running shell with locator name",
+  },
+  locatorSupport: {
+    name: "locator support",
+    note: "locator can be (relative) file or url",
+  },
+  parallelProcessing: {
+    name: "parallel processing",
+    note: "processing is done in parallel",
+  },
+  batchCreation: {
+    name: "batch creation",
+    note: "batch creation of locators metadata",
+  },
+  batchUpdate: {
+    name: "batch update",
+    note: "batch update of locators metadata",
+  },
+  batchDiff: {
+    name: "batch diff",
+    note: "batch diff of locators metadata",
   },
 };
 
