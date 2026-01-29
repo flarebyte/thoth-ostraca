@@ -12,7 +12,7 @@ export type ComponentCall = Stickie & {
   title: string;
   directory?: string;
   level: number;
-  useCases: UseCase[];
+  useCases?: UseCase[];
 };
 
 export type FlowContext = {

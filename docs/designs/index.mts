@@ -64,16 +64,25 @@ const cliArgsMetaFind = (context: FlowContext) => {
     directory: "cmd",
     note: "Use cobra lib",
     level: context.level,
-    useCases: mustUseCases,
   };
   calls.push(call);
-  findMetaFiles(incrContext(context));
+  findMetaLocators(incrContext(context));
 };
 
-const findMetaFiles = (context: FlowContext) => {
+const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "find meta files",
-    title: "Find individual meta files",
+    name: "find meta locators",
+    title: "Find individual meta locators",
+    note: "yaml meta locator",
+    level: context.level,
+  };
+  calls.push(call);
+};
+
+const filterMetaLocators = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "filter meta locators",
+    title: "Filter metadata for a locator using a Lua script",
     note: "yaml meta file",
     level: context.level,
     useCases: mustUseCases,
