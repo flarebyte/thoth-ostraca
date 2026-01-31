@@ -1,18 +1,15 @@
-export type Stickie = {
-  id?: string;
-  name?: string;
+export type UseCase = {
+  name: string;
   note: string;
-  labels?: string[];
-  priority_level?: string;
 };
 
-export type UseCase = Stickie;
-
-export type ComponentCall = Stickie & {
+export type ComponentCall = {
+  name: string;
   title: string;
+  note: string;
   directory?: string;
   level: number;
-  useCases?: UseCase[];
+  useCases?: string[];
 };
 
 export type FlowContext = {

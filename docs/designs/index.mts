@@ -85,7 +85,7 @@ const filterMetaLocators = (context: FlowContext) => {
     title: "Filter metadata for a locator using a Lua script",
     note: "yaml meta file",
     level: context.level,
-    useCases: mustUseCases,
+    useCases: [useCases.filterByMeta.name],
   };
   calls.push(call);
 };
