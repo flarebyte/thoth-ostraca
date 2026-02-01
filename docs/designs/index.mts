@@ -124,7 +124,7 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
     name: "cli.meta",
     title: "Parse args for meta pipeline",
     directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --config",
+    note: "flags: --root, --pattern, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
@@ -135,6 +135,7 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
   filterMetaLocators(incrContext(context));
   mapMetaRecords(incrContext(context));
   execShellFromMap(incrContext(context));
+  postMapShellResults(incrContext(context));
   reduceMetaRecords(incrContext(context));
   outputJsonResult(incrContext(context));
 };
@@ -217,9 +218,21 @@ const execShellFromMap = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "shell.exec",
     title: "Execute shell per mapped item",
-    note: "Conditional: --run-shell; supports bash, sh, zsh; parallel with bounded workers; mutually exclusive with reduce",
+    note: "Conditional: --run-shell; supports bash, sh, zsh; parallel with bounded workers; feeds post-map/reduce when provided",
     level: context.level,
     useCases: [useCases.shellExecFromMap.name, useCases.parallelism.name],
+  };
+  calls.push(call);
+};
+
+// Optional: map the shell result to structured data for downstream reduce/output
+const postMapShellResults = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.map.post-shell",
+    title: "Post-map shell results",
+    note: "Conditional: --post-map-script; Lua transforms {locator,input,shell:{cmd,exitCode,stdout,stderr,durationMs}}",
+    level: context.level,
+    useCases: [useCases.metaMap.name, useCases.embeddedScripting.name],
   };
   calls.push(call);
 };
@@ -270,11 +283,18 @@ await appendSection("Suggested Go Implementation", [
   "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
   "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
   "Commands: thoth meta (single pipeline incl. optional shell)",
-  "Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --config, --out",
+  "Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out",
   "Tests: golden tests for I/O; fs testdata fixtures",
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",
   "Shells: support bash, sh, zsh early",
+]);
+
+await appendSection("Lua Data Contracts", [
+  "Filter: fn({ locator, meta }) -> bool",
+  "Map: fn({ locator, meta }) -> any",
+  "Reduce: fn(acc, value) -> acc (single JSON value)",
+  "Post-map (shell): fn({ locator, input, shell: { cmd, exitCode, stdout, stderr, durationMs } }) -> any",
 ]);
 
 await appendSection("Design Decisions", [

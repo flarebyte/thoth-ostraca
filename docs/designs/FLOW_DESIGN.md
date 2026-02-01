@@ -11,6 +11,7 @@ thoth CLI root command
     Apply filter predicate
     Apply map transform
     Execute shell per mapped item
+    Post-map shell results
     Apply reduce aggregate
     Write JSON result (array/value/lines)
 ```
@@ -48,11 +49,17 @@ Unsupported use cases (yet):
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Commands: thoth meta (single pipeline incl. optional shell)
-  - Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --config, --out
+  - Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)
   - Shells: support bash, sh, zsh early
+
+## Lua Data Contracts
+  - Filter: fn({ locator, meta }) -> bool
+  - Map: fn({ locator, meta }) -> any
+  - Reduce: fn(acc, value) -> acc (single JSON value)
+  - Post-map (shell): fn({ locator, input, shell: { cmd, exitCode, stdout, stderr, durationMs } }) -> any
 
 ## Design Decisions
   - Filter: Lua-only (v1)
