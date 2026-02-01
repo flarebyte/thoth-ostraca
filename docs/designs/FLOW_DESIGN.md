@@ -75,6 +75,8 @@ Unsupported use cases (yet):
   - YAML: gopkg.in/yaml.v3 for *.thoth.yaml
   - Discovery: filepath.WalkDir + gitignore filter (go-gitignore)
   - Schema: required fields (locator, meta); error on missing
+  - Validation defaults: unknown top-level keys: error; meta.* keys: allowed
+  - Validation config: validation.allowUnknownTopLevel (bool, default false)
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
@@ -107,6 +109,9 @@ Unsupported use cases (yet):
     "noGitignore": false
   },
   "workers": 8,
+  "validation": {
+    "allowUnknownTopLevel": false
+  },
   "filter": {
     "inline": "-- keep records with meta.enabled == true\nreturn (meta and meta.enabled) == true"
   },
@@ -298,7 +303,7 @@ thoth CLI root command [cli.root]
           - func: FsDiscovery
           - file: internal/fs/fs_discovery.go
         Parse and validate YAML records [meta.parse]
-          - note: yaml.v3; strict fields; types; support file path or URL locator
+          - note: yaml.v3; strict fields; types; support file path or URL locator; top-level unknown = error (unless validation.allowUnknownTopLevel); inside meta: unknown allowed
           - pkg: internal/meta
           - func: MetaParse
           - file: internal/meta/meta_parse.go
@@ -482,6 +487,12 @@ diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A    
   - YAML: error on missing required fields (locator, meta)
   - Shells: bash, sh, zsh supported early
   - Save filename: sha256 prefix length = 12 by default
+
+## Schema Validation
+  - Top-level: required keys 'locator' (string, non-empty) and 'meta' (object)
+  - Top-level: unknown keys -> error by default; can allow via validation.allowUnknownTopLevel = true
+  - Meta object: unknown keys are allowed (user data)
+  - Locator: accept file paths (relative/absolute) and URLs (http/https)
 
 ## Open Design Questions
   - YAML strictness for unknown fields: error or ignore?

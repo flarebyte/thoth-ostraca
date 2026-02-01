@@ -128,6 +128,9 @@ type SaveOptions = {
   hashAlgo?: "sha256"; // future extension; default sha256
   hashLen?: number; // characters from hash prefix; default 12
 };
+type ValidationOptions = {
+  allowUnknownTopLevel?: boolean; // default false: error on unknown top-level keys
+};
 type DiffOptions = {
   includeSnapshots?: boolean; // include before/after in per-item results
   output?: "patch" | "summary" | "both"; // default: both
@@ -145,6 +148,7 @@ type PipelineConfig = {
   output?: OutputOptions;
   save?: SaveOptions; // create mode: write meta files
   diff?: DiffOptions; // diff mode: output tuning
+  validation?: ValidationOptions; // YAML strictness
 };
 
 export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
@@ -155,6 +159,7 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
     noGitignore: false,
   },
   workers: 8,
+  validation: { allowUnknownTopLevel: false },
   // Lua inline scripts (concise and self-contained)
   filter: {
     inline: `-- keep records with meta.enabled == true
@@ -449,7 +454,7 @@ const parseYamlRecords = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.parse",
     title: "Parse and validate YAML records",
-    note: "yaml.v3; strict fields; types; support file path or URL locator",
+    note: "yaml.v3; strict fields; types; support file path or URL locator; top-level unknown = error (unless validation.allowUnknownTopLevel); inside meta: unknown allowed",
     level: context.level,
     useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
   };
@@ -675,6 +680,8 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["YAML", "gopkg.in/yaml.v3 for *.thoth.yaml"],
   ["Discovery", "filepath.WalkDir + gitignore filter (go-gitignore)"],
   ["Schema", "required fields (locator, meta); error on missing"],
+  ["Validation defaults", "unknown top-level keys: error; meta.* keys: allowed"],
+  ["Validation config", "validation.allowUnknownTopLevel (bool, default false)"],
   ["Filter/Map/Reduce", "Lua scripts only (gopher-lua) for v1"],
   ["Parallelism", "bounded worker pool; default workers = runtime.NumCPU()"],
   ["Output", "aggregated JSON by default; --lines to stream; --pretty for humans"],
@@ -850,6 +857,13 @@ await appendSection("Action Script Scope", "```\n" + actionRows.join("\n") + "\n
 await appendSection("Go Package Outline", GO_PACKAGE_OUTLINE);
 
 await appendSection("Design Decisions", DESIGN_DECISIONS);
+
+await appendSection("Schema Validation", [
+  "Top-level: required keys 'locator' (string, non-empty) and 'meta' (object)",
+  "Top-level: unknown keys -> error by default; can allow via validation.allowUnknownTopLevel = true",
+  "Meta object: unknown keys are allowed (user data)",
+  "Locator: accept file paths (relative/absolute) and URLs (http/https)",
+]);
 
 await appendSection("Open Design Questions", [
   "YAML strictness for unknown fields: error or ignore?",
