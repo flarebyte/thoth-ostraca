@@ -763,6 +763,68 @@ await appendToReport("```");
 await displayCallsDetailed(detailedCalls);
 await appendToReport("```");
 
+// Clarify per-action script scopes and outputs
+const pad = (s: string, n: number) => s.padEnd(n);
+const actionRows: string[] = [];
+const header = [
+  pad("Action", 10),
+  pad("Input", 26),
+  pad("Filter", 10),
+  pad("Map", 10),
+  pad("Post-Map", 12),
+  pad("Reduce", 10),
+  pad("Output", 42),
+].join(" ");
+const sep = "-".repeat(header.length);
+actionRows.push(header);
+actionRows.push(sep);
+actionRows.push(
+  [
+    pad("pipeline", 10),
+    pad("{ locator, meta }", 26),
+    pad("Lua (yes)", 10),
+    pad("Lua (yes)", 10),
+    pad("Lua (shell)", 12),
+    pad("Lua (yes)", 10),
+    pad("array of records or single value (reduce)", 42),
+  ].join(" "),
+);
+actionRows.push(
+  [
+    pad("create", 10),
+    pad("{ file }", 26),
+    pad("Lua (yes)", 10),
+    pad("Lua (yes)", 10),
+    pad("Lua (yes)", 12),
+    pad("Lua (opt)", 10),
+    pad("array of post-map results; save if enabled", 42),
+  ].join(" "),
+);
+actionRows.push(
+  [
+    pad("update", 10),
+    pad("{ file, existing? }", 26),
+    pad("Lua (yes)", 10),
+    pad("Lua (yes)", 10),
+    pad("Lua (patch)", 12),
+    pad("Lua (opt)", 10),
+    pad("array of updates (dry-run) or write changes", 42),
+  ].join(" "),
+);
+actionRows.push(
+  [
+    pad("diff", 10),
+    pad("{ file, existing? }", 26),
+    pad("Lua (yes)", 10),
+    pad("Lua (yes)", 10),
+    pad("Lua (patch)", 12),
+    pad("N/A", 10),
+    pad("patch list (RFC6902) + summary; orphans flagged", 42),
+  ].join(" "),
+);
+
+await appendSection("Action Script Scope", "```\n" + actionRows.join("\n") + "\n```");
+
 await appendSection("Go Package Outline", GO_PACKAGE_OUTLINE);
 
 await appendSection("Design Decisions", DESIGN_DECISIONS);

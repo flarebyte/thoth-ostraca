@@ -433,6 +433,16 @@ thoth CLI root command [cli.root]
           - file: internal/output/json_result.go
 ```
 
+## Action Script Scope
+```
+Action     Input                      Filter     Map        Post-Map     Reduce     Output                                    
+------------------------------------------------------------------------------------------------------------------------------
+pipeline   { locator, meta }          Lua (yes)  Lua (yes)  Lua (shell)  Lua (yes)  array of records or single value (reduce) 
+create     { file }                   Lua (yes)  Lua (yes)  Lua (yes)    Lua (opt)  array of post-map results; save if enabled
+update     { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  Lua (opt)  array of updates (dry-run) or write changes
+diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A        patch list (RFC6902) + summary; orphans flagged
+```
+
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
   - internal/config: load/validate YAML (inline Lua strings), defaults
