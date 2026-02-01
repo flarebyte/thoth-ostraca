@@ -55,6 +55,54 @@ Unsupported use cases (yet):
   - Map: returns free-form JSON (any)
   - Shells: support bash, sh, zsh early
 
+## Action Config (JSON Example)
+```json
+{
+  "configVersion": "1",
+  "discovery": {
+    "root": ".",
+    "patterns": [
+      "**/*.thoth.yaml"
+    ],
+    "noGitignore": false
+  },
+  "workers": 8,
+  "filter": {
+    "path": "scripts/filter.lua"
+  },
+  "map": {
+    "path": "scripts/map.lua"
+  },
+  "shell": {
+    "enabled": true,
+    "program": "bash",
+    "commandTemplate": "echo {value}",
+    "workingDir": ".",
+    "env": {
+      "CI": "true"
+    },
+    "timeoutMs": 60000,
+    "failFast": true,
+    "capture": {
+      "stdout": true,
+      "stderr": true,
+      "maxBytes": 1048576
+    }
+  },
+  "postMap": {
+    "path": "scripts/post_map.lua"
+  },
+  "reduce": {
+    "path": "scripts/reduce.lua"
+  },
+  "output": {
+    "lines": false,
+    "pretty": false,
+    "out": "-"
+  }
+}
+```
+
 ## Lua Data Contracts
   - Filter: fn({ locator, meta }) -> bool
   - Map: fn({ locator, meta }) -> any

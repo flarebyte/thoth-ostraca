@@ -98,6 +98,66 @@ const getByName = (expectedName: string) =>
 const getTitlesForSet = (useCaseSet: Set<string>) =>
   [...useCaseSet].map((useCase) => getByName(useCase)?.title || useCase);
 
+// Action/pipeline config model (TypeScript shape used for design)
+type ScriptRef = { path?: string; inline?: string };
+type DiscoveryOptions = {
+  root?: string;
+  patterns?: string[];
+  noGitignore?: boolean; // default false (respect .gitignore)
+};
+type OutputOptions = {
+  lines?: boolean; // default false (aggregate JSON)
+  pretty?: boolean; // default false
+  out?: string; // file path or "-" for stdout
+};
+type ShellCapture = { stdout?: boolean; stderr?: boolean; maxBytes?: number };
+type ShellOptions = {
+  enabled?: boolean; // set true to run shell step
+  program?: "bash" | "sh" | "zsh";
+  commandTemplate?: string; // e.g. "echo {value}"
+  workingDir?: string;
+  env?: Record<string, string>;
+  timeoutMs?: number;
+  failFast?: boolean;
+  capture?: ShellCapture;
+};
+type PipelineConfig = {
+  configVersion?: string;
+  discovery?: DiscoveryOptions;
+  workers?: number; // default: CPU count
+  filter?: ScriptRef; // skip stage if omitted
+  map?: ScriptRef; // skip if omitted
+  shell?: ShellOptions; // optional shell execution
+  postMap?: ScriptRef; // maps shell results → any
+  reduce?: ScriptRef; // skip if omitted
+  output?: OutputOptions;
+};
+
+export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
+  configVersion: "1",
+  discovery: {
+    root: ".",
+    patterns: ["**/*.thoth.yaml"],
+    noGitignore: false,
+  },
+  workers: 8,
+  filter: { path: "scripts/filter.lua" },
+  map: { path: "scripts/map.lua" },
+  shell: {
+    enabled: true,
+    program: "bash",
+    commandTemplate: "echo {value}",
+    workingDir: ".",
+    env: { CI: "true" },
+    timeoutMs: 60000,
+    failFast: true,
+    capture: { stdout: true, stderr: true, maxBytes: 1048576 },
+  },
+  postMap: { path: "scripts/post_map.lua" },
+  reduce: { path: "scripts/reduce.lua" },
+  output: { lines: false, pretty: false, out: "-" },
+};
+
 // Everything listed here is expected to be supported long-term.
 const mustUseCases = new Set([
   ...Object.values(useCases).map(({ name }) => name),
@@ -289,6 +349,12 @@ await appendSection("Suggested Go Implementation", [
   "Map: returns free-form JSON (any)",
   "Shells: support bash, sh, zsh early",
 ]);
+
+// Emit example action config as JSON for easy viewing
+await appendSection(
+  "Action Config (JSON Example)",
+  "```json\n" + JSON.stringify(ACTION_CONFIG_EXAMPLE, null, 2) + "\n```",
+);
 
 await appendSection("Lua Data Contracts", [
   "Filter: fn({ locator, meta }) -> bool",
