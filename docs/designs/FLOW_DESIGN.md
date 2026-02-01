@@ -85,7 +85,7 @@ Unsupported use cases (yet):
   - Commands: thoth run (exec action config: pipeline/create/update/diff)
   - Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
-  - Reduce: outputs a plain JSON value
+  - Reduce: Lua fn(acc, value) -> acc; initial acc=nil (Lua sees nil), Applies in deterministic order (locator/relPath sort), Any JSON-serializable acc allowed (object/array/number/string/bool/null)
   - Map: returns free-form JSON (any)
   - Shells: support bash, sh, zsh early
   - Create flow: discover files (gitignore), filter/map/post-map over {file}
@@ -112,6 +112,7 @@ Unsupported use cases (yet):
 ## Ordering & Determinism
   - Aggregated output (array): deterministic sort
   - Sort key: 'locator' for pipeline; 'file.relPath' for create/update/diff
+  - Reduce: consumes values in the same deterministic order as the aggregated array
   - Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value
 
 ## Action Config (JSON Example)
@@ -288,9 +289,11 @@ Unsupported use cases (yet):
   - diff.post-map: { file, input = <map result>, existing = { locator, meta }? }
 
 ## Reduce Behavior
-  - pipeline.reduce: accumulates over map or post-map(shell) results; returns a single JSON value
-  - create.reduce (optional): accumulates over post-map results (e.g., counts); dry-run friendly
-  - update.reduce (optional): accumulates over post-map patches or simulated results
+  - pipeline.reduce: accumulates over map or post-map(shell) results in deterministic order (sorted by locator); returns a single JSON value
+  - create.reduce (optional): accumulates over post-map results in deterministic order (sorted by file.relPath); dry-run friendly
+  - update.reduce (optional): accumulates over post-map patches/simulated results in deterministic order (sorted by file.relPath)
+  - acc initialization: starts as nil in Lua (use 'acc or <default>'); any JSON-serializable value allowed
+  - when reduce is present: output is a single JSON value; --lines is ignored
   - diff: reduce not applicable (summary auto-generated)
 
 ## Error Handling
