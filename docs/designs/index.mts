@@ -130,7 +130,7 @@ type SaveOptions = {
 };
 type PipelineConfig = {
   configVersion?: string;
-  action?: "pipeline" | "create"; // which flow to run
+  action?: "pipeline" | "create" | "update"; // which flow to run
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
   filter?: InlineScript; // skip stage if omitted
@@ -260,7 +260,7 @@ const routeByActionType = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "action.route",
     title: "Route by action type",
-    note: "action: pipeline | create",
+    note: "action: pipeline | create | update",
     level: context.level,
   };
   calls.push(call);
@@ -268,6 +268,8 @@ const routeByActionType = (context: FlowContext) => {
   pipelineFlow(incrContext(context));
   // Create flow (generate new meta files from filenames)
   createFlow(incrContext(context));
+  // Update flow (update or create meta files from filenames)
+  updateFlow(incrContext(context));
 };
 
 const pipelineFlow = (context: FlowContext) => {
@@ -303,6 +305,23 @@ const createFlow = (context: FlowContext) => {
   outputJsonResult(incrContext(context));
 };
 
+const updateFlow = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "flow.update",
+    title: "Update meta files flow",
+    level: context.level,
+    useCases: [useCases.batchUpdate.name],
+  };
+  calls.push(call);
+  findFilesForUpdate(incrContext(context));
+  filterFilenames(incrContext(context));
+  mapFilenames(incrContext(context));
+  loadExistingMeta(incrContext(context));
+  postMapUpdateFromFiles(incrContext(context));
+  updateMetaFiles(incrContext(context));
+  outputJsonResult(incrContext(context));
+};
+
 // File discovery: respects .gitignore and finds *.thoth.yaml files
 const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
@@ -321,6 +340,18 @@ const findFilesForCreate = (context: FlowContext) => {
     name: "fs.discovery.files",
     title: "Find files recursively (gitignore)",
     note: "walk root; .gitignore ON by default; no patterns; filenames as inputs",
+    level: context.level,
+    useCases: [useCases.gitIgnore.name],
+  };
+  calls.push(call);
+};
+
+// Discovery for update flow: reuse create discovery semantics
+const findFilesForUpdate = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "fs.discovery.files.update",
+    title: "Find files recursively (update)",
+    note: "walk root; .gitignore ON by default; filenames as inputs",
     level: context.level,
     useCases: [useCases.gitIgnore.name],
   };
@@ -396,6 +427,42 @@ const saveMetaFiles = (context: FlowContext) => {
     note: "Conditional: config.save.enabled or --save; name = <hash>-<lastdir>-<filename>.thoth.yaml; onExists: ignore|error",
     level: context.level,
     useCases: [useCases.batchCreate.name, useCases.gitConflictFriendly.name],
+  };
+  calls.push(call);
+};
+
+// Update: load existing meta if present for each filename
+const loadExistingMeta = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.load.existing",
+    title: "Load existing meta (if any)",
+    note: "compute expected path by naming convention; read YAML if exists",
+    level: context.level,
+    useCases: [useCases.batchUpdate.name],
+  };
+  calls.push(call);
+};
+
+// Update: post-map with access to existing meta
+const postMapUpdateFromFiles = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "files.map.post.update",
+    title: "Post-map for update (with existing)",
+    note: "Lua receives {file,input,existing?}; returns { meta } patch",
+    level: context.level,
+    useCases: [useCases.batchUpdate.name, useCases.embeddedScripting.name],
+  };
+  calls.push(call);
+};
+
+// Update: merge and write meta (create if missing)
+const updateMetaFiles = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.update",
+    title: "Update meta files (merge/create)",
+    note: "shallow merge: new keys override existing; missing -> create new by naming convention",
+    level: context.level,
+    useCases: [useCases.batchUpdate.name, useCases.gitConflictFriendly.name],
   };
   calls.push(call);
 };
@@ -516,6 +583,8 @@ await appendSection("Suggested Go Implementation", [
   "Filename: <sha256[:12]>-<lastdir>-<filename>.thoth.yaml",
   "Hash input: discovery relPath for stability",
   "On exists: ignore (default) or error",
+  "Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing",
+  "Merge strategy: shallow merge (new keys override)",
 ]);
 
 // Emit example action config as JSON for easy viewing
@@ -542,6 +611,7 @@ await appendSection("Lua Data Contracts", [
   "Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool",
   "Create Map: fn({ file }) -> any",
   "Create Post-map: fn({ file, input }) -> { meta }",
+  "Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)",
 ]);
 
 await appendSection("Go Package Outline", [
@@ -564,6 +634,7 @@ await appendSection("Design Decisions", [
   "Workers: default = CPU count (overridable via --workers)",
   "YAML: error on missing required fields (locator, meta)",
   "Shells: bash, sh, zsh supported early",
+  "Save filename: sha256 prefix length = 12 by default",
 ]);
 
 await appendSection("Open Design Questions", [

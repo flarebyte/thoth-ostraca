@@ -23,6 +23,14 @@ thoth CLI root command
         Post-map from files
         Save meta files (*.thoth.yaml)
         Write JSON result (array/value/lines)
+      Update meta files flow
+        Find files recursively (update)
+        Filter filenames
+        Map filenames
+        Load existing meta (if any)
+        Post-map for update (with existing)
+        Update meta files (merge/create)
+        Write JSON result (array/value/lines)
 ```
 
 Supported use cases:
@@ -41,10 +49,10 @@ Supported use cases:
   - Run shell using map output
   - Reduce across meta set
   - Create many meta files
+  - Update many meta files
 
 Unsupported use cases (yet):
 
-  - Update many meta files
   - Diff meta files at scale
 
 ## Suggested Go Implementation
@@ -68,6 +76,8 @@ Unsupported use cases (yet):
   - Filename: <sha256[:12]>-<lastdir>-<filename>.thoth.yaml
   - Hash input: discovery relPath for stability
   - On exists: ignore (default) or error
+  - Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing
+  - Merge strategy: shallow merge (new keys override)
 
 ## Action Config (JSON Example)
 ```json
@@ -182,6 +192,7 @@ Unsupported use cases (yet):
   - Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool
   - Create Map: fn({ file }) -> any
   - Create Post-map: fn({ file, input }) -> { meta }
+  - Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)
 
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
@@ -202,6 +213,7 @@ Unsupported use cases (yet):
   - Workers: default = CPU count (overridable via --workers)
   - YAML: error on missing required fields (locator, meta)
   - Shells: bash, sh, zsh supported early
+  - Save filename: sha256 prefix length = 12 by default
 
 ## Open Design Questions
   - YAML strictness for unknown fields: error or ignore?
