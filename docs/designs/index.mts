@@ -116,7 +116,6 @@ const cliRoot = (context: FlowContext) => {
   calls.push(call);
   // Register commands under the root.
   cliArgsMetaPipeline(incrContext(context));
-  cliArgsRun(incrContext(context));
 };
 
 // Single pipeline command: discover → parse → filter → [map] → [reduce] → output
@@ -125,7 +124,7 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
     name: "cli.meta",
     title: "Parse args for meta pipeline",
     directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --config",
+    note: "flags: --root, --pattern, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --config",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
@@ -135,22 +134,9 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
   parseYamlRecords(incrContext(context));
   filterMetaLocators(incrContext(context));
   mapMetaRecords(incrContext(context));
+  execShellFromMap(incrContext(context));
   reduceMetaRecords(incrContext(context));
   outputJsonResult(incrContext(context));
-};
-
-// Subcommand: run (shell from map output)
-const cliArgsRun = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "cli.run",
-    title: "Parse args for run (shell)",
-    directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --script, --shell, --workers",
-    level: context.level,
-    useCases: [useCases.cliUX.name],
-  };
-  calls.push(call);
-  findMetaLocatorsForRun(incrContext(context));
 };
 
 // File discovery: respects .gitignore and finds *.thoth.yaml files
@@ -163,18 +149,6 @@ const findMetaLocators = (context: FlowContext) => {
     useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
   };
   calls.push(call);
-};
-// Same discovery used by run
-const findMetaLocatorsForRun = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "fs.discovery.run",
-    title: "Find *.thoth.yaml files (run)",
-    note: "reuse discovery; supports patterns and .gitignore",
-    level: context.level,
-    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
-  };
-  calls.push(call);
-  parseYamlRecordsForRun(incrContext(context));
 };
 
 // Parse and validate each YAML meta file → {locator, meta}
@@ -189,20 +163,6 @@ const parseYamlRecords = (context: FlowContext) => {
   calls.push(call);
 };
 
-// Parser for run flow
-const parseYamlRecordsForRun = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "meta.parse.run",
-    title: "Parse and validate YAML (run)",
-    note: "yaml.v3; strict fields; types; support file path or URL locator",
-    level: context.level,
-    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
-  };
-  calls.push(call);
-  loadActionConfig(incrContext(context));
-  filterMetaLocators(incrContext(context));
-  mapMetaForRun(incrContext(context));
-};
 
 // Filtering step: predicate over stream of {locator, meta}
 const filterMetaLocators = (context: FlowContext) => {
@@ -238,7 +198,6 @@ const mapMetaRecords = (context: FlowContext) => {
     useCases: [useCases.metaMap.name, useCases.embeddedScripting.name, useCases.parallelism.name],
   };
   calls.push(call);
-  outputJsonResult(incrContext(context));
 };
 
 // Reduce step: aggregate stream -> single value
@@ -251,27 +210,14 @@ const reduceMetaRecords = (context: FlowContext) => {
     useCases: [useCases.metaReduce.name, useCases.embeddedScripting.name, useCases.parallelism.name],
   };
   calls.push(call);
-  outputJsonResult(incrContext(context));
 };
 
-// Run step: execute shell using map output
-const mapMetaForRun = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "meta.map.for-run",
-    title: "Map for run (shell input)",
-    note: "Lua-only map (v1) to build command args",
-    level: context.level,
-    useCases: [useCases.metaMap.name, useCases.embeddedScripting.name],
-  };
-  calls.push(call);
-  execShellFromMap(incrContext(context));
-};
 
 const execShellFromMap = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "shell.exec",
     title: "Execute shell per mapped item",
-    note: "Supports bash, sh, zsh; parallel with bounded workers",
+    note: "Conditional: --run-shell; supports bash, sh, zsh; parallel with bounded workers; mutually exclusive with reduce",
     level: context.level,
     useCases: [useCases.shellExecFromMap.name, useCases.parallelism.name],
   };
@@ -323,8 +269,8 @@ await appendSection("Suggested Go Implementation", [
   "Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1",
   "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
   "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
-  "Commands: thoth meta (single pipeline), thoth run (shell)",
-  "Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --config, --out",
+  "Commands: thoth meta (single pipeline incl. optional shell)",
+  "Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --config, --out",
   "Tests: golden tests for I/O; fs testdata fixtures",
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",

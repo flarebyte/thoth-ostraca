@@ -10,17 +10,9 @@ thoth CLI root command
     Parse and validate YAML records
     Apply filter predicate
     Apply map transform
-      Write JSON result (array/value/lines)
+    Execute shell per mapped item
     Apply reduce aggregate
-      Write JSON result (array/value/lines)
     Write JSON result (array/value/lines)
-  Parse args for run (shell)
-    Find *.thoth.yaml files (run)
-      Parse and validate YAML (run)
-        Load action config file (optional)
-        Apply filter predicate
-        Map for run (shell input)
-          Execute shell per mapped item
 ```
 
 Supported use cases:
@@ -36,8 +28,8 @@ Supported use cases:
   - Script filter/map/reduce
   - Process in parallel
   - Map meta records
-  - Reduce across meta set
   - Run shell using map output
+  - Reduce across meta set
 
 Unsupported use cases (yet):
 
@@ -55,8 +47,8 @@ Unsupported use cases (yet):
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
-  - Commands: thoth meta (single pipeline), thoth run (shell)
-  - Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --config, --out
+  - Commands: thoth meta (single pipeline incl. optional shell)
+  - Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --config, --out
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)
