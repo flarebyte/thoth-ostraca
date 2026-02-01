@@ -45,23 +45,26 @@ thoth CLI root command
 Supported use cases:
 
   - Helpful, well-documented flags
-  - JSON output for CLI/CI/AI
-  - Load action config file
-  - Respect .gitignore by default
-  - One file per locator
-  - Validate {locator, meta} schema
+  - JSON output for CLI/CI/AI — Machine-oriented default; aggregated JSON; lines optional
+  - Load action config file — Prefer YAML; allow JSON
+  - Respect .gitignore by default — Always on; opt-out via --no-gitignore
+  - One file per locator — Minimize merge conflicts
+  - Validate {locator, meta} schema — Required fields: locator:string, meta:object; error on missing
   - Locators as file path or URL
-  - Filter meta by locator
-  - Script filter/map/reduce
-  - Process in parallel
-  - Map meta records
-  - Run shell using map output
-  - Reduce across meta set
+  - Filter meta by locator — boolean predicate over {locator, meta}
+  - Script filter/map/reduce — Lua only (v1): small + popular
+  - Process in parallel — Goroutines + channels; bounded pool; default workers = CPU count
+  - Map meta records — transform {locator, meta} → any
+  - Run shell using map output — Support bash, sh, zsh early
+  - Reduce across meta set — aggregate stream → single result
   - Create many meta files
   - Update many meta files
   - Diff meta files at scale
 
+
 Unsupported use cases (yet):
+
+
 
 
 

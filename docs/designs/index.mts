@@ -1,5 +1,6 @@
 import {
   appendSection,
+  appendUseCases,
   appendToReport,
   ComponentCall,
   displayCallsAsText,
@@ -95,9 +96,6 @@ const useCases = {
 
 const getByName = (expectedName: string) =>
   Object.values(useCases).find(({ name }) => name === expectedName);
-
-const getTitlesForSet = (useCaseSet: Set<string>) =>
-  [...useCaseSet].map((useCase) => getByName(useCase)?.title || useCase);
 
 // Action/pipeline config model (TypeScript shape used for design)
 // v1: scripts are inline only (path-based scripts planned for v2)
@@ -225,6 +223,10 @@ export const ACTION_CONFIG_CREATE_MINIMAL: PipelineConfig = {
 const mustUseCases = new Set([
   ...Object.values(useCases).map(({ name }) => name),
 ]);
+
+// Build a catalog keyed by the canonical use-case name
+const useCaseCatalogByName: Record<string, { name: string; title: string; note?: string }> =
+  Object.fromEntries(Object.values(useCases).map((u) => [u.name, u]));
 
 // Helpers to suggest Go package, function, and file names based on call names
 const toTokens = (s: string) => s.split(/[^a-zA-Z0-9]+/).filter(Boolean);
@@ -625,16 +627,12 @@ await appendToReport("```");
 await displayCallsAsText(calls);
 await appendToReport("```\n");
 
-await appendToReport("Supported use cases:\n");
+await appendUseCases("Supported use cases:", toUseCaseSet(calls), useCaseCatalogByName);
 
-await appendToReport(toBulletPoints(getTitlesForSet(toUseCaseSet(calls))));
-
-await appendToReport("\nUnsupported use cases (yet):\n");
-
-await appendToReport(
-  toBulletPoints(
-    getTitlesForSet(getSetDifference(mustUseCases, toUseCaseSet(calls))),
-  ),
+await appendUseCases(
+  "Unsupported use cases (yet):",
+  getSetDifference(mustUseCases, toUseCaseSet(calls)),
+  useCaseCatalogByName,
 );
 
 // Suggested Go implementation outline

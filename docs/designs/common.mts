@@ -135,3 +135,30 @@ export const appendSection = async (
     await appendToReport(lines);
   }
 };
+
+/**
+ * Build human-readable lines for a set of use-case names using a catalog.
+ */
+export const toUseCaseLines = (
+  useCaseNames: Set<string>,
+  catalogByName: Record<string, UseCase>,
+): string[] => {
+  return [...useCaseNames].map((name) => {
+    const uc = catalogByName[name];
+    if (!uc) return name;
+    return uc.note ? `${uc.title} — ${uc.note}` : uc.title;
+  });
+};
+
+/**
+ * Append a small heading then bullet list for use-cases (title + note).
+ */
+export const appendUseCases = async (
+  heading: string,
+  useCaseNames: Set<string>,
+  catalogByName: Record<string, UseCase>,
+) => {
+  await appendToReport(`${heading}\n`);
+  await appendToReport(toBulletPoints(toUseCaseLines(useCaseNames, catalogByName)));
+  await appendToReport("\n");
+};
