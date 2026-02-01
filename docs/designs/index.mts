@@ -126,7 +126,7 @@ type SaveOptions = {
   onExists?: "ignore" | "error"; // behavior if target exists
   dir?: string; // optional output directory for meta files
   hashAlgo?: "sha256"; // future extension; default sha256
-  hashLen?: number; // characters from hash prefix; default e.g. 12
+  hashLen?: number; // characters from hash prefix; default 12
 };
 type PipelineConfig = {
   configVersion?: string;
@@ -207,6 +207,17 @@ return { meta = { title = (input.title or file.base) } }`,
   output: { lines: false, pretty: false, out: "-" },
   // Saving behavior
   save: { enabled: false, onExists: "ignore" },
+};
+
+export const ACTION_CONFIG_CREATE_MINIMAL: PipelineConfig = {
+  configVersion: "1",
+  action: "create",
+  discovery: { root: ".", noGitignore: false },
+  // Process all files (example); dry-run (no save)
+  filter: { inline: `return true` },
+  map: { inline: `return { meta = { created = true } }` },
+  output: { lines: false, pretty: true, out: "-" },
+  save: { enabled: false, onExists: "ignore", hashLen: 12 },
 };
 
 // Everything listed here is expected to be supported long-term.
@@ -500,6 +511,11 @@ await appendSection("Suggested Go Implementation", [
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",
   "Shells: support bash, sh, zsh early",
+  "Create flow: discover files (gitignore), filter/map/post-map over {file}",
+  "Save writer: if save.enabled or --save, write *.thoth.yaml",
+  "Filename: <sha256[:12]>-<lastdir>-<filename>.thoth.yaml",
+  "Hash input: discovery relPath for stability",
+  "On exists: ignore (default) or error",
 ]);
 
 // Emit example action config as JSON for easy viewing
@@ -513,6 +529,11 @@ await appendSection(
   "```json\n" + JSON.stringify(ACTION_CONFIG_CREATE_EXAMPLE, null, 2) + "\n```",
 );
 
+await appendSection(
+  "Action Config (Create Minimal Example)",
+  "```json\n" + JSON.stringify(ACTION_CONFIG_CREATE_MINIMAL, null, 2) + "\n```",
+);
+
 await appendSection("Lua Data Contracts", [
   "Filter: fn({ locator, meta }) -> bool",
   "Map: fn({ locator, meta }) -> any",
@@ -521,6 +542,17 @@ await appendSection("Lua Data Contracts", [
   "Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool",
   "Create Map: fn({ file }) -> any",
   "Create Post-map: fn({ file, input }) -> { meta }",
+]);
+
+await appendSection("Go Package Outline", [
+  "cmd/thoth: cobra wiring, --config parsing, action routing",
+  "internal/config: load/validate YAML (inline Lua strings), defaults",
+  "internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext})",
+  "internal/meta: YAML read/write of {locator, meta}",
+  "internal/lua: gopher-lua helpers to run inline scripts with typed inputs",
+  "internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool",
+  "internal/shell: exec with capture, timeouts, env, sh/bash/zsh",
+  "internal/save: filename builder (<sha256[:12]>-<lastdir>-<filename>.thoth.yaml), onExists policy",
 ]);
 
 await appendSection("Design Decisions", [

@@ -63,6 +63,11 @@ Unsupported use cases (yet):
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)
   - Shells: support bash, sh, zsh early
+  - Create flow: discover files (gitignore), filter/map/post-map over {file}
+  - Save writer: if save.enabled or --save, write *.thoth.yaml
+  - Filename: <sha256[:12]>-<lastdir>-<filename>.thoth.yaml
+  - Hash input: discovery relPath for stability
+  - On exists: ignore (default) or error
 
 ## Action Config (JSON Example)
 ```json
@@ -141,6 +146,34 @@ Unsupported use cases (yet):
 }
 ```
 
+## Action Config (Create Minimal Example)
+```json
+{
+  "configVersion": "1",
+  "action": "create",
+  "discovery": {
+    "root": ".",
+    "noGitignore": false
+  },
+  "filter": {
+    "inline": "return true"
+  },
+  "map": {
+    "inline": "return { meta = { created = true } }"
+  },
+  "output": {
+    "lines": false,
+    "pretty": true,
+    "out": "-"
+  },
+  "save": {
+    "enabled": false,
+    "onExists": "ignore",
+    "hashLen": 12
+  }
+}
+```
+
 ## Lua Data Contracts
   - Filter: fn({ locator, meta }) -> bool
   - Map: fn({ locator, meta }) -> any
@@ -149,6 +182,16 @@ Unsupported use cases (yet):
   - Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool
   - Create Map: fn({ file }) -> any
   - Create Post-map: fn({ file, input }) -> { meta }
+
+## Go Package Outline
+  - cmd/thoth: cobra wiring, --config parsing, action routing
+  - internal/config: load/validate YAML (inline Lua strings), defaults
+  - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext})
+  - internal/meta: YAML read/write of {locator, meta}
+  - internal/lua: gopher-lua helpers to run inline scripts with typed inputs
+  - internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool
+  - internal/shell: exec with capture, timeouts, env, sh/bash/zsh
+  - internal/save: filename builder (<sha256[:12]>-<lastdir>-<filename>.thoth.yaml), onExists policy
 
 ## Design Decisions
   - Filter: Lua-only (v1)
