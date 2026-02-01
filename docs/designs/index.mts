@@ -130,7 +130,7 @@ type SaveOptions = {
 };
 type PipelineConfig = {
   configVersion?: string;
-  action?: "pipeline" | "create" | "update"; // which flow to run
+  action?: "pipeline" | "create" | "update" | "diff"; // which flow to run
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
   filter?: InlineScript; // skip stage if omitted
@@ -260,7 +260,7 @@ const routeByActionType = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "action.route",
     title: "Route by action type",
-    note: "action: pipeline | create | update",
+    note: "action: pipeline | create | update | diff",
     level: context.level,
   };
   calls.push(call);
@@ -270,6 +270,8 @@ const routeByActionType = (context: FlowContext) => {
   createFlow(incrContext(context));
   // Update flow (update or create meta files from filenames)
   updateFlow(incrContext(context));
+  // Diff flow (show changes without writing; detect orphans)
+  diffFlow(incrContext(context));
 };
 
 const pipelineFlow = (context: FlowContext) => {
@@ -319,6 +321,24 @@ const updateFlow = (context: FlowContext) => {
   loadExistingMeta(incrContext(context));
   postMapUpdateFromFiles(incrContext(context));
   updateMetaFiles(incrContext(context));
+  outputJsonResult(incrContext(context));
+};
+
+const diffFlow = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "flow.diff",
+    title: "Diff meta files flow",
+    level: context.level,
+    useCases: [useCases.batchDiff.name],
+  };
+  calls.push(call);
+  findFilesForUpdate(incrContext(context));
+  filterFilenames(incrContext(context));
+  mapFilenames(incrContext(context));
+  loadExistingMeta(incrContext(context));
+  postMapUpdateFromFiles(incrContext(context));
+  computeMetaDiffs(incrContext(context));
+  scanForOrphanMetas(incrContext(context));
   outputJsonResult(incrContext(context));
 };
 
@@ -467,6 +487,30 @@ const updateMetaFiles = (context: FlowContext) => {
   calls.push(call);
 };
 
+// Diff: compute differences between existing and would-be-updated meta
+const computeMetaDiffs = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.diff.compute",
+    title: "Compute meta diffs",
+    note: "deep diff existing vs patch-applied result; JSON diff or summary",
+    level: context.level,
+    useCases: [useCases.batchDiff.name],
+  };
+  calls.push(call);
+};
+
+// Diff: scan for orphan meta files (locator path missing)
+const scanForOrphanMetas = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.diff.orphans",
+    title: "Detect orphan meta files",
+    note: "iterate *.thoth.yaml; if locator is file path and does not exist, flag",
+    level: context.level,
+    useCases: [useCases.batchDiff.name, useCases.locatorKinds.name],
+  };
+  calls.push(call);
+};
+
 // Optional: load action config for map/reduce/run
 const loadActionConfig = (context: FlowContext) => {
   const call: ComponentCall = {
@@ -585,6 +629,8 @@ await appendSection("Suggested Go Implementation", [
   "On exists: ignore (default) or error",
   "Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing",
   "Merge strategy: shallow merge (new keys override)",
+  "Diff flow: same as update until patch; compute deep diff; do not write",
+  "Orphans: scan existing meta files; if locator path missing on disk, report",
 ]);
 
 // Emit example action config as JSON for easy viewing
@@ -601,6 +647,23 @@ await appendSection(
 await appendSection(
   "Action Config (Create Minimal Example)",
   "```json\n" + JSON.stringify(ACTION_CONFIG_CREATE_MINIMAL, null, 2) + "\n```",
+);
+
+// Provide a diff config example (reuses update contracts; no writes)
+export const ACTION_CONFIG_DIFF_EXAMPLE: PipelineConfig = {
+  configVersion: "1",
+  action: "diff",
+  discovery: { root: ".", noGitignore: false },
+  workers: 8,
+  filter: { inline: `-- example: only .json files\nreturn string.match(file.ext or "", "^%.json$") ~= nil` },
+  map: { inline: `-- compute desired meta fields from filename\nreturn { category = file.dir }` },
+  // update-style post-map available as needed
+  output: { lines: false, pretty: true, out: "-" },
+};
+
+await appendSection(
+  "Action Config (Diff Example)",
+  "```json\n" + JSON.stringify(ACTION_CONFIG_DIFF_EXAMPLE, null, 2) + "\n```",
 );
 
 await appendSection("Lua Data Contracts", [

@@ -31,6 +31,15 @@ thoth CLI root command
         Post-map for update (with existing)
         Update meta files (merge/create)
         Write JSON result (array/value/lines)
+      Diff meta files flow
+        Find files recursively (update)
+        Filter filenames
+        Map filenames
+        Load existing meta (if any)
+        Post-map for update (with existing)
+        Compute meta diffs
+        Detect orphan meta files
+        Write JSON result (array/value/lines)
 ```
 
 Supported use cases:
@@ -50,10 +59,11 @@ Supported use cases:
   - Reduce across meta set
   - Create many meta files
   - Update many meta files
+  - Diff meta files at scale
 
 Unsupported use cases (yet):
 
-  - Diff meta files at scale
+
 
 ## Suggested Go Implementation
   - Module: go 1.22; command name: thoth
@@ -78,6 +88,8 @@ Unsupported use cases (yet):
   - On exists: ignore (default) or error
   - Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing
   - Merge strategy: shallow merge (new keys override)
+  - Diff flow: same as update until patch; compute deep diff; do not write
+  - Orphans: scan existing meta files; if locator path missing on disk, report
 
 ## Action Config (JSON Example)
 ```json
@@ -180,6 +192,30 @@ Unsupported use cases (yet):
     "enabled": false,
     "onExists": "ignore",
     "hashLen": 12
+  }
+}
+```
+
+## Action Config (Diff Example)
+```json
+{
+  "configVersion": "1",
+  "action": "diff",
+  "discovery": {
+    "root": ".",
+    "noGitignore": false
+  },
+  "workers": 8,
+  "filter": {
+    "inline": "-- example: only .json files\nreturn string.match(file.ext or \"\", \"^%.json$\") ~= nil"
+  },
+  "map": {
+    "inline": "-- compute desired meta fields from filename\nreturn { category = file.dir }"
+  },
+  "output": {
+    "lines": false,
+    "pretty": true,
+    "out": "-"
   }
 }
 ```
