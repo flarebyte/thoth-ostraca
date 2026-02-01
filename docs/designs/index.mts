@@ -115,12 +115,17 @@ type ShellCapture = { stdout?: boolean; stderr?: boolean; maxBytes?: number };
 type ShellOptions = {
   enabled?: boolean; // set true to run shell step
   program?: "bash" | "sh" | "zsh";
-  commandTemplate?: string; // e.g. "echo {value}"
+  // Exactly one of commandTemplate or argsTemplate should be used.
+  commandTemplate?: string; // single command string passed to shell, with placeholders
+  argsTemplate?: string[]; // argv form: avoids shell parsing hazards; placeholders resolved per-arg
   workingDir?: string;
   env?: Record<string, string>;
   timeoutMs?: number;
   failFast?: boolean;
   capture?: ShellCapture;
+  strictTemplating?: boolean; // default true: enforce transforms/escaping; unknown placeholders -> error
+  killProcessGroup?: boolean; // default true: signal entire group on timeout/error
+  termGraceMs?: number; // default e.g. 2000ms before SIGKILL
 };
 type SaveOptions = {
   enabled?: boolean; // when true, write meta files to disk
@@ -181,12 +186,16 @@ return { locator = locator, name = meta and meta.name }`,
   shell: {
     enabled: true,
     program: "bash",
-    commandTemplate: "echo {value}",
+    // Recommend argv form to avoid shell parsing hazards
+    argsTemplate: ["echo", "{json}"],
     workingDir: ".",
     env: { CI: "true" },
     timeoutMs: 60000,
     failFast: true,
     capture: { stdout: true, stderr: true, maxBytes: 1048576 },
+    strictTemplating: true,
+    killProcessGroup: true,
+    termGraceMs: 2000,
   },
   postMap: {
     inline: `-- summarize shell result
@@ -632,7 +641,7 @@ const execShellFromMap = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "shell.exec",
     title: "Execute shell per mapped item",
-    note: "Conditional: --run-shell; supports bash, sh, zsh; parallel with bounded workers; feeds post-map/reduce when provided",
+    note: "Conditional: --run-shell; argv templates preferred (no shell parsing); string templates auto-escape; supports bash/sh/zsh; parallel with bounded workers; feeds post-map/reduce; timeout kills process group",
     level: context.level,
     useCases: [useCases.shellExecFromMap.name, useCases.parallelism.name],
   };
@@ -820,6 +829,17 @@ await appendSection("Discovery Semantics", [
   ".gitignore: honored by default even when not in a git repo (local .gitignore files are parsed)",
   "Symlinks: do not follow by default (discovery.followSymlinks=false)",
   "Exclusions: no magic exclusions beyond .gitignore rules",
+]);
+
+await appendSection("Shell Execution Spec", [
+  "Templating: placeholders {name} with optional transforms {name|json} and {name|sh}",
+  "Placeholders: {value} (map result, string only), {json} (JSON of map result), {locator}, {index}, {file.path}, {file.relPath}, {file.dir}, {file.base}, {file.name}, {file.ext}",
+  "Strict mode (default): unknown placeholders -> error; {value} must be string or use {value|json}",
+  "Escaping: in commandTemplate (string), all placeholders are shell-escaped by default; {..|sh} forces quoting explicitly",
+  "Security: prefer argsTemplate (argv form) to avoid shell parsing; each arg templated independently",
+  "Timeout: on timeout, send SIGTERM to process group, wait termGraceMs, then SIGKILL; killProcessGroup=true by default",
+  "Exit codes: non-zero → record error; if failFast=true, abort remaining work",
+  "Env: explicit env entries merged with process env; no implicit interpolation in templates (use {env.VAR} not supported v1)",
 ]);
 
 // Detailed calls section with notes and suggestions

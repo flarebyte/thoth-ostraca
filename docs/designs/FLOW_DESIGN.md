@@ -134,7 +134,10 @@ Unsupported use cases (yet):
   "shell": {
     "enabled": true,
     "program": "bash",
-    "commandTemplate": "echo {value}",
+    "argsTemplate": [
+      "echo",
+      "{json}"
+    ],
     "workingDir": ".",
     "env": {
       "CI": "true"
@@ -145,7 +148,10 @@ Unsupported use cases (yet):
       "stdout": true,
       "stderr": true,
       "maxBytes": 1048576
-    }
+    },
+    "strictTemplating": true,
+    "killProcessGroup": true,
+    "termGraceMs": 2000
   },
   "postMap": {
     "inline": "-- summarize shell result\nreturn { locator = locator, exit = shell.exitCode }"
@@ -298,6 +304,16 @@ Unsupported use cases (yet):
   - Symlinks: do not follow by default (discovery.followSymlinks=false)
   - Exclusions: no magic exclusions beyond .gitignore rules
 
+## Shell Execution Spec
+  - Templating: placeholders {name} with optional transforms {name|json} and {name|sh}
+  - Placeholders: {value} (map result, string only), {json} (JSON of map result), {locator}, {index}, {file.path}, {file.relPath}, {file.dir}, {file.base}, {file.name}, {file.ext}
+  - Strict mode (default): unknown placeholders -> error; {value} must be string or use {value|json}
+  - Escaping: in commandTemplate (string), all placeholders are shell-escaped by default; {..|sh} forces quoting explicitly
+  - Security: prefer argsTemplate (argv form) to avoid shell parsing; each arg templated independently
+  - Timeout: on timeout, send SIGTERM to process group, wait termGraceMs, then SIGKILL; killProcessGroup=true by default
+  - Exit codes: non-zero → record error; if failFast=true, abort remaining work
+  - Env: explicit env entries merged with process env; no implicit interpolation in templates (use {env.VAR} not supported v1)
+
 ## Function calls details
 
 ```
@@ -346,7 +362,7 @@ thoth CLI root command [cli.root]
           - func: MetaMapStep
           - file: internal/pipeline/map_step.go
         Execute shell per mapped item [shell.exec]
-          - note: Conditional: --run-shell; supports bash, sh, zsh; parallel with bounded workers; feeds post-map/reduce when provided
+          - note: Conditional: --run-shell; argv templates preferred (no shell parsing); string templates auto-escape; supports bash/sh/zsh; parallel with bounded workers; feeds post-map/reduce; timeout kills process group
           - pkg: internal/shell
           - func: ShellExec
           - file: internal/shell/shell_exec.go
