@@ -45,4 +45,11 @@ export const displayCallsAsText = async (calls: ComponentCall[]) => {
   }
 };
 
-export const toBulletPoints = (lines: string[]) => lines.map(line => `  - ${line}`).join('\n')
+export const getSetDifference = (
+  setA: Set<string>,
+  setB: Set<string>,
+): Set<string> => {
+  return new Set([...setA].filter((item) => !setB.has(item)));
+};
+export const toBulletPoints = (lines: string[]) =>
+  lines.map((line) => `  - ${line}`).join("\n");

@@ -3,6 +3,7 @@ import {
   ComponentCall,
   displayCallsAsText,
   FlowContext,
+  getSetDifference,
   incrContext,
   resetReport,
   toBulletPoints,
@@ -63,7 +64,7 @@ const getByName = (expectedName: string) =>
   Object.values(useCases).find(({ name }) => name === expectedName);
 
 const getTitlesForSet = (useCaseSet: Set<string>) =>
-  [...useCaseSet].map((useCase) => getByName(useCase)?.title);
+  [...useCaseSet].map((useCase) => getByName(useCase)?.title || useCase);
 
 const mustUseCases = new Set([
   ...Object.values(useCases).map(({ name }) => name),
@@ -114,4 +115,12 @@ await appendToReport("```\n");
 
 await appendToReport("Supported use cases:\n");
 
-await appendToReport(toBulletPoints([...toUseCaseSet(calls)]));
+await appendToReport(toBulletPoints(getTitlesForSet(toUseCaseSet(calls))));
+
+await appendToReport("\nUnsupported use cases (yet):\n");
+
+await appendToReport(
+  toBulletPoints(
+    getTitlesForSet(getSetDifference(mustUseCases, toUseCaseSet(calls))),
+  ),
+);
