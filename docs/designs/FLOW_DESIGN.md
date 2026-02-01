@@ -80,6 +80,7 @@ Unsupported use cases (yet):
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
+  - Ordering: Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff), Lines: nondeterministic (parallel), each line is independent JSON value
   - Commands: thoth run (exec action config: pipeline/create/update/diff)
   - Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
@@ -99,6 +100,11 @@ Unsupported use cases (yet):
   - Diff output: RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)
   - internal/diff: generate patches and optional before/after snapshots for debugging
   - Diff config: includeSnapshots (bool), output: patch|summary|both (default: both)
+
+## Ordering & Determinism
+  - Aggregated output (array): deterministic sort
+  - Sort key: 'locator' for pipeline; 'file.relPath' for create/update/diff
+  - Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value
 
 ## Action Config (JSON Example)
 ```json
@@ -355,7 +361,7 @@ thoth CLI root command [cli.root]
           - func: MetaReduceStep
           - file: internal/pipeline/reduce_step.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
@@ -389,7 +395,7 @@ thoth CLI root command [cli.root]
           - func: MetaSave
           - file: internal/save/meta_save.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
@@ -428,7 +434,7 @@ thoth CLI root command [cli.root]
           - func: MetaUpdate
           - file: internal/save/meta_update.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
@@ -472,7 +478,7 @@ thoth CLI root command [cli.root]
           - func: MetaDiffOrphans
           - file: internal/diff/diff_orphans.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go

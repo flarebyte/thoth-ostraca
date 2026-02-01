@@ -656,7 +656,7 @@ const outputJsonResult = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "output.json.result",
     title: "Write JSON result (array/value/lines)",
-    note: "default: aggregated JSON array; --lines to stream; reduce → single value",
+    note: "default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value",
     level: context.level,
     useCases: [useCases.outputJson.name],
   };
@@ -694,6 +694,10 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Filter/Map/Reduce", "Lua scripts only (gopher-lua) for v1"],
   ["Parallelism", "bounded worker pool; default workers = runtime.NumCPU()"],
   ["Output", "aggregated JSON by default; --lines to stream; --pretty for humans"],
+  ["Ordering", [
+    "Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff)",
+    "Lines: nondeterministic (parallel), each line is independent JSON value",
+  ]],
   ["Commands", "thoth run (exec action config: pipeline/create/update/diff)"],
   ["Flags", "--config (YAML preferred; JSON accepted), --save (enable saving in create)"],
   ["Tests", "golden tests for I/O; fs testdata fixtures"],
@@ -720,6 +724,12 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
 ];
 
 await appendKeyValueList("Suggested Go Implementation", SUGGESTED_GO_IMPLEMENTATION);
+
+await appendSection("Ordering & Determinism", [
+  "Aggregated output (array): deterministic sort",
+  "Sort key: 'locator' for pipeline; 'file.relPath' for create/update/diff",
+  "Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value",
+]);
 
 // Emit example action config as JSON for easy viewing
 await appendSection(
