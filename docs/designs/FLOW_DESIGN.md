@@ -39,15 +39,16 @@ Unsupported use cases (yet):
   - Types: type Record struct { Locator string; Meta map[string]any }
   - YAML: gopkg.in/yaml.v3 for *.thoth.yaml
   - Discovery: filepath.WalkDir + gitignore filter (go-gitignore)
-  - Schema: validate locator non-empty; meta is object
+  - Schema: required fields (locator, meta); error on missing
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
-  - Parallelism: bounded worker pool; channels for records
+  - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Commands: thoth find, thoth map, thoth reduce, thoth run (shell)
   - Flags: --root, --pattern, --no-gitignore, --workers, --script, --out
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)
+  - Shells: support bash, sh, zsh early
 
 ## Design Decisions
   - Filter: Lua-only (v1)
@@ -55,8 +56,9 @@ Unsupported use cases (yet):
   - Reduce: plain JSON value
   - Output: machine-oriented JSON by default (aggregate unless --lines)
   - Gitignore: always on; --no-gitignore to opt out
+  - Workers: default = CPU count (overridable via --workers)
+  - YAML: error on missing required fields (locator, meta)
+  - Shells: bash, sh, zsh supported early
 
 ## Open Design Questions
-  - Default worker pool size and tuning flags?
-  - YAML schema strictness (unknown fields: error or ignore)?
-  - Which shells to support for 'run' besides bash?
+  - YAML strictness for unknown fields: error or ignore?
