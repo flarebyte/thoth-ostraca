@@ -9,6 +9,24 @@ thoth CLI root command
       Parse and validate YAML records
         Apply filter predicate
           Write JSON result (array/value/lines)
+  Parse args for meta map
+    Find *.thoth.yaml files (map)
+      Parse and validate YAML (map)
+        Load action config file (optional)
+        Apply map transform
+          Write JSON result (array/value/lines)
+  Parse args for meta reduce
+    Find *.thoth.yaml files (reduce)
+      Parse and validate YAML (reduce)
+        Load action config file (optional)
+        Apply reduce aggregate
+          Write JSON result (array/value/lines)
+  Parse args for run (shell)
+    Find *.thoth.yaml files (run)
+      Parse and validate YAML (run)
+        Load action config file (optional)
+        Map for run (shell input)
+          Execute shell per mapped item
 ```
 
 Supported use cases:
@@ -18,17 +36,17 @@ Supported use cases:
   - Respect .gitignore by default
   - One file per locator
   - Validate {locator, meta} schema
+  - Locators as file path or URL
   - Filter meta by locator
   - Script filter/map/reduce
+  - Process in parallel
+  - Load action config file
+  - Map meta records
+  - Reduce across meta set
+  - Run shell using map output
 
 Unsupported use cases (yet):
 
-  - Map meta records
-  - Reduce across meta set
-  - Load action config file
-  - Run shell using map output
-  - Locators as file path or URL
-  - Process in parallel
   - Create many meta files
   - Update many meta files
   - Diff meta files at scale

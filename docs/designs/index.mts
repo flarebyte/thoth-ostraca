@@ -114,7 +114,11 @@ const cliRoot = (context: FlowContext) => {
     useCases: [useCases.cliUX.name],
   };
   calls.push(call);
+  // Register subcommands under the root.
   cliArgsMetaFind(incrContext(context));
+  cliArgsMetaMap(incrContext(context));
+  cliArgsMetaReduce(incrContext(context));
+  cliArgsRun(incrContext(context));
 };
 
 // Subcommand that discovers meta files and emits JSON.
@@ -131,6 +135,48 @@ const cliArgsMetaFind = (context: FlowContext) => {
   findMetaLocators(incrContext(context));
 };
 
+// Subcommand: map
+const cliArgsMetaMap = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "cli.meta.map",
+    title: "Parse args for meta map",
+    directory: "cmd/thoth",
+    note: "flags: --root, --pattern, --no-gitignore, --script, --json, --lines, --pretty",
+    level: context.level,
+    useCases: [useCases.cliUX.name, useCases.outputJson.name],
+  };
+  calls.push(call);
+  findMetaLocatorsForMap(incrContext(context));
+};
+
+// Subcommand: reduce
+const cliArgsMetaReduce = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "cli.meta.reduce",
+    title: "Parse args for meta reduce",
+    directory: "cmd/thoth",
+    note: "flags: --root, --pattern, --no-gitignore, --script, --json, --pretty",
+    level: context.level,
+    useCases: [useCases.cliUX.name, useCases.outputJson.name],
+  };
+  calls.push(call);
+  findMetaLocatorsForReduce(incrContext(context));
+};
+
+// Subcommand: run (shell from map output)
+const cliArgsRun = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "cli.run",
+    title: "Parse args for run (shell)",
+    directory: "cmd/thoth",
+    note: "flags: --root, --pattern, --no-gitignore, --script, --shell, --workers",
+    level: context.level,
+    useCases: [useCases.cliUX.name],
+  };
+  calls.push(call);
+  findMetaLocatorsForRun(incrContext(context));
+};
+
 // File discovery: respects .gitignore and finds *.thoth.yaml files
 const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
@@ -144,17 +190,98 @@ const findMetaLocators = (context: FlowContext) => {
   parseYamlRecords(incrContext(context));
 };
 
+// Same discovery used by map
+const findMetaLocatorsForMap = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "fs.discovery.map",
+    title: "Find *.thoth.yaml files (map)",
+    note: "reuse discovery; supports patterns and .gitignore",
+    level: context.level,
+    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
+  };
+  calls.push(call);
+  parseYamlRecordsForMap(incrContext(context));
+};
+
+// Same discovery used by reduce
+const findMetaLocatorsForReduce = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "fs.discovery.reduce",
+    title: "Find *.thoth.yaml files (reduce)",
+    note: "reuse discovery; supports patterns and .gitignore",
+    level: context.level,
+    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
+  };
+  calls.push(call);
+  parseYamlRecordsForReduce(incrContext(context));
+};
+
+// Same discovery used by run
+const findMetaLocatorsForRun = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "fs.discovery.run",
+    title: "Find *.thoth.yaml files (run)",
+    note: "reuse discovery; supports patterns and .gitignore",
+    level: context.level,
+    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
+  };
+  calls.push(call);
+  parseYamlRecordsForRun(incrContext(context));
+};
+
 // Parse and validate each YAML meta file → {locator, meta}
 const parseYamlRecords = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.parse",
     title: "Parse and validate YAML records",
-    note: "yaml.v3; strict fields; types",
+    note: "yaml.v3; strict fields; types; support file path or URL locator",
     level: context.level,
-    useCases: [useCases.metaSchema.name],
+    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
   };
   calls.push(call);
   filterMetaLocators(incrContext(context));
+};
+
+// Parser for map flow
+const parseYamlRecordsForMap = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.parse.map",
+    title: "Parse and validate YAML (map)",
+    note: "yaml.v3; strict fields; types; support file path or URL locator",
+    level: context.level,
+    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
+  };
+  calls.push(call);
+  loadActionConfig(incrContext(context));
+  mapMetaRecords(incrContext(context));
+};
+
+// Parser for reduce flow
+const parseYamlRecordsForReduce = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.parse.reduce",
+    title: "Parse and validate YAML (reduce)",
+    note: "yaml.v3; strict fields; types; support file path or URL locator",
+    level: context.level,
+    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
+  };
+  calls.push(call);
+  loadActionConfig(incrContext(context));
+  reduceMetaRecords(incrContext(context));
+};
+
+// Parser for run flow
+const parseYamlRecordsForRun = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.parse.run",
+    title: "Parse and validate YAML (run)",
+    note: "yaml.v3; strict fields; types; support file path or URL locator",
+    level: context.level,
+    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
+  };
+  calls.push(call);
+  loadActionConfig(incrContext(context));
+  mapMetaForRun(incrContext(context));
 };
 
 // Filtering step: predicate over stream of {locator, meta}
@@ -164,10 +291,72 @@ const filterMetaLocators = (context: FlowContext) => {
     title: "Apply filter predicate",
     note: "Lua-only predicate (v1)",
     level: context.level,
-    useCases: [useCases.metaFilter.name, useCases.embeddedScripting.name],
+    useCases: [useCases.metaFilter.name, useCases.embeddedScripting.name, useCases.parallelism.name],
   };
   calls.push(call);
   outputJsonResult(incrContext(context));
+};
+
+// Optional: load action config for map/reduce/run
+const loadActionConfig = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "action.config.load",
+    title: "Load action config file (optional)",
+    note: "--config path; YAML preferred; JSON allowed",
+    level: context.level,
+    useCases: [useCases.actionConfig.name],
+  };
+  calls.push(call);
+};
+
+// Map step: transform {locator, meta} -> any
+const mapMetaRecords = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.map.step",
+    title: "Apply map transform",
+    note: "Lua-only mapping (v1); parallel by default",
+    level: context.level,
+    useCases: [useCases.metaMap.name, useCases.embeddedScripting.name, useCases.parallelism.name],
+  };
+  calls.push(call);
+  outputJsonResult(incrContext(context));
+};
+
+// Reduce step: aggregate stream -> single value
+const reduceMetaRecords = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.reduce.step",
+    title: "Apply reduce aggregate",
+    note: "Lua-only reduce (v1); parallel feed; single JSON value",
+    level: context.level,
+    useCases: [useCases.metaReduce.name, useCases.embeddedScripting.name, useCases.parallelism.name],
+  };
+  calls.push(call);
+  outputJsonResult(incrContext(context));
+};
+
+// Run step: execute shell using map output
+const mapMetaForRun = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.map.for-run",
+    title: "Map for run (shell input)",
+    note: "Lua-only map (v1) to build command args",
+    level: context.level,
+    useCases: [useCases.metaMap.name, useCases.embeddedScripting.name],
+  };
+  calls.push(call);
+  execShellFromMap(incrContext(context));
+};
+
+const execShellFromMap = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "shell.exec",
+    title: "Execute shell per mapped item",
+    note: "Supports bash, sh, zsh; parallel with bounded workers",
+    level: context.level,
+    useCases: [useCases.shellExecFromMap.name, useCases.parallelism.name],
+  };
+  calls.push(call);
 };
 
 // Output JSON: machine-oriented by default; aggregated or lines
