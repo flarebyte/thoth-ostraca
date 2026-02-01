@@ -90,6 +90,8 @@ Unsupported use cases (yet):
   - Merge strategy: shallow merge (new keys override)
   - Diff flow: same as update until patch; compute deep diff; do not write
   - Orphans: scan existing meta files; if locator path missing on disk, report
+  - Diff output: RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)
+  - internal/diff: generate patches and optional before/after snapshots for debugging
 
 ## Action Config (JSON Example)
 ```json
@@ -230,6 +232,18 @@ Unsupported use cases (yet):
   - Create Post-map: fn({ file, input }) -> { meta }
   - Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)
 
+## Diff Output Shape
+  - Per-item result: { file, status, patch?, before?, after? }
+  - status ∈ { created, modified, deleted, unchanged, orphan }
+  - patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test)
+  - before/after: optional full meta snapshots for debugging (disabled by default)
+  - Top-level summary: counts per status and totals
+
+## Lua Builtins
+  - locator.kind(locator) -> 'file' | 'url'
+  - locator.to_file_path(locator, root) -> string|nil (nil for URLs)
+  - url.is_url(s) -> bool (http/https schemes)
+
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
   - internal/config: load/validate YAML (inline Lua strings), defaults
@@ -239,6 +253,7 @@ Unsupported use cases (yet):
   - internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool
   - internal/shell: exec with capture, timeouts, env, sh/bash/zsh
   - internal/save: filename builder (<sha256[:12]>-<lastdir>-<filename>.thoth.yaml), onExists policy
+  - internal/diff: RFC6902 patch generation + item summary
 
 ## Design Decisions
   - Filter: Lua-only (v1)
