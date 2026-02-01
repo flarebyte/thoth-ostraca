@@ -27,15 +27,18 @@ const useCases = {
   },
   mapReduceActionConfig: {
     name: "map reduce action config",
-    title: "Load map reduce action config from file (YAML)",
+    title: "Load map reduce action config from file",
+    note: "Prefer human friendly YAML to JSON for configuration",
   },
   scripting: {
     name: "scripting",
-    title: "Filter map and reduce can be scripted (Lua)",
+    title: "Filter map and reduce can be scripted",
+    note: "Prefer Lua to other embeded languages because popular but small footprint",
   },
   mapShell: {
     name: "map with shell",
     title: "Use map metadata for running shell with locator name",
+    note: "By default bash shell but perhaps other shells too like zsh, python, ...",
   },
   locatorSupport: {
     name: "locator support",
@@ -57,6 +60,18 @@ const useCases = {
   batchDiff: {
     name: "batch diff",
     title: "batch diff of locators metadata",
+  },
+  gitConflictFriendly: {
+    name: "git commit friendly",
+    title: "Separate files to limit git conflicts",
+  },
+  helpfulArgs: {
+    name: "helpful args",
+    title: "Documented and easy to use command args",
+  },
+  gitIgnore: {
+    name: "respect git ignore",
+    title: "Respect gitignore by default when searching files",
   },
 };
 
