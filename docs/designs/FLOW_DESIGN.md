@@ -49,7 +49,7 @@ Unsupported use cases (yet):
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Commands: thoth meta (single pipeline incl. optional shell)
-  - Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out
+  - Flags: --root, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)
@@ -61,17 +61,14 @@ Unsupported use cases (yet):
   "configVersion": "1",
   "discovery": {
     "root": ".",
-    "patterns": [
-      "**/*.thoth.yaml"
-    ],
     "noGitignore": false
   },
   "workers": 8,
   "filter": {
-    "path": "scripts/filter.lua"
+    "inline": "-- keep records with meta.enabled == true\nreturn (meta and meta.enabled) == true"
   },
   "map": {
-    "path": "scripts/map.lua"
+    "inline": "-- project selected fields\nreturn { locator = locator, name = meta and meta.name }"
   },
   "shell": {
     "enabled": true,
@@ -90,10 +87,10 @@ Unsupported use cases (yet):
     }
   },
   "postMap": {
-    "path": "scripts/post_map.lua"
+    "inline": "-- summarize shell result\nreturn { locator = locator, exit = shell.exitCode }"
   },
   "reduce": {
-    "path": "scripts/reduce.lua"
+    "inline": "-- count items\nreturn (acc or 0) + 1"
   },
   "output": {
     "lines": false,

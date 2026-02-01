@@ -99,10 +99,10 @@ const getTitlesForSet = (useCaseSet: Set<string>) =>
   [...useCaseSet].map((useCase) => getByName(useCase)?.title || useCase);
 
 // Action/pipeline config model (TypeScript shape used for design)
-type ScriptRef = { path?: string; inline?: string };
+// v1: scripts are inline only (path-based scripts planned for v2)
+type InlineScript = { inline: string };
 type DiscoveryOptions = {
   root?: string;
-  patterns?: string[];
   noGitignore?: boolean; // default false (respect .gitignore)
 };
 type OutputOptions = {
@@ -125,11 +125,11 @@ type PipelineConfig = {
   configVersion?: string;
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
-  filter?: ScriptRef; // skip stage if omitted
-  map?: ScriptRef; // skip if omitted
+  filter?: InlineScript; // skip stage if omitted
+  map?: InlineScript; // skip if omitted
   shell?: ShellOptions; // optional shell execution
-  postMap?: ScriptRef; // maps shell results → any
-  reduce?: ScriptRef; // skip if omitted
+  postMap?: InlineScript; // maps shell results → any
+  reduce?: InlineScript; // skip if omitted
   output?: OutputOptions;
 };
 
@@ -137,12 +137,18 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
   configVersion: "1",
   discovery: {
     root: ".",
-    patterns: ["**/*.thoth.yaml"],
     noGitignore: false,
   },
   workers: 8,
-  filter: { path: "scripts/filter.lua" },
-  map: { path: "scripts/map.lua" },
+  // Lua inline scripts (concise and self-contained)
+  filter: {
+    inline: `-- keep records with meta.enabled == true
+return (meta and meta.enabled) == true`,
+  },
+  map: {
+    inline: `-- project selected fields
+return { locator = locator, name = meta and meta.name }`,
+  },
   shell: {
     enabled: true,
     program: "bash",
@@ -153,8 +159,14 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
     failFast: true,
     capture: { stdout: true, stderr: true, maxBytes: 1048576 },
   },
-  postMap: { path: "scripts/post_map.lua" },
-  reduce: { path: "scripts/reduce.lua" },
+  postMap: {
+    inline: `-- summarize shell result
+return { locator = locator, exit = shell.exitCode }`,
+  },
+  reduce: {
+    inline: `-- count items
+return (acc or 0) + 1`,
+  },
   output: { lines: false, pretty: false, out: "-" },
 };
 
@@ -184,7 +196,7 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
     name: "cli.meta",
     title: "Parse args for meta pipeline",
     directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config",
+    note: "flags: --root, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
@@ -205,7 +217,7 @@ const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "fs.discovery",
     title: "Find *.thoth.yaml files",
-    note: "walk root; .gitignore ON by default; --no-gitignore to disable; pattern overrides",
+    note: "walk root; .gitignore ON by default; --no-gitignore to disable",
     level: context.level,
     useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
   };
@@ -343,7 +355,7 @@ await appendSection("Suggested Go Implementation", [
   "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
   "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
   "Commands: thoth meta (single pipeline incl. optional shell)",
-  "Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out",
+  "Flags: --root, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out",
   "Tests: golden tests for I/O; fs testdata fixtures",
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",
