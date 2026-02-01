@@ -4,7 +4,7 @@
 
 ```
 thoth CLI root command
-  Parse args for meta pipeline
+  Parse args for run
     Load action config file
     Route by action type
       Meta pipeline flow
@@ -78,7 +78,7 @@ Unsupported use cases (yet):
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
-  - Commands: thoth meta (single pipeline incl. optional shell and create)
+  - Commands: thoth run (exec action config: pipeline/create/update/diff)
   - Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
@@ -255,11 +255,11 @@ thoth CLI root command [cli.root]
   - pkg: cmd/thoth
   - func: CliRoot
   - file: cmd/thoth/cli_root.go
-  Parse args for meta pipeline [cli.meta]
+  Parse args for run [cli.run]
     - note: flags: --config (YAML preferred; JSON accepted). All other options belong in the action config.
     - pkg: cmd/thoth
-    - func: CliMeta
-    - file: cmd/thoth/cli_meta.go
+    - func: CliRun
+    - file: cmd/thoth/cli_run.go
     Load action config file [action.config.load]
       - note: --config path; YAML preferred; JSON accepted; drives entire pipeline
       - pkg: internal/config

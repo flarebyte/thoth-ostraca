@@ -297,14 +297,15 @@ const cliRoot = (context: FlowContext) => {
   };
   calls.push(call);
   // Register commands under the root.
-  cliArgsMetaPipeline(incrContext(context));
+  cliArgsRun(incrContext(context));
 };
 
-// Single pipeline command: discover → parse → filter → [map] → [shell] → [post-map] → [reduce] → output
-const cliArgsMetaPipeline = (context: FlowContext) => {
+// Single run command: executes the configured action (pipeline/create/update/diff)
+// pipeline: discover → parse → filter → [map] → [shell] → [post-map] → [reduce] → output
+const cliArgsRun = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "cli.meta",
-    title: "Parse args for meta pipeline",
+    name: "cli.run",
+    title: "Parse args for run",
     directory: "cmd/thoth",
     note: "flags: --config (YAML preferred; JSON accepted). All other options belong in the action config.",
     level: context.level,
@@ -672,7 +673,7 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Filter/Map/Reduce", "Lua scripts only (gopher-lua) for v1"],
   ["Parallelism", "bounded worker pool; default workers = runtime.NumCPU()"],
   ["Output", "aggregated JSON by default; --lines to stream; --pretty for humans"],
-  ["Commands", "thoth meta (single pipeline incl. optional shell and create)"],
+  ["Commands", "thoth run (exec action config: pipeline/create/update/diff)"],
   ["Flags", "--config (YAML preferred; JSON accepted), --save (enable saving in create)"],
   ["Tests", "golden tests for I/O; fs testdata fixtures"],
   ["Reduce", "outputs a plain JSON value"],
