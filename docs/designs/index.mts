@@ -127,6 +127,10 @@ type ShellOptions = {
   killProcessGroup?: boolean; // default true: signal entire group on timeout/error
   termGraceMs?: number; // default e.g. 2000ms before SIGKILL
 };
+type ErrorPolicy = {
+  mode?: "keep-going" | "fail-fast"; // default keep-going
+  embedErrors?: boolean; // default true: include per-item error objects in output
+};
 type SaveOptions = {
   enabled?: boolean; // when true, write meta files to disk
   onExists?: "ignore" | "error"; // behavior if target exists
@@ -151,6 +155,7 @@ type PipelineConfig = {
   action?: "pipeline" | "create" | "update" | "diff"; // which flow to run
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
+  errors?: ErrorPolicy; // error handling strategy
   filter?: InlineScript; // skip stage if omitted
   map?: InlineScript; // skip if omitted
   shell?: ShellOptions; // optional shell execution
@@ -172,6 +177,7 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
     followSymlinks: false,
   },
   workers: 8,
+  errors: { mode: "keep-going", embedErrors: true },
   validation: { allowUnknownTopLevel: false },
   locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true },
   // Lua inline scripts (concise and self-contained)
@@ -665,7 +671,7 @@ const outputJsonResult = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "output.json.result",
     title: "Write JSON result (array/value/lines)",
-    note: "default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value",
+    note: "default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured",
     level: context.level,
     useCases: [useCases.outputJson.name],
   };
@@ -706,6 +712,11 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Ordering", [
     "Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff)",
     "Lines: nondeterministic (parallel), each line is independent JSON value",
+  ]],
+  ["Errors", [
+    "Policy: errors.mode keep-going|fail-fast (default keep-going)",
+    "Embed: errors.embedErrors=true includes per-item error objects; final exit non-zero if any error",
+    "Parse/validation errors: reported per-item when possible; fatal config/load errors abort early",
   ]],
   ["Commands", "thoth run (exec action config: pipeline/create/update/diff)"],
   ["Flags", "--config (YAML preferred; JSON accepted), --save (enable saving in create)"],
@@ -762,6 +773,7 @@ export const ACTION_CONFIG_DIFF_EXAMPLE: PipelineConfig = {
   action: "diff",
   discovery: { root: ".", noGitignore: false },
   workers: 8,
+  errors: { mode: "keep-going", embedErrors: true },
   filter: { inline: `-- example: only .json files\nreturn string.match(file.ext or "", "^%.json$") ~= nil` },
   map: { inline: `-- compute desired meta fields from filename\nreturn { category = file.dir }` },
   diff: { includeSnapshots: false, output: "both" },
@@ -798,6 +810,15 @@ await appendSection("Reduce Behavior", [
   "create.reduce (optional): accumulates over post-map results (e.g., counts); dry-run friendly",
   "update.reduce (optional): accumulates over post-map patches or simulated results",
   "diff: reduce not applicable (summary auto-generated)",
+]);
+
+await appendSection("Error Handling", [
+  "Modes: errors.mode = 'keep-going' (default) or 'fail-fast'",
+  "Keep-going: continue other items; embed per-item errors when errors.embedErrors=true; exit non-zero if any error",
+  "Fail-fast: stop processing on first error; still emit any already-produced results; exit non-zero",
+  "Per-item error shape: { error: { stage, code, message, details? }, context: { locator?|file? } }",
+  "Reduce receives only successful items; if all fail, reduce is skipped and an error is returned",
+  "Config/load-level errors: abort immediately (no output beyond an error message)",
 ]);
 
 await appendSection("Diff Output Shape", [

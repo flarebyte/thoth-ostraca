@@ -81,6 +81,7 @@ Unsupported use cases (yet):
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Ordering: Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff), Lines: nondeterministic (parallel), each line is independent JSON value
+  - Errors: Policy: errors.mode keep-going|fail-fast (default keep-going), Embed: errors.embedErrors=true includes per-item error objects; final exit non-zero if any error, Parse/validation errors: reported per-item when possible; fatal config/load errors abort early
   - Commands: thoth run (exec action config: pipeline/create/update/diff)
   - Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
@@ -117,6 +118,10 @@ Unsupported use cases (yet):
     "followSymlinks": false
   },
   "workers": 8,
+  "errors": {
+    "mode": "keep-going",
+    "embedErrors": true
+  },
   "validation": {
     "allowUnknownTopLevel": false
   },
@@ -236,6 +241,10 @@ Unsupported use cases (yet):
     "noGitignore": false
   },
   "workers": 8,
+  "errors": {
+    "mode": "keep-going",
+    "embedErrors": true
+  },
   "filter": {
     "inline": "-- example: only .json files\nreturn string.match(file.ext or \"\", \"^%.json$\") ~= nil"
   },
@@ -276,6 +285,14 @@ Unsupported use cases (yet):
   - create.reduce (optional): accumulates over post-map results (e.g., counts); dry-run friendly
   - update.reduce (optional): accumulates over post-map patches or simulated results
   - diff: reduce not applicable (summary auto-generated)
+
+## Error Handling
+  - Modes: errors.mode = 'keep-going' (default) or 'fail-fast'
+  - Keep-going: continue other items; embed per-item errors when errors.embedErrors=true; exit non-zero if any error
+  - Fail-fast: stop processing on first error; still emit any already-produced results; exit non-zero
+  - Per-item error shape: { error: { stage, code, message, details? }, context: { locator?|file? } }
+  - Reduce receives only successful items; if all fail, reduce is skipped and an error is returned
+  - Config/load-level errors: abort immediately (no output beyond an error message)
 
 ## Diff Output Shape
   - Per-item result: { file, status, patch?, before?, after? }
@@ -377,7 +394,7 @@ thoth CLI root command [cli.root]
           - func: MetaReduceStep
           - file: internal/pipeline/reduce_step.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
+          - note: default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
@@ -411,7 +428,7 @@ thoth CLI root command [cli.root]
           - func: MetaSave
           - file: internal/save/meta_save.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
+          - note: default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
@@ -450,7 +467,7 @@ thoth CLI root command [cli.root]
           - func: MetaUpdate
           - file: internal/save/meta_update.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
+          - note: default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
@@ -494,7 +511,7 @@ thoth CLI root command [cli.root]
           - func: MetaDiffOrphans
           - file: internal/diff/diff_orphans.go
         Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array (deterministically sorted by locator/relPath); --lines streams nondeterministically; reduce → single value
+          - note: default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
