@@ -131,6 +131,11 @@ type SaveOptions = {
 type ValidationOptions = {
   allowUnknownTopLevel?: boolean; // default false: error on unknown top-level keys
 };
+type LocatorPolicy = {
+  allowAbsolute?: boolean; // default false: reject absolute file paths
+  allowParentRefs?: boolean; // default false: reject ".." segments
+  posixStyle?: boolean; // default true: canonical POSIX separators in locators
+};
 type DiffOptions = {
   includeSnapshots?: boolean; // include before/after in per-item results
   output?: "patch" | "summary" | "both"; // default: both
@@ -149,6 +154,7 @@ type PipelineConfig = {
   save?: SaveOptions; // create mode: write meta files
   diff?: DiffOptions; // diff mode: output tuning
   validation?: ValidationOptions; // YAML strictness
+  locatorPolicy?: LocatorPolicy; // locator normalization & security
 };
 
 export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
@@ -160,6 +166,7 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
   },
   workers: 8,
   validation: { allowUnknownTopLevel: false },
+  locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true },
   // Lua inline scripts (concise and self-contained)
   filter: {
     inline: `-- keep records with meta.enabled == true
@@ -454,7 +461,7 @@ const parseYamlRecords = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.parse",
     title: "Parse and validate YAML records",
-    note: "yaml.v3; strict fields; types; support file path or URL locator; top-level unknown = error (unless validation.allowUnknownTopLevel); inside meta: unknown allowed",
+    note: "yaml.v3; strict fields; types; locator canonicalization; top-level unknown = error (unless validation.allowUnknownTopLevel); inside meta: unknown allowed",
     level: context.level,
     useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
   };
@@ -696,6 +703,11 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Filename", "<sha256[:12]>-<lastdir>-<filename>.thoth.yaml"],
   ["Hash input", "discovery relPath for stability"],
   ["On exists", "ignore (default) or error"],
+  ["Locator canonicalization", [
+    "files: repo-relative POSIX path; use path.Clean + separator normalization",
+    "URLs: net/url parse; lowercase scheme/host; drop default ports; strip fragment",
+    "to_file_path: filepath.Join(root, posix->OS); reject absolute and '..' by default",
+  ]],
   ["Update flow", "discover files, load existing meta if present, shallow-merge patch, create if missing"],
   ["Merge strategy", "shallow merge (new keys override)"],
   ["Diff flow", "same as update until patch; compute deep diff; do not write"],
@@ -777,8 +789,19 @@ await appendSection("Diff Output Shape", [
 
 await appendSection("Lua Builtins", [
   "locator.kind(locator) -> 'file' | 'url'",
-  "locator.to_file_path(locator, root) -> string|nil (nil for URLs)",
+  "locator.normalize(locator, root?) -> string (canonical: file=repo-relative POSIX path; url=lowercase scheme/host, strip default port)",
+  "locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)",
+  "path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')",
   "url.is_url(s) -> bool (http/https schemes)",
+]);
+
+await appendSection("Locator Normalization", [
+  "File locators: canonical form is repo-relative POSIX-style path (no leading './', '/' forbidden by default)",
+  "Disallow '..' segments and absolute paths by default (config.locatorPolicy controls exceptions)",
+  "Normalization: collapse '.', remove duplicate '/', convert OS separators to '/' for storage",
+  "URL locators: lowercase scheme and host; strip default ports (http:80, https:443); preserve path/query; remove fragment",
+  "locator.to_file_path: returns OS-native absolute path under 'root' after validation and clean join",
+  "Security: reject traversal (..), absolute inputs, and non-http(s) URLs by default",
 ]);
 
 // Detailed calls section with notes and suggestions
