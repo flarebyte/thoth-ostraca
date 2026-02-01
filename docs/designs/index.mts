@@ -126,7 +126,7 @@ type SaveOptions = {
   onExists?: "ignore" | "error"; // behavior if target exists
   dir?: string; // optional output directory for meta files
   hashAlgo?: "sha256"; // future extension; default sha256
-  hashLen?: number; // characters from hash prefix; default 12
+  hashLen?: number; // characters from hash prefix; default 15
 };
 type ValidationOptions = {
   allowUnknownTopLevel?: boolean; // default false: error on unknown top-level keys
@@ -234,7 +234,7 @@ export const ACTION_CONFIG_CREATE_MINIMAL: PipelineConfig = {
   filter: { inline: `return true` },
   map: { inline: `return { meta = { created = true } }` },
   output: { lines: false, pretty: true, out: "-" },
-  save: { enabled: false, onExists: "ignore", hashLen: 12 },
+  save: { enabled: false, onExists: "ignore", hashLen: 15 },
 };
 
 // Everything listed here is expected to be supported long-term.
@@ -268,7 +268,7 @@ const DESIGN_DECISIONS: string[] = [
   "Workers: default = CPU count (overridable via --workers)",
   "YAML: error on missing required fields (locator, meta)",
   "Shells: bash, sh, zsh supported early",
-  "Save filename: sha256 prefix length = 12 by default",
+  "Save filename: sha256 prefix length = 15 by default",
 ];
 
 // Helpers to suggest Go package, function, and file names based on call names
@@ -522,7 +522,7 @@ const saveMetaFiles = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.save",
     title: "Save meta files (*.thoth.yaml)",
-    note: "Conditional: config.save.enabled or --save; name = <hash>-<lastdir>-<filename>.thoth.yaml; onExists: ignore|error",
+    note: "Conditional: config.save.enabled or --save; name = <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml; sanitize components; if path exists and belongs to different locator -> error; onExists: ignore|error",
     level: context.level,
     useCases: [useCases.batchCreate.name, useCases.gitConflictFriendly.name],
   };
@@ -558,7 +558,7 @@ const updateMetaFiles = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.update",
     title: "Update meta files (merge/create)",
-    note: "shallow merge: new keys override existing; missing -> create new by naming convention",
+    note: "shallow merge: new keys override existing; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)",
     level: context.level,
     useCases: [useCases.batchUpdate.name, useCases.gitConflictFriendly.name],
   };
@@ -700,8 +700,8 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Shells", "support bash, sh, zsh early"],
   ["Create flow", "discover files (gitignore), filter/map/post-map over {file}"],
   ["Save writer", "if save.enabled or --save, write *.thoth.yaml"],
-  ["Filename", "<sha256[:12]>-<lastdir>-<filename>.thoth.yaml"],
-  ["Hash input", "discovery relPath for stability"],
+  ["Filename", "<sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml"],
+  ["Hash input", "canonical root (CWD-based) + POSIX relPath"],
   ["On exists", "ignore (default) or error"],
   ["Locator canonicalization", [
     "files: repo-relative POSIX path; use path.Clean + separator normalization",
@@ -880,6 +880,15 @@ await appendSection("Action Script Scope", "```\n" + actionRows.join("\n") + "\n
 await appendSection("Go Package Outline", GO_PACKAGE_OUTLINE);
 
 await appendSection("Design Decisions", DESIGN_DECISIONS);
+
+await appendSection("Filename Collision & Stability", [
+  "Sanitization: lowercase ASCII; replace non [a-z0-9._-] with '-', collapse repeats; trim '-'",
+  "Format: <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml (rootTag=hash of canonical root when root!='.')",
+  "Hash input: canonical root (CWD-based) + POSIX relPath; stable across OS; renames change hash",
+  "Collision: extremely unlikely; if computed path exists but locator differs -> error (do not overwrite)",
+  "Root changes: recommended to keep root at '.'; if different, include rootTag and enforce hash match; otherwise error",
+  "Orphans: renames create new meta file; detection handled by orphan scan in diff flow",
+]);
 
 await appendSection("Schema Validation", [
   "Top-level: required keys 'locator' (string, non-empty) and 'meta' (object)",

@@ -88,8 +88,8 @@ Unsupported use cases (yet):
   - Shells: support bash, sh, zsh early
   - Create flow: discover files (gitignore), filter/map/post-map over {file}
   - Save writer: if save.enabled or --save, write *.thoth.yaml
-  - Filename: <sha256[:12]>-<lastdir>-<filename>.thoth.yaml
-  - Hash input: discovery relPath for stability
+  - Filename: <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml
+  - Hash input: canonical root (CWD-based) + POSIX relPath
   - On exists: ignore (default) or error
   - Locator canonicalization: files: repo-relative POSIX path; use path.Clean + separator normalization, URLs: net/url parse; lowercase scheme/host; drop default ports; strip fragment, to_file_path: filepath.Join(root, posix->OS); reject absolute and '..' by default
   - Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing
@@ -208,7 +208,7 @@ Unsupported use cases (yet):
   "save": {
     "enabled": false,
     "onExists": "ignore",
-    "hashLen": 12
+    "hashLen": 15
   }
 }
 ```
@@ -378,7 +378,7 @@ thoth CLI root command [cli.root]
           - func: FilesMapPost
           - file: internal/pipeline/map_post.go
         Save meta files (*.thoth.yaml) [meta.save]
-          - note: Conditional: config.save.enabled or --save; name = <hash>-<lastdir>-<filename>.thoth.yaml; onExists: ignore|error
+          - note: Conditional: config.save.enabled or --save; name = <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml; sanitize components; if path exists and belongs to different locator -> error; onExists: ignore|error
           - pkg: internal/save
           - func: MetaSave
           - file: internal/save/meta_save.go
@@ -417,7 +417,7 @@ thoth CLI root command [cli.root]
           - func: FilesMapPostUpdate
           - file: internal/pipeline/post_update.go
         Update meta files (merge/create) [meta.update]
-          - note: shallow merge: new keys override existing; missing -> create new by naming convention
+          - note: shallow merge: new keys override existing; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)
           - pkg: internal/save
           - func: MetaUpdate
           - file: internal/save/meta_update.go
@@ -502,7 +502,15 @@ diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A    
   - Workers: default = CPU count (overridable via --workers)
   - YAML: error on missing required fields (locator, meta)
   - Shells: bash, sh, zsh supported early
-  - Save filename: sha256 prefix length = 12 by default
+  - Save filename: sha256 prefix length = 15 by default
+
+## Filename Collision & Stability
+  - Sanitization: lowercase ASCII; replace non [a-z0-9._-] with '-', collapse repeats; trim '-'
+  - Format: <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml (rootTag=hash of canonical root when root!='.')
+  - Hash input: canonical root (CWD-based) + POSIX relPath; stable across OS; renames change hash
+  - Collision: extremely unlikely; if computed path exists but locator differs -> error (do not overwrite)
+  - Root changes: recommended to keep root at '.'; if different, include rootTag and enforce hash match; otherwise error
+  - Orphans: renames create new meta file; detection handled by orphan scan in diff flow
 
 ## Schema Validation
   - Top-level: required keys 'locator' (string, non-empty) and 'meta' (object)
