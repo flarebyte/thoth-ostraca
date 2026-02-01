@@ -95,7 +95,7 @@ Unsupported use cases (yet):
   - On exists: ignore (default) or error
   - Locator canonicalization: files: repo-relative POSIX path; use path.Clean + separator normalization, URLs: net/url parse; lowercase scheme/host; drop default ports; strip fragment, to_file_path: filepath.Join(root, posix->OS); reject absolute and '..' by default
   - Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing
-  - Merge strategy: shallow merge (new keys override)
+  - Merge strategy: config.update.merge: shallow|deep|jsonpatch (default shallow), shallow: replace top-level keys (objects); arrays replaced entirely, deep: recursive merge for objects; arrays replaced (v1), jsonpatch: apply user-provided RFC6902 patch from post-map { patch }, post-map may return { meta } (full desired) or { patch }; when both provided, { patch } takes precedence
   - Diff flow: same as update until patch; compute deep diff; do not write
   - Orphans: scan existing meta files; if locator path missing on disk, report
   - Diff output: RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)
@@ -279,7 +279,7 @@ Unsupported use cases (yet):
   - Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool
   - Create Map: fn({ file }) -> any
   - Create Post-map: fn({ file, input }) -> { meta }
-  - Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)
+  - Update Post-map: fn({ file, input, existing? }) -> { meta } | { patch } (RFC6902)
 
 ## Lua Input Examples
   - pipeline.filter/map: { locator = "path/or/url", meta = { ... } }
@@ -317,6 +317,14 @@ Unsupported use cases (yet):
   - patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test)
   - before/after: optional full meta snapshots for debugging (disabled by default)
   - Top-level summary: counts per status and totals
+
+## Update Merge Strategy
+  - config.update.merge: 'shallow' | 'deep' | 'jsonpatch' (default 'shallow')
+  - shallow: replace top-level keys; arrays replaced entirely
+  - deep: recursive merge for objects; arrays replaced (v1 semantics)
+  - jsonpatch: apply RFC6902 operations from post-map { patch }
+  - Post-map return: may return { meta } (full desired) or { patch }; if both present, { patch } is applied
+  - Validation: patch must apply cleanly; otherwise per-item error
 
 ## Lua Builtins
   - locator.kind(locator) -> 'file' | 'url'
@@ -474,12 +482,12 @@ thoth CLI root command [cli.root]
           - func: MetaLoadExisting
           - file: internal/meta/load_existing.go
         Post-map for update (with existing) [files.map.post.update]
-          - note: Lua receives {file,input,existing?}; returns { meta } patch
+          - note: Lua receives {file,input,existing?}; returns either { meta } (full desired) or { patch } (RFC6902)
           - pkg: internal/pipeline
           - func: FilesMapPostUpdate
           - file: internal/pipeline/post_update.go
         Update meta files (merge/create) [meta.update]
-          - note: shallow merge: new keys override existing; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)
+          - note: merge strategy via config.update.merge: shallow|deep|jsonpatch (default shallow); if post-map returns patch, apply RFC6902; else merge existing with returned meta; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)
           - pkg: internal/save
           - func: MetaUpdate
           - file: internal/save/meta_update.go
@@ -513,7 +521,7 @@ thoth CLI root command [cli.root]
           - func: MetaLoadExisting
           - file: internal/meta/load_existing.go
         Post-map for update (with existing) [files.map.post.update]
-          - note: Lua receives {file,input,existing?}; returns { meta } patch
+          - note: Lua receives {file,input,existing?}; returns either { meta } (full desired) or { patch } (RFC6902)
           - pkg: internal/pipeline
           - func: FilesMapPostUpdate
           - file: internal/pipeline/post_update.go
@@ -540,7 +548,7 @@ Action     Input                      Filter     Map        Post-Map     Reduce 
 ------------------------------------------------------------------------------------------------------------------------------
 pipeline   { locator, meta }          Lua (yes)  Lua (yes)  Lua (shell)  Lua (yes)  array of records or single value (reduce) 
 create     { file }                   Lua (yes)  Lua (yes)  Lua (yes)    Lua (opt)  array of post-map results; save if enabled
-update     { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  Lua (opt)  array of updates (dry-run) or write changes
+update     { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch|meta) Lua (opt)  array of updates (dry-run) or write changes
 diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A        patch list (RFC6902) + summary; orphans flagged
 ```
 

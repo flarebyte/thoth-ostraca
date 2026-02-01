@@ -150,6 +150,9 @@ type DiffOptions = {
   includeSnapshots?: boolean; // include before/after in per-item results
   output?: "patch" | "summary" | "both"; // default: both
 };
+type UpdateOptions = {
+  merge?: "shallow" | "deep" | "jsonpatch"; // default shallow
+};
 type PipelineConfig = {
   configVersion?: string;
   action?: "pipeline" | "create" | "update" | "diff"; // which flow to run
@@ -166,6 +169,7 @@ type PipelineConfig = {
   diff?: DiffOptions; // diff mode: output tuning
   validation?: ValidationOptions; // YAML strictness
   locatorPolicy?: LocatorPolicy; // locator normalization & security
+  update?: UpdateOptions; // update mode: merge strategy
 };
 
 export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
@@ -563,7 +567,7 @@ const postMapUpdateFromFiles = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "files.map.post.update",
     title: "Post-map for update (with existing)",
-    note: "Lua receives {file,input,existing?}; returns { meta } patch",
+    note: "Lua receives {file,input,existing?}; returns either { meta } (full desired) or { patch } (RFC6902)",
     level: context.level,
     useCases: [useCases.batchUpdate.name, useCases.embeddedScripting.name],
   };
@@ -575,7 +579,7 @@ const updateMetaFiles = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.update",
     title: "Update meta files (merge/create)",
-    note: "shallow merge: new keys override existing; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)",
+    note: "merge strategy via config.update.merge: shallow|deep|jsonpatch (default shallow); if post-map returns patch, apply RFC6902; else merge existing with returned meta; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)",
     level: context.level,
     useCases: [useCases.batchUpdate.name, useCases.gitConflictFriendly.name],
   };
@@ -739,7 +743,13 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
     "to_file_path: filepath.Join(root, posix->OS); reject absolute and '..' by default",
   ]],
   ["Update flow", "discover files, load existing meta if present, shallow-merge patch, create if missing"],
-  ["Merge strategy", "shallow merge (new keys override)"],
+  ["Merge strategy", [
+    "config.update.merge: shallow|deep|jsonpatch (default shallow)",
+    "shallow: replace top-level keys (objects); arrays replaced entirely",
+    "deep: recursive merge for objects; arrays replaced (v1)",
+    "jsonpatch: apply user-provided RFC6902 patch from post-map { patch }",
+    "post-map may return { meta } (full desired) or { patch }; when both provided, { patch } takes precedence",
+  ]],
   ["Diff flow", "same as update until patch; compute deep diff; do not write"],
   ["Orphans", "scan existing meta files; if locator path missing on disk, report"],
   ["Diff output", "RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)"],
@@ -812,7 +822,7 @@ await appendSection("Lua Data Contracts", [
   "Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool",
   "Create Map: fn({ file }) -> any",
   "Create Post-map: fn({ file, input }) -> { meta }",
-  "Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)",
+  "Update Post-map: fn({ file, input, existing? }) -> { meta } | { patch } (RFC6902)",
 ]);
 
 await appendSection("Lua Input Examples", [
@@ -855,6 +865,15 @@ await appendSection("Diff Output Shape", [
   "patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test)",
   "before/after: optional full meta snapshots for debugging (disabled by default)",
   "Top-level summary: counts per status and totals",
+]);
+
+await appendSection("Update Merge Strategy", [
+  "config.update.merge: 'shallow' | 'deep' | 'jsonpatch' (default 'shallow')",
+  "shallow: replace top-level keys; arrays replaced entirely",
+  "deep: recursive merge for objects; arrays replaced (v1 semantics)",
+  "jsonpatch: apply RFC6902 operations from post-map { patch }",
+  "Post-map return: may return { meta } (full desired) or { patch }; if both present, { patch } is applied",
+  "Validation: patch must apply cleanly; otherwise per-item error",
 ]);
 
 await appendSection("Lua Builtins", [
@@ -945,7 +964,7 @@ actionRows.push(
     pad("{ file, existing? }", 26),
     pad("Lua (yes)", 10),
     pad("Lua (yes)", 10),
-    pad("Lua (patch)", 12),
+    pad("Lua (patch|meta)", 12),
     pad("Lua (opt)", 10),
     pad("array of updates (dry-run) or write changes", 42),
   ].join(" "),
