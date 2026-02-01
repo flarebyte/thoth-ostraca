@@ -1,4 +1,5 @@
 import {
+  appendSection,
   appendToReport,
   ComponentCall,
   displayCallsAsText,
@@ -12,66 +13,81 @@ import {
 
 const calls: ComponentCall[] = [];
 
+// Use-cases represent end-user capabilities we aim to support in the Go CLI.
 const useCases = {
-  filterByMeta: {
-    name: "filter by meta",
-    title: "Filter metadata associated with locator",
+  metaFilter: {
+    name: "meta.filter",
+    title: "Filter meta by locator",
+    note: "boolean predicate over {locator, meta}",
   },
-  mapMeta: {
-    name: "map meta",
-    title: "Map metadata associated with locator",
+  metaMap: {
+    name: "meta.map",
+    title: "Map meta records",
+    note: "transform {locator, meta} → any",
   },
-  reduceMeta: {
-    name: "reduce meta",
-    title: "Reduce metadata for all locators",
+  metaReduce: {
+    name: "meta.reduce",
+    title: "Reduce across meta set",
+    note: "aggregate stream → single result",
   },
-  mapReduceActionConfig: {
-    name: "map reduce action config",
-    title: "Load map reduce action config from file",
-    note: "Prefer human friendly YAML to JSON for configuration",
+  actionConfig: {
+    name: "action.config",
+    title: "Load action config file",
+    note: "Prefer YAML; allow JSON",
   },
-  scripting: {
-    name: "scripting",
-    title: "Filter map and reduce can be scripted",
-    note: "Prefer Lua to other embeded languages because popular but small footprint",
+  embeddedScripting: {
+    name: "scripting.embed",
+    title: "Script filter/map/reduce",
+    note: "Lua preferred: small + popular",
   },
-  mapShell: {
-    name: "map with shell",
-    title: "Use map metadata for running shell with locator name",
-    note: "By default bash shell but perhaps other shells too like zsh, python, ...",
+  shellExecFromMap: {
+    name: "map.shell",
+    title: "Run shell using map output",
+    note: "Default bash; allow others",
   },
-  locatorSupport: {
-    name: "locator support",
-    title: "Locator can be (relative) file or url",
+  locatorKinds: {
+    name: "locator.kinds",
+    title: "Locators as file path or URL",
   },
-  parallelProcessing: {
-    name: "parallel processing",
-    title: "Processing is done in parallel",
-    note: "Uses Goroutines and channels.",
+  parallelism: {
+    name: "exec.parallel",
+    title: "Process in parallel",
+    note: "Goroutines + channels; bounded pool",
   },
-  batchCreation: {
-    name: "batch creation",
-    title: "batch creation of locators metadata",
+  batchCreate: {
+    name: "batch.create",
+    title: "Create many meta files",
   },
   batchUpdate: {
-    name: "batch update",
-    title: "batch update of locators metadata",
+    name: "batch.update",
+    title: "Update many meta files",
   },
   batchDiff: {
-    name: "batch diff",
-    title: "batch diff of locators metadata",
+    name: "batch.diff",
+    title: "Diff meta files at scale",
   },
   gitConflictFriendly: {
-    name: "git commit friendly",
-    title: "Separate files to limit git conflicts",
+    name: "vcs.conflict-friendly",
+    title: "One file per locator",
+    note: "Minimize merge conflicts",
   },
-  helpfulArgs: {
-    name: "helpful args",
-    title: "Documented and easy to use command args",
+  cliUX: {
+    name: "cli.ux",
+    title: "Helpful, well-documented flags",
   },
   gitIgnore: {
-    name: "respect git ignore",
-    title: "Respect gitignore by default when searching files",
+    name: "fs.gitignore",
+    title: "Respect .gitignore by default",
+  },
+  outputJson: {
+    name: "output.json",
+    title: "JSON output for humans/CI/AI",
+    note: "Pretty/compact/lines variants",
+  },
+  metaSchema: {
+    name: "meta.schema",
+    title: "Validate {locator, meta} schema",
+    note: "locator:string; meta:object",
   },
 };
 
@@ -81,45 +97,92 @@ const getByName = (expectedName: string) =>
 const getTitlesForSet = (useCaseSet: Set<string>) =>
   [...useCaseSet].map((useCase) => getByName(useCase)?.title || useCase);
 
+// Everything listed here is expected to be supported long-term.
 const mustUseCases = new Set([
   ...Object.values(useCases).map(({ name }) => name),
 ]);
 
+// Root CLI: thoth
+const cliRoot = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "cli.root",
+    title: "thoth CLI root command",
+    directory: "cmd/thoth",
+    note: "cobra-based command tree",
+    level: context.level,
+    useCases: [useCases.cliUX.name],
+  };
+  calls.push(call);
+  cliArgsMetaFind(incrContext(context));
+};
+
+// Subcommand that discovers meta files and emits JSON.
 const cliArgsMetaFind = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "meta find",
-    title: "Parse CLI args for metadata find",
-    directory: "cmd",
-    note: "Use cobra lib",
+    name: "cli.meta.find",
+    title: "Parse args for meta find",
+    directory: "cmd/thoth",
+    note: "flags: --root, --pattern, --ignore, --json",
     level: context.level,
+    useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
   calls.push(call);
   findMetaLocators(incrContext(context));
 };
 
+// File discovery: respects .gitignore and finds *.thoth.yaml files
 const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "find meta locators",
-    title: "Find individual meta locators",
-    note: "yaml meta locator",
+    name: "fs.discovery",
+    title: "Find *.thoth.yaml files",
+    note: "walk root; respect .gitignore; pattern overrides",
     level: context.level,
+    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
+  };
+  calls.push(call);
+  parseYamlRecords(incrContext(context));
+};
+
+// Parse and validate each YAML meta file → {locator, meta}
+const parseYamlRecords = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.parse",
+    title: "Parse and validate YAML records",
+    note: "yaml.v3; strict fields; types",
+    level: context.level,
+    useCases: [useCases.metaSchema.name],
   };
   calls.push(call);
   filterMetaLocators(incrContext(context));
 };
 
+// Filtering step: predicate over stream of {locator, meta}
 const filterMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "filter meta locators",
-    title: "Filter metadata for a locator using a Lua script",
-    note: "yaml meta file",
+    name: "meta.filter.step",
+    title: "Apply filter predicate",
+    note: "built-in or Lua predicate",
     level: context.level,
-    useCases: [useCases.filterByMeta.name],
+    useCases: [useCases.metaFilter.name, useCases.embeddedScripting.name],
+  };
+  calls.push(call);
+  outputJsonStream(incrContext(context));
+};
+
+// Output JSON: friendly for humans, CI, and AI
+const outputJsonStream = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "output.json.lines",
+    title: "Write JSON (pretty/compact/lines)",
+    note: "default: json lines for streams",
+    level: context.level,
+    useCases: [useCases.outputJson.name],
   };
   calls.push(call);
 };
 
-cliArgsMetaFind({ level: 0 });
+// Start tree at root command.
+cliRoot({ level: 0 });
 
 await resetReport();
 await appendToReport("# FLOW DESIGN OVERVIEW (Generated)\n");
@@ -139,3 +202,27 @@ await appendToReport(
     getTitlesForSet(getSetDifference(mustUseCases, toUseCaseSet(calls))),
   ),
 );
+
+// Suggested Go implementation outline
+await appendSection("Suggested Go Implementation", [
+  "Module: go 1.22; command name: thoth",
+  "CLI: cobra for command tree; viper optional",
+  "Types: type Record struct { Locator string; Meta map[string]any }",
+  "YAML: gopkg.in/yaml.v3 for *.thoth.yaml",
+  "Discovery: filepath.WalkDir + gitignore filter (go-gitignore)",
+  "Schema: validate locator non-empty; meta is object",
+  "Filter/Map/Reduce: built-in funcs + optional gopher-lua scripts",
+  "Parallelism: bounded worker pool; channels for records",
+  "Output: JSON lines (default), pretty via --pretty, compact via --compact",
+  "Commands: thoth find, thoth map, thoth reduce, thoth run (shell)",
+  "Flags: --root, --pattern, --ignore, --workers, --script, --out",
+  "Tests: golden tests for I/O; fs testdata fixtures",
+]);
+
+await appendSection("Open Design Questions", [
+  "Filter expression: prefer small DSL or go with Lua first?",
+  "Map output shape: free-form any vs constrained fields?",
+  "Reduce outputs: single JSON value vs object with metadata?",
+  "Default output: JSON lines or pretty JSON when writing to TTY?",
+  "Gitignore behavior: always on, or opt-out flag --no-gitignore?",
+]);
