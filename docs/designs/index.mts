@@ -1,8 +1,11 @@
 import {
+  appendToReport,
   ComponentCall,
-  displayAsText,
+  displayCallsAsText,
   FlowContext,
   incrContext,
+  resetReport,
+  toBulletPoints,
   toUseCaseSet,
 } from "./common.mts";
 
@@ -102,8 +105,13 @@ const filterMetaLocators = (context: FlowContext) => {
 
 cliArgsMetaFind({ level: 0 });
 
-displayAsText(calls);
+await resetReport();
+await appendToReport("# FLOW DESIGN OVERVIEW (Generated)\n");
+await appendToReport("## Function calls tree\n");
+await appendToReport("```");
+await displayCallsAsText(calls);
+await appendToReport("```\n");
 
-console.log(getTitlesForSet(mustUseCases));
+await appendToReport("Supported use cases:\n");
 
-console.log(toUseCaseSet(calls));
+await appendToReport(toBulletPoints([...toUseCaseSet(calls)]));

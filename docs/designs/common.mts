@@ -1,3 +1,5 @@
+import { appendFile, writeFile } from "node:fs/promises";
+
 export type UseCase = {
   name: string;
   title: string;
@@ -28,9 +30,19 @@ export const toUseCaseSet = (calls: ComponentCall[]) => {
   return new Set(allUseCases);
 };
 
-export const displayAsText = (calls: ComponentCall[]) => {
+export const resetReport = async () => {
+  await writeFile("docs/designs/FLOW_DESIGN.md", "");
+};
+
+export const appendToReport = async (line: string) => {
+  await appendFile("docs/designs/FLOW_DESIGN.md", line + "\n", "utf8");
+};
+
+export const displayCallsAsText = async (calls: ComponentCall[]) => {
   for (const call of calls) {
     const spaces = " ".repeat(call.level * 2);
-    console.log(`${spaces}${call.title}`);
+    await appendToReport(`${spaces}${call.title}`);
   }
 };
+
+export const toBulletPoints = (lines: string[]) => lines.map(line => `  - ${line}`).join('\n')
