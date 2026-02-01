@@ -741,9 +741,22 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Diff output", "RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)"],
   ["internal/diff", "generate patches and optional before/after snapshots for debugging"],
   ["Diff config", "includeSnapshots (bool), output: patch|summary|both (default: both)"],
+  ["Exit codes", [
+    "0: success (no errors)",
+    "1: fatal setup/validation error (no output)",
+    "2: partial failures (some per-item errors present)",
+    "3: script/reduce failure (pipeline aborted)",
+  ]],
 ];
 
 await appendKeyValueList("Suggested Go Implementation", SUGGESTED_GO_IMPLEMENTATION);
+
+await appendKeyValueList("Exit Codes", [
+  ["0", "success (no errors)"],
+  ["1", "fatal setup/validation error (no output)"],
+  ["2", "partial failures (some per-item errors present)"],
+  ["3", "script/reduce failure (pipeline aborted)"],
+]);
 
 await appendSection("Ordering & Determinism", [
   "Aggregated output (array): deterministic sort",
@@ -819,6 +832,14 @@ await appendSection("Error Handling", [
   "Per-item error shape: { error: { stage, code, message, details? }, context: { locator?|file? } }",
   "Reduce receives only successful items; if all fail, reduce is skipped and an error is returned",
   "Config/load-level errors: abort immediately (no output beyond an error message)",
+]);
+
+await appendSection("Result Shapes", [
+  "Aggregated (array): list of items with consistent envelope for CI parsing",
+  "Success item: { status: 'ok', context: { locator?|file? }, value: any, shell? }",
+  "Error item: { status: 'error', context: { locator?|file? }, error: { stage, code, message, details? } }",
+  "Lines (--lines): each line is a success or error item as above",
+  "Diff action: uses Diff Output Shape for success items; errors follow the error item schema",
 ]);
 
 await appendSection("Diff Output Shape", [
