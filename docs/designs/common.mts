@@ -162,3 +162,18 @@ export const appendUseCases = async (
   await appendToReport(toBulletPoints(toUseCaseLines(useCaseNames, catalogByName)));
   await appendToReport("\n");
 };
+
+/**
+ * Append a key/value list as a section, preserving entry order.
+ */
+export const appendKeyValueList = async (
+  title: string,
+  entries: Array<[string, string | string[]]>,
+) => {
+  await appendToReport(`\n## ${title}`);
+  const lines = entries.map(([k, v]) => {
+    const value = Array.isArray(v) ? v.join(", ") : v;
+    return `${k}: ${value}`;
+  });
+  await appendToReport(toBulletPoints(lines));
+};

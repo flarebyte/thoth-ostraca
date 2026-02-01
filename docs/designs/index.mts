@@ -2,6 +2,7 @@ import {
   appendSection,
   appendUseCases,
   appendToReport,
+  appendKeyValueList,
   ComponentCall,
   displayCallsAsText,
   displayCallsDetailed,
@@ -635,35 +636,37 @@ await appendUseCases(
   useCaseCatalogByName,
 );
 
-// Suggested Go implementation outline
-await appendSection("Suggested Go Implementation", [
-  "Module: go 1.22; command name: thoth",
-  "CLI: cobra for command tree; viper optional",
-  "Types: type Record struct { Locator string; Meta map[string]any }",
-  "YAML: gopkg.in/yaml.v3 for *.thoth.yaml",
-  "Discovery: filepath.WalkDir + gitignore filter (go-gitignore)",
-  "Schema: required fields (locator, meta); error on missing",
-  "Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1",
-  "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
-  "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
-  "Commands: thoth meta (single pipeline incl. optional shell and create)",
-  "Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)",
-  "Tests: golden tests for I/O; fs testdata fixtures",
-  "Reduce: outputs a plain JSON value",
-  "Map: returns free-form JSON (any)",
-  "Shells: support bash, sh, zsh early",
-  "Create flow: discover files (gitignore), filter/map/post-map over {file}",
-  "Save writer: if save.enabled or --save, write *.thoth.yaml",
-  "Filename: <sha256[:12]>-<lastdir>-<filename>.thoth.yaml",
-  "Hash input: discovery relPath for stability",
-  "On exists: ignore (default) or error",
-  "Update flow: discover files, load existing meta if present, shallow-merge patch, create if missing",
-  "Merge strategy: shallow merge (new keys override)",
-  "Diff flow: same as update until patch; compute deep diff; do not write",
-  "Orphans: scan existing meta files; if locator path missing on disk, report",
-  "Diff output: RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)",
-  "internal/diff: generate patches and optional before/after snapshots for debugging",
-]);
+// Suggested Go implementation outline (structured)
+const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
+  ["Module", "go 1.22; command name: thoth"],
+  ["CLI", "cobra for command tree; viper optional"],
+  ["Types", "type Record struct { Locator string; Meta map[string]any }"],
+  ["YAML", "gopkg.in/yaml.v3 for *.thoth.yaml"],
+  ["Discovery", "filepath.WalkDir + gitignore filter (go-gitignore)"],
+  ["Schema", "required fields (locator, meta); error on missing"],
+  ["Filter/Map/Reduce", "Lua scripts only (gopher-lua) for v1"],
+  ["Parallelism", "bounded worker pool; default workers = runtime.NumCPU()"],
+  ["Output", "aggregated JSON by default; --lines to stream; --pretty for humans"],
+  ["Commands", "thoth meta (single pipeline incl. optional shell and create)"],
+  ["Flags", "--config (YAML preferred; JSON accepted), --save (enable saving in create)"],
+  ["Tests", "golden tests for I/O; fs testdata fixtures"],
+  ["Reduce", "outputs a plain JSON value"],
+  ["Map", "returns free-form JSON (any)"],
+  ["Shells", "support bash, sh, zsh early"],
+  ["Create flow", "discover files (gitignore), filter/map/post-map over {file}"],
+  ["Save writer", "if save.enabled or --save, write *.thoth.yaml"],
+  ["Filename", "<sha256[:12]>-<lastdir>-<filename>.thoth.yaml"],
+  ["Hash input", "discovery relPath for stability"],
+  ["On exists", "ignore (default) or error"],
+  ["Update flow", "discover files, load existing meta if present, shallow-merge patch, create if missing"],
+  ["Merge strategy", "shallow merge (new keys override)"],
+  ["Diff flow", "same as update until patch; compute deep diff; do not write"],
+  ["Orphans", "scan existing meta files; if locator path missing on disk, report"],
+  ["Diff output", "RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)"],
+  ["internal/diff", "generate patches and optional before/after snapshots for debugging"],
+];
+
+await appendKeyValueList("Suggested Go Implementation", SUGGESTED_GO_IMPLEMENTATION);
 
 // Emit example action config as JSON for easy viewing
 await appendSection(
