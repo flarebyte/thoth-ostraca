@@ -5,7 +5,7 @@
 ```
 thoth CLI root command
   Parse args for meta pipeline
-    Load action config file (optional)
+    Load action config file
     Find *.thoth.yaml files
     Parse and validate YAML records
     Apply filter predicate
@@ -49,7 +49,7 @@ Unsupported use cases (yet):
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Commands: thoth meta (single pipeline incl. optional shell)
-  - Flags: --root, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out
+  - Flags: --config (YAML preferred; JSON accepted)
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)

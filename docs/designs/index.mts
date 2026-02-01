@@ -190,13 +190,13 @@ const cliRoot = (context: FlowContext) => {
   cliArgsMetaPipeline(incrContext(context));
 };
 
-// Single pipeline command: discover → parse → filter → [map] → [reduce] → output
+// Single pipeline command: discover → parse → filter → [map] → [shell] → [post-map] → [reduce] → output
 const cliArgsMetaPipeline = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "cli.meta",
     title: "Parse args for meta pipeline",
     directory: "cmd/thoth",
-    note: "flags: --root, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config",
+    note: "flags: --config (YAML preferred; JSON accepted). All other options belong in the action config.",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
@@ -253,8 +253,8 @@ const filterMetaLocators = (context: FlowContext) => {
 const loadActionConfig = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "action.config.load",
-    title: "Load action config file (optional)",
-    note: "--config path; YAML preferred; JSON allowed",
+    title: "Load action config file",
+    note: "--config path; YAML preferred; JSON accepted; drives entire pipeline",
     level: context.level,
     useCases: [useCases.actionConfig.name],
   };
@@ -355,7 +355,7 @@ await appendSection("Suggested Go Implementation", [
   "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
   "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
   "Commands: thoth meta (single pipeline incl. optional shell)",
-  "Flags: --root, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --run-shell, --shell, --post-map-script, --fail-fast, --capture-stdout, --capture-stderr, --config, --out",
+  "Flags: --config (YAML preferred; JSON accepted)",
   "Tests: golden tests for I/O; fs testdata fixtures",
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",
