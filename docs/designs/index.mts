@@ -128,6 +128,10 @@ type SaveOptions = {
   hashAlgo?: "sha256"; // future extension; default sha256
   hashLen?: number; // characters from hash prefix; default 12
 };
+type DiffOptions = {
+  includeSnapshots?: boolean; // include before/after in per-item results
+  output?: "patch" | "summary" | "both"; // default: both
+};
 type PipelineConfig = {
   configVersion?: string;
   action?: "pipeline" | "create" | "update" | "diff"; // which flow to run
@@ -140,6 +144,7 @@ type PipelineConfig = {
   reduce?: InlineScript; // skip if omitted
   output?: OutputOptions;
   save?: SaveOptions; // create mode: write meta files
+  diff?: DiffOptions; // diff mode: output tuning
 };
 
 export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
@@ -690,6 +695,7 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Orphans", "scan existing meta files; if locator path missing on disk, report"],
   ["Diff output", "RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)"],
   ["internal/diff", "generate patches and optional before/after snapshots for debugging"],
+  ["Diff config", "includeSnapshots (bool), output: patch|summary|both (default: both)"],
 ];
 
 await appendKeyValueList("Suggested Go Implementation", SUGGESTED_GO_IMPLEMENTATION);
@@ -718,6 +724,7 @@ export const ACTION_CONFIG_DIFF_EXAMPLE: PipelineConfig = {
   workers: 8,
   filter: { inline: `-- example: only .json files\nreturn string.match(file.ext or "", "^%.json$") ~= nil` },
   map: { inline: `-- compute desired meta fields from filename\nreturn { category = file.dir }` },
+  diff: { includeSnapshots: false, output: "both" },
   // update-style post-map available as needed
   output: { lines: false, pretty: true, out: "-" },
 };
@@ -736,6 +743,21 @@ await appendSection("Lua Data Contracts", [
   "Create Map: fn({ file }) -> any",
   "Create Post-map: fn({ file, input }) -> { meta }",
   "Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)",
+]);
+
+await appendSection("Lua Input Examples", [
+  "pipeline.filter/map: { locator = \"path/or/url\", meta = { ... } }",
+  "pipeline.post-map(shell): { locator, input = <map result>, shell = { cmd, exitCode, stdout, stderr, durationMs } }",
+  "create.filter/map: { file = { path, relPath, dir, base, name, ext } }",
+  "update.post-map: { file, input = <map result>, existing = { locator, meta }? }",
+  "diff.post-map: { file, input = <map result>, existing = { locator, meta }? }",
+]);
+
+await appendSection("Reduce Behavior", [
+  "pipeline.reduce: accumulates over map or post-map(shell) results; returns a single JSON value",
+  "create.reduce (optional): accumulates over post-map results (e.g., counts); dry-run friendly",
+  "update.reduce (optional): accumulates over post-map patches or simulated results",
+  "diff: reduce not applicable (summary auto-generated)",
 ]);
 
 await appendSection("Diff Output Shape", [

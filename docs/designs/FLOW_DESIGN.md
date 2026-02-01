@@ -95,6 +95,7 @@ Unsupported use cases (yet):
   - Orphans: scan existing meta files; if locator path missing on disk, report
   - Diff output: RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)
   - internal/diff: generate patches and optional before/after snapshots for debugging
+  - Diff config: includeSnapshots (bool), output: patch|summary|both (default: both)
 
 ## Action Config (JSON Example)
 ```json
@@ -217,6 +218,10 @@ Unsupported use cases (yet):
   "map": {
     "inline": "-- compute desired meta fields from filename\nreturn { category = file.dir }"
   },
+  "diff": {
+    "includeSnapshots": false,
+    "output": "both"
+  },
   "output": {
     "lines": false,
     "pretty": true,
@@ -234,6 +239,19 @@ Unsupported use cases (yet):
   - Create Map: fn({ file }) -> any
   - Create Post-map: fn({ file, input }) -> { meta }
   - Update Post-map: fn({ file, input, existing? }) -> { meta } (patch)
+
+## Lua Input Examples
+  - pipeline.filter/map: { locator = "path/or/url", meta = { ... } }
+  - pipeline.post-map(shell): { locator, input = <map result>, shell = { cmd, exitCode, stdout, stderr, durationMs } }
+  - create.filter/map: { file = { path, relPath, dir, base, name, ext } }
+  - update.post-map: { file, input = <map result>, existing = { locator, meta }? }
+  - diff.post-map: { file, input = <map result>, existing = { locator, meta }? }
+
+## Reduce Behavior
+  - pipeline.reduce: accumulates over map or post-map(shell) results; returns a single JSON value
+  - create.reduce (optional): accumulates over post-map results (e.g., counts); dry-run friendly
+  - update.reduce (optional): accumulates over post-map patches or simulated results
+  - diff: reduce not applicable (summary auto-generated)
 
 ## Diff Output Shape
   - Per-item result: { file, status, patch?, before?, after? }
