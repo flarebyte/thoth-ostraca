@@ -229,6 +229,31 @@ const mustUseCases = new Set([
 const useCaseCatalogByName: Record<string, { name: string; title: string; note?: string }> =
   Object.fromEntries(Object.values(useCases).map((u) => [u.name, u]));
 
+// Structured sections (TS model)
+const GO_PACKAGE_OUTLINE: string[] = [
+  "cmd/thoth: cobra wiring, --config parsing, action routing",
+  "internal/config: load/validate YAML (inline Lua strings), defaults",
+  "internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext})",
+  "internal/meta: YAML read/write of {locator, meta}",
+  "internal/lua: gopher-lua helpers to run inline scripts with typed inputs",
+  "internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool",
+  "internal/shell: exec with capture, timeouts, env, sh/bash/zsh",
+  "internal/save: filename builder (<sha256[:12]>-<lastdir>-<filename>.thoth.yaml), onExists policy",
+  "internal/diff: RFC6902 patch generation + item summary",
+];
+
+const DESIGN_DECISIONS: string[] = [
+  "Filter: Lua-only (v1)",
+  "Map: free-form JSON (any)",
+  "Reduce: plain JSON value",
+  "Output: machine-oriented JSON by default (aggregate unless --lines)",
+  "Gitignore: always on; --no-gitignore to opt out",
+  "Workers: default = CPU count (overridable via --workers)",
+  "YAML: error on missing required fields (locator, meta)",
+  "Shells: bash, sh, zsh supported early",
+  "Save filename: sha256 prefix length = 12 by default",
+];
+
 // Helpers to suggest Go package, function, and file names based on call names
 const toTokens = (s: string) => s.split(/[^a-zA-Z0-9]+/).filter(Boolean);
 const toGoExported = (tokens: string[]) =>
@@ -737,29 +762,9 @@ await appendToReport("```");
 await displayCallsDetailed(detailedCalls);
 await appendToReport("```");
 
-await appendSection("Go Package Outline", [
-  "cmd/thoth: cobra wiring, --config parsing, action routing",
-  "internal/config: load/validate YAML (inline Lua strings), defaults",
-  "internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext})",
-  "internal/meta: YAML read/write of {locator, meta}",
-  "internal/lua: gopher-lua helpers to run inline scripts with typed inputs",
-  "internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool",
-  "internal/shell: exec with capture, timeouts, env, sh/bash/zsh",
-  "internal/save: filename builder (<sha256[:12]>-<lastdir>-<filename>.thoth.yaml), onExists policy",
-  "internal/diff: RFC6902 patch generation + item summary",
-]);
+await appendSection("Go Package Outline", GO_PACKAGE_OUTLINE);
 
-await appendSection("Design Decisions", [
-  "Filter: Lua-only (v1)",
-  "Map: free-form JSON (any)",
-  "Reduce: plain JSON value",
-  "Output: machine-oriented JSON by default (aggregate unless --lines)",
-  "Gitignore: always on; --no-gitignore to opt out",
-  "Workers: default = CPU count (overridable via --workers)",
-  "YAML: error on missing required fields (locator, meta)",
-  "Shells: bash, sh, zsh supported early",
-  "Save filename: sha256 prefix length = 12 by default",
-]);
+await appendSection("Design Decisions", DESIGN_DECISIONS);
 
 await appendSection("Open Design Questions", [
   "YAML strictness for unknown fields: error or ignore?",
