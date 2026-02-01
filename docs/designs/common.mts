@@ -27,6 +27,11 @@ export type ComponentCall = {
   directory?: string;
   level: number;
   useCases?: string[];
+  suggest?: {
+    pkg?: string;
+    func?: string;
+    file?: string;
+  };
 };
 
 /**
@@ -74,6 +79,29 @@ export const displayCallsAsText = async (calls: ComponentCall[]) => {
   for (const call of calls) {
     const spaces = " ".repeat(call.level * 2);
     await appendToReport(`${spaces}${call.title}`);
+  }
+};
+
+/**
+ * Render a detailed view of the call tree with notes and suggestions.
+ */
+export const displayCallsDetailed = async (calls: ComponentCall[]) => {
+  for (const call of calls) {
+    const base = " ".repeat(call.level * 2);
+    await appendToReport(`${base}${call.title} [${call.name}]`);
+    if (call.note) {
+      await appendToReport(`${base}  - note: ${call.note}`);
+    }
+    const pkg = call.directory || call.suggest?.pkg;
+    if (pkg) {
+      await appendToReport(`${base}  - pkg: ${pkg}`);
+    }
+    if (call.suggest?.func) {
+      await appendToReport(`${base}  - func: ${call.suggest.func}`);
+    }
+    if (call.suggest?.file) {
+      await appendToReport(`${base}  - file: ${call.suggest.file}`);
+    }
   }
 };
 

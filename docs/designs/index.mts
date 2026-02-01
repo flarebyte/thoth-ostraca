@@ -3,6 +3,7 @@ import {
   appendToReport,
   ComponentCall,
   displayCallsAsText,
+  displayCallsDetailed,
   FlowContext,
   getSetDifference,
   incrContext,
@@ -224,6 +225,37 @@ export const ACTION_CONFIG_CREATE_MINIMAL: PipelineConfig = {
 const mustUseCases = new Set([
   ...Object.values(useCases).map(({ name }) => name),
 ]);
+
+// Helpers to suggest Go package, function, and file names based on call names
+const toTokens = (s: string) => s.split(/[^a-zA-Z0-9]+/).filter(Boolean);
+const toGoExported = (tokens: string[]) =>
+  tokens.map((t) => t.charAt(0).toUpperCase() + t.slice(1)).join("");
+const toSnake = (tokens: string[]) => tokens.map((t) => t.toLowerCase()).join("_");
+const guessPkg = (call: ComponentCall) => {
+  if (call.directory) return call.directory;
+  const n = call.name;
+  if (n.startsWith("cli.")) return "cmd/thoth";
+  if (n.startsWith("fs.")) return "internal/fs";
+  if (n.startsWith("meta.parse")) return "internal/meta";
+  if (n.startsWith("meta.load")) return "internal/meta";
+  if (n.startsWith("meta.save")) return "internal/save";
+  if (n.startsWith("meta.update")) return "internal/save";
+  if (n.startsWith("meta.diff")) return "internal/diff";
+  if (n.startsWith("output.")) return "internal/output";
+  if (n.startsWith("shell.")) return "internal/shell";
+  if (n.startsWith("files.")) return "internal/pipeline";
+  if (n.startsWith("flow.")) return "internal/pipeline";
+  if (n.startsWith("action.")) return "internal/config";
+  if (n.startsWith("meta.")) return "internal/pipeline";
+  return "internal";
+};
+const suggestFor = (call: ComponentCall) => {
+  const pkg = guessPkg(call);
+  const tokens = toTokens(call.name);
+  const func = toGoExported(tokens);
+  const file = `${pkg}/${toSnake(tokens.slice(-2)) || toSnake(tokens)}.go`;
+  return { pkg, func, file };
+};
 
 // Root CLI: thoth
 const cliRoot = (context: FlowContext) => {
@@ -692,6 +724,17 @@ await appendSection("Lua Builtins", [
   "locator.to_file_path(locator, root) -> string|nil (nil for URLs)",
   "url.is_url(s) -> bool (http/https schemes)",
 ]);
+
+// Detailed calls section with notes and suggestions
+const detailedCalls: ComponentCall[] = calls.map((c) => ({
+  ...c,
+  suggest: suggestFor(c),
+}));
+
+await appendToReport("\n## Function calls details\n");
+await appendToReport("```");
+await displayCallsDetailed(detailedCalls);
+await appendToReport("```");
 
 await appendSection("Go Package Outline", [
   "cmd/thoth: cobra wiring, --config parsing, action routing",

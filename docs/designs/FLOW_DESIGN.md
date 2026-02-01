@@ -244,6 +244,192 @@ Unsupported use cases (yet):
   - locator.to_file_path(locator, root) -> string|nil (nil for URLs)
   - url.is_url(s) -> bool (http/https schemes)
 
+## Function calls details
+
+```
+thoth CLI root command [cli.root]
+  - note: cobra-based command tree
+  - pkg: cmd/thoth
+  - func: CliRoot
+  - file: cmd/thoth/cli_root.go
+  Parse args for meta pipeline [cli.meta]
+    - note: flags: --config (YAML preferred; JSON accepted). All other options belong in the action config.
+    - pkg: cmd/thoth
+    - func: CliMeta
+    - file: cmd/thoth/cli_meta.go
+    Load action config file [action.config.load]
+      - note: --config path; YAML preferred; JSON accepted; drives entire pipeline
+      - pkg: internal/config
+      - func: ActionConfigLoad
+      - file: internal/config/config_load.go
+    Route by action type [action.route]
+      - note: action: pipeline | create | update | diff
+      - pkg: internal/config
+      - func: ActionRoute
+      - file: internal/config/action_route.go
+      Meta pipeline flow [flow.pipeline]
+        - pkg: internal/pipeline
+        - func: FlowPipeline
+        - file: internal/pipeline/flow_pipeline.go
+        Find *.thoth.yaml files [fs.discovery]
+          - note: walk root; .gitignore ON by default; --no-gitignore to disable
+          - pkg: internal/fs
+          - func: FsDiscovery
+          - file: internal/fs/fs_discovery.go
+        Parse and validate YAML records [meta.parse]
+          - note: yaml.v3; strict fields; types; support file path or URL locator
+          - pkg: internal/meta
+          - func: MetaParse
+          - file: internal/meta/meta_parse.go
+        Apply filter predicate [meta.filter.step]
+          - note: Lua-only predicate (v1)
+          - pkg: internal/pipeline
+          - func: MetaFilterStep
+          - file: internal/pipeline/filter_step.go
+        Apply map transform [meta.map.step]
+          - note: Lua-only mapping (v1); parallel by default
+          - pkg: internal/pipeline
+          - func: MetaMapStep
+          - file: internal/pipeline/map_step.go
+        Execute shell per mapped item [shell.exec]
+          - note: Conditional: --run-shell; supports bash, sh, zsh; parallel with bounded workers; feeds post-map/reduce when provided
+          - pkg: internal/shell
+          - func: ShellExec
+          - file: internal/shell/shell_exec.go
+        Post-map shell results [meta.map.post-shell]
+          - note: Conditional: --post-map-script; Lua transforms {locator,input,shell:{cmd,exitCode,stdout,stderr,durationMs}}
+          - pkg: internal/pipeline
+          - func: MetaMapPostShell
+          - file: internal/pipeline/post_shell.go
+        Apply reduce aggregate [meta.reduce.step]
+          - note: Lua-only reduce (v1); parallel feed; single JSON value
+          - pkg: internal/pipeline
+          - func: MetaReduceStep
+          - file: internal/pipeline/reduce_step.go
+        Write JSON result (array/value/lines) [output.json.result]
+          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - pkg: internal/output
+          - func: OutputJsonResult
+          - file: internal/output/json_result.go
+      Create meta files flow [flow.create]
+        - pkg: internal/pipeline
+        - func: FlowCreate
+        - file: internal/pipeline/flow_create.go
+        Find files recursively (gitignore) [fs.discovery.files]
+          - note: walk root; .gitignore ON by default; no patterns; filenames as inputs
+          - pkg: internal/fs
+          - func: FsDiscoveryFiles
+          - file: internal/fs/discovery_files.go
+        Filter filenames [files.filter.step]
+          - note: Lua-only predicate (v1) over {file}
+          - pkg: internal/pipeline
+          - func: FilesFilterStep
+          - file: internal/pipeline/filter_step.go
+        Map filenames [files.map.step]
+          - note: Lua-only map (v1) over {file}
+          - pkg: internal/pipeline
+          - func: FilesMapStep
+          - file: internal/pipeline/map_step.go
+        Post-map from files [files.map.post]
+          - note: Conditional: inline Lua transforms {file,input} -> any
+          - pkg: internal/pipeline
+          - func: FilesMapPost
+          - file: internal/pipeline/map_post.go
+        Save meta files (*.thoth.yaml) [meta.save]
+          - note: Conditional: config.save.enabled or --save; name = <hash>-<lastdir>-<filename>.thoth.yaml; onExists: ignore|error
+          - pkg: internal/save
+          - func: MetaSave
+          - file: internal/save/meta_save.go
+        Write JSON result (array/value/lines) [output.json.result]
+          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - pkg: internal/output
+          - func: OutputJsonResult
+          - file: internal/output/json_result.go
+      Update meta files flow [flow.update]
+        - pkg: internal/pipeline
+        - func: FlowUpdate
+        - file: internal/pipeline/flow_update.go
+        Find files recursively (update) [fs.discovery.files.update]
+          - note: walk root; .gitignore ON by default; filenames as inputs
+          - pkg: internal/fs
+          - func: FsDiscoveryFilesUpdate
+          - file: internal/fs/files_update.go
+        Filter filenames [files.filter.step]
+          - note: Lua-only predicate (v1) over {file}
+          - pkg: internal/pipeline
+          - func: FilesFilterStep
+          - file: internal/pipeline/filter_step.go
+        Map filenames [files.map.step]
+          - note: Lua-only map (v1) over {file}
+          - pkg: internal/pipeline
+          - func: FilesMapStep
+          - file: internal/pipeline/map_step.go
+        Load existing meta (if any) [meta.load.existing]
+          - note: compute expected path by naming convention; read YAML if exists
+          - pkg: internal/meta
+          - func: MetaLoadExisting
+          - file: internal/meta/load_existing.go
+        Post-map for update (with existing) [files.map.post.update]
+          - note: Lua receives {file,input,existing?}; returns { meta } patch
+          - pkg: internal/pipeline
+          - func: FilesMapPostUpdate
+          - file: internal/pipeline/post_update.go
+        Update meta files (merge/create) [meta.update]
+          - note: shallow merge: new keys override existing; missing -> create new by naming convention
+          - pkg: internal/save
+          - func: MetaUpdate
+          - file: internal/save/meta_update.go
+        Write JSON result (array/value/lines) [output.json.result]
+          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - pkg: internal/output
+          - func: OutputJsonResult
+          - file: internal/output/json_result.go
+      Diff meta files flow [flow.diff]
+        - pkg: internal/pipeline
+        - func: FlowDiff
+        - file: internal/pipeline/flow_diff.go
+        Find files recursively (update) [fs.discovery.files.update]
+          - note: walk root; .gitignore ON by default; filenames as inputs
+          - pkg: internal/fs
+          - func: FsDiscoveryFilesUpdate
+          - file: internal/fs/files_update.go
+        Filter filenames [files.filter.step]
+          - note: Lua-only predicate (v1) over {file}
+          - pkg: internal/pipeline
+          - func: FilesFilterStep
+          - file: internal/pipeline/filter_step.go
+        Map filenames [files.map.step]
+          - note: Lua-only map (v1) over {file}
+          - pkg: internal/pipeline
+          - func: FilesMapStep
+          - file: internal/pipeline/map_step.go
+        Load existing meta (if any) [meta.load.existing]
+          - note: compute expected path by naming convention; read YAML if exists
+          - pkg: internal/meta
+          - func: MetaLoadExisting
+          - file: internal/meta/load_existing.go
+        Post-map for update (with existing) [files.map.post.update]
+          - note: Lua receives {file,input,existing?}; returns { meta } patch
+          - pkg: internal/pipeline
+          - func: FilesMapPostUpdate
+          - file: internal/pipeline/post_update.go
+        Compute meta diffs [meta.diff.compute]
+          - note: deep diff existing vs patch-applied result; output RFC6902 JSON Patch + summary
+          - pkg: internal/diff
+          - func: MetaDiffCompute
+          - file: internal/diff/diff_compute.go
+        Detect orphan meta files [meta.diff.orphans]
+          - note: iterate *.thoth.yaml; if locator is file path and does not exist, flag
+          - pkg: internal/diff
+          - func: MetaDiffOrphans
+          - file: internal/diff/diff_orphans.go
+        Write JSON result (array/value/lines) [output.json.result]
+          - note: default: aggregated JSON array; --lines to stream; reduce → single value
+          - pkg: internal/output
+          - func: OutputJsonResult
+          - file: internal/output/json_result.go
+```
+
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
   - internal/config: load/validate YAML (inline Lua strings), defaults
