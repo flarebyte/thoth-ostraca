@@ -1,5 +1,6 @@
 export type UseCase = {
   name: string;
+  title: string;
   note: string;
 };
 
@@ -19,6 +20,13 @@ export type FlowContext = {
 export const incrContext = (flowContext: FlowContext) => ({
   level: flowContext.level + 1,
 });
+
+export const toUseCaseSet = (calls: ComponentCall[]) => {
+  const allUseCases = calls
+    .flatMap(({ useCases }) => useCases)
+    .filter((useCase) => typeof useCase === "string");
+  return new Set(allUseCases);
+};
 
 export const displayAsText = (calls: ComponentCall[]) => {
   for (const call of calls) {

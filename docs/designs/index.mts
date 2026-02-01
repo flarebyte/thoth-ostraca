@@ -3,7 +3,7 @@ import {
   displayAsText,
   FlowContext,
   incrContext,
-  UseCase,
+  toUseCaseSet,
 } from "./common.mts";
 
 const calls: ComponentCall[] = [];
@@ -11,51 +11,60 @@ const calls: ComponentCall[] = [];
 const useCases = {
   filterByMeta: {
     name: "filter by meta",
-    note: "Filter metadata associated with locator",
+    title: "Filter metadata associated with locator",
   },
   mapMeta: {
     name: "map meta",
-    note: "Map metadata associated with locator",
+    title: "Map metadata associated with locator",
   },
   reduceMeta: {
     name: "reduce meta",
-    note: "reduce metadata for all locators",
+    title: "Reduce metadata for all locators",
   },
   mapReduceActionConfig: {
     name: "map reduce action config",
-    note: "load map reduce action config from file (YAML)",
+    title: "Load map reduce action config from file (YAML)",
   },
   scripting: {
     name: "scripting",
-    note: "filter map and reduce can be scripted (Lua)",
+    title: "Filter map and reduce can be scripted (Lua)",
   },
   mapShell: {
     name: "map with shell",
-    note: "use map metadata for running shell with locator name",
+    title: "Use map metadata for running shell with locator name",
   },
   locatorSupport: {
     name: "locator support",
-    note: "locator can be (relative) file or url",
+    title: "Locator can be (relative) file or url",
   },
   parallelProcessing: {
     name: "parallel processing",
-    note: "processing is done in parallel",
+    title: "Processing is done in parallel",
+    note: "Uses Goroutines and channels.",
   },
   batchCreation: {
     name: "batch creation",
-    note: "batch creation of locators metadata",
+    title: "batch creation of locators metadata",
   },
   batchUpdate: {
     name: "batch update",
-    note: "batch update of locators metadata",
+    title: "batch update of locators metadata",
   },
   batchDiff: {
     name: "batch diff",
-    note: "batch diff of locators metadata",
+    title: "batch diff of locators metadata",
   },
 };
 
-const mustUseCases: UseCase[] = [useCases.filterByMeta];
+const getByName = (expectedName: string) =>
+  Object.values(useCases).find(({ name }) => name === expectedName);
+
+const getTitlesForSet = (useCaseSet: Set<string>) =>
+  [...useCaseSet].map((useCase) => getByName(useCase)?.title);
+
+const mustUseCases = new Set([
+  ...Object.values(useCases).map(({ name }) => name),
+]);
 
 const cliArgsMetaFind = (context: FlowContext) => {
   const call: ComponentCall = {
@@ -77,6 +86,7 @@ const findMetaLocators = (context: FlowContext) => {
     level: context.level,
   };
   calls.push(call);
+  filterMetaLocators(incrContext(context));
 };
 
 const filterMetaLocators = (context: FlowContext) => {
@@ -93,3 +103,7 @@ const filterMetaLocators = (context: FlowContext) => {
 cliArgsMetaFind({ level: 0 });
 
 displayAsText(calls);
+
+console.log(getTitlesForSet(mustUseCases));
+
+console.log(toUseCaseSet(calls));
