@@ -4,27 +4,21 @@
 
 ```
 thoth CLI root command
-  Parse args for meta find
+  Parse args for meta pipeline
+    Load action config file (optional)
     Find *.thoth.yaml files
-      Parse and validate YAML records
-        Apply filter predicate
-          Write JSON result (array/value/lines)
-  Parse args for meta map
-    Find *.thoth.yaml files (map)
-      Parse and validate YAML (map)
-        Load action config file (optional)
-        Apply map transform
-          Write JSON result (array/value/lines)
-  Parse args for meta reduce
-    Find *.thoth.yaml files (reduce)
-      Parse and validate YAML (reduce)
-        Load action config file (optional)
-        Apply reduce aggregate
-          Write JSON result (array/value/lines)
+    Parse and validate YAML records
+    Apply filter predicate
+    Apply map transform
+      Write JSON result (array/value/lines)
+    Apply reduce aggregate
+      Write JSON result (array/value/lines)
+    Write JSON result (array/value/lines)
   Parse args for run (shell)
     Find *.thoth.yaml files (run)
       Parse and validate YAML (run)
         Load action config file (optional)
+        Apply filter predicate
         Map for run (shell input)
           Execute shell per mapped item
 ```
@@ -33,6 +27,7 @@ Supported use cases:
 
   - Helpful, well-documented flags
   - JSON output for CLI/CI/AI
+  - Load action config file
   - Respect .gitignore by default
   - One file per locator
   - Validate {locator, meta} schema
@@ -40,7 +35,6 @@ Supported use cases:
   - Filter meta by locator
   - Script filter/map/reduce
   - Process in parallel
-  - Load action config file
   - Map meta records
   - Reduce across meta set
   - Run shell using map output
@@ -61,8 +55,8 @@ Unsupported use cases (yet):
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
-  - Commands: thoth find, thoth map, thoth reduce, thoth run (shell)
-  - Flags: --root, --pattern, --no-gitignore, --workers, --script, --out
+  - Commands: thoth meta (single pipeline), thoth run (shell)
+  - Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --config, --out
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)

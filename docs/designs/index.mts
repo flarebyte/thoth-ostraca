@@ -114,53 +114,29 @@ const cliRoot = (context: FlowContext) => {
     useCases: [useCases.cliUX.name],
   };
   calls.push(call);
-  // Register subcommands under the root.
-  cliArgsMetaFind(incrContext(context));
-  cliArgsMetaMap(incrContext(context));
-  cliArgsMetaReduce(incrContext(context));
+  // Register commands under the root.
+  cliArgsMetaPipeline(incrContext(context));
   cliArgsRun(incrContext(context));
 };
 
-// Subcommand that discovers meta files and emits JSON.
-const cliArgsMetaFind = (context: FlowContext) => {
+// Single pipeline command: discover → parse → filter → [map] → [reduce] → output
+const cliArgsMetaPipeline = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "cli.meta.find",
-    title: "Parse args for meta find",
+    name: "cli.meta",
+    title: "Parse args for meta pipeline",
     directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --json, --lines, --pretty",
+    note: "flags: --root, --pattern, --no-gitignore, --workers, --json, --lines, --pretty, --filter-script, --map-script, --reduce-script, --config",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
   calls.push(call);
+  loadActionConfig(incrContext(context));
   findMetaLocators(incrContext(context));
-};
-
-// Subcommand: map
-const cliArgsMetaMap = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "cli.meta.map",
-    title: "Parse args for meta map",
-    directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --script, --json, --lines, --pretty",
-    level: context.level,
-    useCases: [useCases.cliUX.name, useCases.outputJson.name],
-  };
-  calls.push(call);
-  findMetaLocatorsForMap(incrContext(context));
-};
-
-// Subcommand: reduce
-const cliArgsMetaReduce = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "cli.meta.reduce",
-    title: "Parse args for meta reduce",
-    directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --no-gitignore, --script, --json, --pretty",
-    level: context.level,
-    useCases: [useCases.cliUX.name, useCases.outputJson.name],
-  };
-  calls.push(call);
-  findMetaLocatorsForReduce(incrContext(context));
+  parseYamlRecords(incrContext(context));
+  filterMetaLocators(incrContext(context));
+  mapMetaRecords(incrContext(context));
+  reduceMetaRecords(incrContext(context));
+  outputJsonResult(incrContext(context));
 };
 
 // Subcommand: run (shell from map output)
@@ -187,35 +163,7 @@ const findMetaLocators = (context: FlowContext) => {
     useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
   };
   calls.push(call);
-  parseYamlRecords(incrContext(context));
 };
-
-// Same discovery used by map
-const findMetaLocatorsForMap = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "fs.discovery.map",
-    title: "Find *.thoth.yaml files (map)",
-    note: "reuse discovery; supports patterns and .gitignore",
-    level: context.level,
-    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
-  };
-  calls.push(call);
-  parseYamlRecordsForMap(incrContext(context));
-};
-
-// Same discovery used by reduce
-const findMetaLocatorsForReduce = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "fs.discovery.reduce",
-    title: "Find *.thoth.yaml files (reduce)",
-    note: "reuse discovery; supports patterns and .gitignore",
-    level: context.level,
-    useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
-  };
-  calls.push(call);
-  parseYamlRecordsForReduce(incrContext(context));
-};
-
 // Same discovery used by run
 const findMetaLocatorsForRun = (context: FlowContext) => {
   const call: ComponentCall = {
@@ -239,35 +187,6 @@ const parseYamlRecords = (context: FlowContext) => {
     useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
   };
   calls.push(call);
-  filterMetaLocators(incrContext(context));
-};
-
-// Parser for map flow
-const parseYamlRecordsForMap = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "meta.parse.map",
-    title: "Parse and validate YAML (map)",
-    note: "yaml.v3; strict fields; types; support file path or URL locator",
-    level: context.level,
-    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
-  };
-  calls.push(call);
-  loadActionConfig(incrContext(context));
-  mapMetaRecords(incrContext(context));
-};
-
-// Parser for reduce flow
-const parseYamlRecordsForReduce = (context: FlowContext) => {
-  const call: ComponentCall = {
-    name: "meta.parse.reduce",
-    title: "Parse and validate YAML (reduce)",
-    note: "yaml.v3; strict fields; types; support file path or URL locator",
-    level: context.level,
-    useCases: [useCases.metaSchema.name, useCases.locatorKinds.name],
-  };
-  calls.push(call);
-  loadActionConfig(incrContext(context));
-  reduceMetaRecords(incrContext(context));
 };
 
 // Parser for run flow
@@ -281,6 +200,7 @@ const parseYamlRecordsForRun = (context: FlowContext) => {
   };
   calls.push(call);
   loadActionConfig(incrContext(context));
+  filterMetaLocators(incrContext(context));
   mapMetaForRun(incrContext(context));
 };
 
@@ -294,7 +214,6 @@ const filterMetaLocators = (context: FlowContext) => {
     useCases: [useCases.metaFilter.name, useCases.embeddedScripting.name, useCases.parallelism.name],
   };
   calls.push(call);
-  outputJsonResult(incrContext(context));
 };
 
 // Optional: load action config for map/reduce/run
@@ -404,8 +323,8 @@ await appendSection("Suggested Go Implementation", [
   "Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1",
   "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
   "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
-  "Commands: thoth find, thoth map, thoth reduce, thoth run (shell)",
-  "Flags: --root, --pattern, --no-gitignore, --workers, --script, --out",
+  "Commands: thoth meta (single pipeline), thoth run (shell)",
+  "Flags: --root, --pattern, --no-gitignore, --workers, --filter-script, --map-script, --reduce-script, --config, --out",
   "Tests: golden tests for I/O; fs testdata fixtures",
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",
