@@ -73,7 +73,7 @@ Unsupported use cases (yet):
   - CLI: cobra for command tree; viper optional
   - Types: type Record struct { Locator string; Meta map[string]any }
   - YAML: gopkg.in/yaml.v3 for *.thoth.yaml
-  - Discovery: filepath.WalkDir + gitignore filter (go-gitignore)
+  - Discovery: filepath.WalkDir + gitignore filter (go-gitignore); apply .gitignore even if not a git repo; do not follow symlinks by default
   - Schema: required fields (locator, meta); error on missing
   - Validation defaults: unknown top-level keys: error; meta.* keys: allowed
   - Validation config: validation.allowUnknownTopLevel (bool, default false)
@@ -107,7 +107,8 @@ Unsupported use cases (yet):
   "action": "pipeline",
   "discovery": {
     "root": ".",
-    "noGitignore": false
+    "noGitignore": false,
+    "followSymlinks": false
   },
   "workers": 8,
   "validation": {
@@ -286,6 +287,11 @@ Unsupported use cases (yet):
   - locator.to_file_path: returns OS-native absolute path under 'root' after validation and clean join
   - Security: reject traversal (..), absolute inputs, and non-http(s) URLs by default
 
+## Discovery Semantics
+  - .gitignore: honored by default even when not in a git repo (local .gitignore files are parsed)
+  - Symlinks: do not follow by default (discovery.followSymlinks=false)
+  - Exclusions: no magic exclusions beyond .gitignore rules
+
 ## Function calls details
 
 ```
@@ -314,7 +320,7 @@ thoth CLI root command [cli.root]
         - func: FlowPipeline
         - file: internal/pipeline/flow_pipeline.go
         Find *.thoth.yaml files [fs.discovery]
-          - note: walk root; .gitignore ON by default; --no-gitignore to disable
+          - note: walk root; .gitignore ON by default even outside git repos; --no-gitignore to disable; do not follow symlinks by default
           - pkg: internal/fs
           - func: FsDiscovery
           - file: internal/fs/fs_discovery.go
@@ -358,7 +364,7 @@ thoth CLI root command [cli.root]
         - func: FlowCreate
         - file: internal/pipeline/flow_create.go
         Find files recursively (gitignore) [fs.discovery.files]
-          - note: walk root; .gitignore ON by default; no patterns; filenames as inputs
+          - note: walk root; .gitignore ON by default (even if not a git repo); no patterns; do not follow symlinks by default; filenames as inputs
           - pkg: internal/fs
           - func: FsDiscoveryFiles
           - file: internal/fs/discovery_files.go
@@ -392,7 +398,7 @@ thoth CLI root command [cli.root]
         - func: FlowUpdate
         - file: internal/pipeline/flow_update.go
         Find files recursively (update) [fs.discovery.files.update]
-          - note: walk root; .gitignore ON by default; filenames as inputs
+          - note: walk root; .gitignore ON by default (even if not a git repo); do not follow symlinks by default; filenames as inputs
           - pkg: internal/fs
           - func: FsDiscoveryFilesUpdate
           - file: internal/fs/files_update.go
@@ -431,7 +437,7 @@ thoth CLI root command [cli.root]
         - func: FlowDiff
         - file: internal/pipeline/flow_diff.go
         Find files recursively (update) [fs.discovery.files.update]
-          - note: walk root; .gitignore ON by default; filenames as inputs
+          - note: walk root; .gitignore ON by default (even if not a git repo); do not follow symlinks by default; filenames as inputs
           - pkg: internal/fs
           - func: FsDiscoveryFilesUpdate
           - file: internal/fs/files_update.go

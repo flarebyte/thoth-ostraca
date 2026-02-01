@@ -104,6 +104,7 @@ type InlineScript = { inline: string };
 type DiscoveryOptions = {
   root?: string;
   noGitignore?: boolean; // default false (respect .gitignore)
+  followSymlinks?: boolean; // default false (do not follow for safety)
 };
 type OutputOptions = {
   lines?: boolean; // default false (aggregate JSON)
@@ -163,6 +164,7 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
   discovery: {
     root: ".",
     noGitignore: false,
+    followSymlinks: false,
   },
   workers: 8,
   validation: { allowUnknownTopLevel: false },
@@ -425,7 +427,7 @@ const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "fs.discovery",
     title: "Find *.thoth.yaml files",
-    note: "walk root; .gitignore ON by default; --no-gitignore to disable",
+    note: "walk root; .gitignore ON by default even outside git repos; --no-gitignore to disable; do not follow symlinks by default",
     level: context.level,
     useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
   };
@@ -437,7 +439,7 @@ const findFilesForCreate = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "fs.discovery.files",
     title: "Find files recursively (gitignore)",
-    note: "walk root; .gitignore ON by default; no patterns; filenames as inputs",
+    note: "walk root; .gitignore ON by default (even if not a git repo); no patterns; do not follow symlinks by default; filenames as inputs",
     level: context.level,
     useCases: [useCases.gitIgnore.name],
   };
@@ -449,7 +451,7 @@ const findFilesForUpdate = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "fs.discovery.files.update",
     title: "Find files recursively (update)",
-    note: "walk root; .gitignore ON by default; filenames as inputs",
+    note: "walk root; .gitignore ON by default (even if not a git repo); do not follow symlinks by default; filenames as inputs",
     level: context.level,
     useCases: [useCases.gitIgnore.name],
   };
@@ -685,7 +687,7 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["CLI", "cobra for command tree; viper optional"],
   ["Types", "type Record struct { Locator string; Meta map[string]any }"],
   ["YAML", "gopkg.in/yaml.v3 for *.thoth.yaml"],
-  ["Discovery", "filepath.WalkDir + gitignore filter (go-gitignore)"],
+  ["Discovery", "filepath.WalkDir + gitignore filter (go-gitignore); apply .gitignore even if not a git repo; do not follow symlinks by default"],
   ["Schema", "required fields (locator, meta); error on missing"],
   ["Validation defaults", "unknown top-level keys: error; meta.* keys: allowed"],
   ["Validation config", "validation.allowUnknownTopLevel (bool, default false)"],
@@ -802,6 +804,12 @@ await appendSection("Locator Normalization", [
   "URL locators: lowercase scheme and host; strip default ports (http:80, https:443); preserve path/query; remove fragment",
   "locator.to_file_path: returns OS-native absolute path under 'root' after validation and clean join",
   "Security: reject traversal (..), absolute inputs, and non-http(s) URLs by default",
+]);
+
+await appendSection("Discovery Semantics", [
+  ".gitignore: honored by default even when not in a git repo (local .gitignore files are parsed)",
+  "Symlinks: do not follow by default (discovery.followSymlinks=false)",
+  "Exclusions: no magic exclusions beyond .gitignore rules",
 ]);
 
 // Detailed calls section with notes and suggestions
