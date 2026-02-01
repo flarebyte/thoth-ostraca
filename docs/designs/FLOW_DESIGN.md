@@ -6,14 +6,23 @@
 thoth CLI root command
   Parse args for meta pipeline
     Load action config file
-    Find *.thoth.yaml files
-    Parse and validate YAML records
-    Apply filter predicate
-    Apply map transform
-    Execute shell per mapped item
-    Post-map shell results
-    Apply reduce aggregate
-    Write JSON result (array/value/lines)
+    Route by action type
+      Meta pipeline flow
+        Find *.thoth.yaml files
+        Parse and validate YAML records
+        Apply filter predicate
+        Apply map transform
+        Execute shell per mapped item
+        Post-map shell results
+        Apply reduce aggregate
+        Write JSON result (array/value/lines)
+      Create meta files flow
+        Find files recursively (gitignore)
+        Filter filenames
+        Map filenames
+        Post-map from files
+        Save meta files (*.thoth.yaml)
+        Write JSON result (array/value/lines)
 ```
 
 Supported use cases:
@@ -31,10 +40,10 @@ Supported use cases:
   - Map meta records
   - Run shell using map output
   - Reduce across meta set
+  - Create many meta files
 
 Unsupported use cases (yet):
 
-  - Create many meta files
   - Update many meta files
   - Diff meta files at scale
 
@@ -48,8 +57,8 @@ Unsupported use cases (yet):
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
-  - Commands: thoth meta (single pipeline incl. optional shell)
-  - Flags: --config (YAML preferred; JSON accepted)
+  - Commands: thoth meta (single pipeline incl. optional shell and create)
+  - Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: outputs a plain JSON value
   - Map: returns free-form JSON (any)
@@ -59,6 +68,7 @@ Unsupported use cases (yet):
 ```json
 {
   "configVersion": "1",
+  "action": "pipeline",
   "discovery": {
     "root": ".",
     "noGitignore": false
@@ -100,11 +110,45 @@ Unsupported use cases (yet):
 }
 ```
 
+## Action Config (Create Example)
+```json
+{
+  "configVersion": "1",
+  "action": "create",
+  "discovery": {
+    "root": ".",
+    "noGitignore": false
+  },
+  "workers": 8,
+  "filter": {
+    "inline": "-- only process markdown files\nreturn string.match(file.ext or \"\", \"^%.md$\") ~= nil"
+  },
+  "map": {
+    "inline": "-- produce initial meta from file info\nreturn { title = file.base, category = file.dir }"
+  },
+  "postMap": {
+    "inline": "-- finalize meta shape\nreturn { meta = { title = (input.title or file.base) } }"
+  },
+  "output": {
+    "lines": false,
+    "pretty": false,
+    "out": "-"
+  },
+  "save": {
+    "enabled": false,
+    "onExists": "ignore"
+  }
+}
+```
+
 ## Lua Data Contracts
   - Filter: fn({ locator, meta }) -> bool
   - Map: fn({ locator, meta }) -> any
   - Reduce: fn(acc, value) -> acc (single JSON value)
   - Post-map (shell): fn({ locator, input, shell: { cmd, exitCode, stdout, stderr, durationMs } }) -> any
+  - Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool
+  - Create Map: fn({ file }) -> any
+  - Create Post-map: fn({ file, input }) -> { meta }
 
 ## Design Decisions
   - Filter: Lua-only (v1)

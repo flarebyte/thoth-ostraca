@@ -121,8 +121,16 @@ type ShellOptions = {
   failFast?: boolean;
   capture?: ShellCapture;
 };
+type SaveOptions = {
+  enabled?: boolean; // when true, write meta files to disk
+  onExists?: "ignore" | "error"; // behavior if target exists
+  dir?: string; // optional output directory for meta files
+  hashAlgo?: "sha256"; // future extension; default sha256
+  hashLen?: number; // characters from hash prefix; default e.g. 12
+};
 type PipelineConfig = {
   configVersion?: string;
+  action?: "pipeline" | "create"; // which flow to run
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
   filter?: InlineScript; // skip stage if omitted
@@ -131,10 +139,12 @@ type PipelineConfig = {
   postMap?: InlineScript; // maps shell results → any
   reduce?: InlineScript; // skip if omitted
   output?: OutputOptions;
+  save?: SaveOptions; // create mode: write meta files
 };
 
 export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
   configVersion: "1",
+  action: "pipeline",
   discovery: {
     root: ".",
     noGitignore: false,
@@ -170,6 +180,35 @@ return (acc or 0) + 1`,
   output: { lines: false, pretty: false, out: "-" },
 };
 
+export const ACTION_CONFIG_CREATE_EXAMPLE: PipelineConfig = {
+  configVersion: "1",
+  action: "create",
+  discovery: {
+    root: ".",
+    noGitignore: false,
+  },
+  workers: 8,
+  // Filter filenames (receive { file })
+  filter: {
+    inline: `-- only process markdown files
+return string.match(file.ext or "", "^%.md$") ~= nil`,
+  },
+  // Map from filename to initial structure
+  map: {
+    inline: `-- produce initial meta from file info
+return { title = file.base, category = file.dir }`,
+  },
+  // Optional post-map to finalize meta
+  postMap: {
+    inline: `-- finalize meta shape
+return { meta = { title = (input.title or file.base) } }`,
+  },
+  // No reduce by default in create
+  output: { lines: false, pretty: false, out: "-" },
+  // Saving behavior
+  save: { enabled: false, onExists: "ignore" },
+};
+
 // Everything listed here is expected to be supported long-term.
 const mustUseCases = new Set([
   ...Object.values(useCases).map(({ name }) => name),
@@ -202,6 +241,31 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
   };
   calls.push(call);
   loadActionConfig(incrContext(context));
+  routeByActionType(incrContext(context));
+};
+
+// Route to the appropriate flow based on config.action
+const routeByActionType = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "action.route",
+    title: "Route by action type",
+    note: "action: pipeline | create",
+    level: context.level,
+  };
+  calls.push(call);
+  // Pipeline flow (meta processing)
+  pipelineFlow(incrContext(context));
+  // Create flow (generate new meta files from filenames)
+  createFlow(incrContext(context));
+};
+
+const pipelineFlow = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "flow.pipeline",
+    title: "Meta pipeline flow",
+    level: context.level,
+  };
+  calls.push(call);
   findMetaLocators(incrContext(context));
   parseYamlRecords(incrContext(context));
   filterMetaLocators(incrContext(context));
@@ -209,6 +273,22 @@ const cliArgsMetaPipeline = (context: FlowContext) => {
   execShellFromMap(incrContext(context));
   postMapShellResults(incrContext(context));
   reduceMetaRecords(incrContext(context));
+  outputJsonResult(incrContext(context));
+};
+
+const createFlow = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "flow.create",
+    title: "Create meta files flow",
+    level: context.level,
+    useCases: [useCases.batchCreate.name],
+  };
+  calls.push(call);
+  findFilesForCreate(incrContext(context));
+  filterFilenames(incrContext(context));
+  mapFilenames(incrContext(context));
+  postMapFromFiles(incrContext(context));
+  saveMetaFiles(incrContext(context));
   outputJsonResult(incrContext(context));
 };
 
@@ -220,6 +300,18 @@ const findMetaLocators = (context: FlowContext) => {
     note: "walk root; .gitignore ON by default; --no-gitignore to disable",
     level: context.level,
     useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
+  };
+  calls.push(call);
+};
+
+// Discovery for create flow: all files under root respecting .gitignore
+const findFilesForCreate = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "fs.discovery.files",
+    title: "Find files recursively (gitignore)",
+    note: "walk root; .gitignore ON by default; no patterns; filenames as inputs",
+    level: context.level,
+    useCases: [useCases.gitIgnore.name],
   };
   calls.push(call);
 };
@@ -245,6 +337,54 @@ const filterMetaLocators = (context: FlowContext) => {
     note: "Lua-only predicate (v1)",
     level: context.level,
     useCases: [useCases.metaFilter.name, useCases.embeddedScripting.name, useCases.parallelism.name],
+  };
+  calls.push(call);
+};
+
+// Create: filter over filenames
+const filterFilenames = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "files.filter.step",
+    title: "Filter filenames",
+    note: "Lua-only predicate (v1) over {file}",
+    level: context.level,
+    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name],
+  };
+  calls.push(call);
+};
+
+// Create: map filenames to structures
+const mapFilenames = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "files.map.step",
+    title: "Map filenames",
+    note: "Lua-only map (v1) over {file}",
+    level: context.level,
+    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name],
+  };
+  calls.push(call);
+};
+
+// Create: optional post-map to produce final {meta}
+const postMapFromFiles = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "files.map.post",
+    title: "Post-map from files",
+    note: "Conditional: inline Lua transforms {file,input} -> any",
+    level: context.level,
+    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name],
+  };
+  calls.push(call);
+};
+
+// Create: save meta files using naming convention
+const saveMetaFiles = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.save",
+    title: "Save meta files (*.thoth.yaml)",
+    note: "Conditional: config.save.enabled or --save; name = <hash>-<lastdir>-<filename>.thoth.yaml; onExists: ignore|error",
+    level: context.level,
+    useCases: [useCases.batchCreate.name, useCases.gitConflictFriendly.name],
   };
   calls.push(call);
 };
@@ -354,8 +494,8 @@ await appendSection("Suggested Go Implementation", [
   "Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1",
   "Parallelism: bounded worker pool; default workers = runtime.NumCPU()",
   "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
-  "Commands: thoth meta (single pipeline incl. optional shell)",
-  "Flags: --config (YAML preferred; JSON accepted)",
+  "Commands: thoth meta (single pipeline incl. optional shell and create)",
+  "Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)",
   "Tests: golden tests for I/O; fs testdata fixtures",
   "Reduce: outputs a plain JSON value",
   "Map: returns free-form JSON (any)",
@@ -368,11 +508,19 @@ await appendSection(
   "```json\n" + JSON.stringify(ACTION_CONFIG_EXAMPLE, null, 2) + "\n```",
 );
 
+await appendSection(
+  "Action Config (Create Example)",
+  "```json\n" + JSON.stringify(ACTION_CONFIG_CREATE_EXAMPLE, null, 2) + "\n```",
+);
+
 await appendSection("Lua Data Contracts", [
   "Filter: fn({ locator, meta }) -> bool",
   "Map: fn({ locator, meta }) -> any",
   "Reduce: fn(acc, value) -> acc (single JSON value)",
   "Post-map (shell): fn({ locator, input, shell: { cmd, exitCode, stdout, stderr, durationMs } }) -> any",
+  "Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool",
+  "Create Map: fn({ file }) -> any",
+  "Create Post-map: fn({ file, input }) -> { meta }",
 ]);
 
 await appendSection("Design Decisions", [
