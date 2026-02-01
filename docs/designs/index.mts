@@ -38,7 +38,7 @@ const useCases = {
   embeddedScripting: {
     name: "scripting.embed",
     title: "Script filter/map/reduce",
-    note: "Lua preferred: small + popular",
+    note: "Lua only (v1): small + popular",
   },
   shellExecFromMap: {
     name: "map.shell",
@@ -78,11 +78,12 @@ const useCases = {
   gitIgnore: {
     name: "fs.gitignore",
     title: "Respect .gitignore by default",
+    note: "Always on; opt-out via --no-gitignore",
   },
   outputJson: {
     name: "output.json",
-    title: "JSON output for humans/CI/AI",
-    note: "Pretty/compact/lines variants",
+    title: "JSON output for CLI/CI/AI",
+    note: "Machine-oriented default; aggregated JSON; lines optional",
   },
   metaSchema: {
     name: "meta.schema",
@@ -122,7 +123,7 @@ const cliArgsMetaFind = (context: FlowContext) => {
     name: "cli.meta.find",
     title: "Parse args for meta find",
     directory: "cmd/thoth",
-    note: "flags: --root, --pattern, --ignore, --json",
+    note: "flags: --root, --pattern, --no-gitignore, --json, --lines, --pretty",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
@@ -135,7 +136,7 @@ const findMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "fs.discovery",
     title: "Find *.thoth.yaml files",
-    note: "walk root; respect .gitignore; pattern overrides",
+    note: "walk root; .gitignore ON by default; --no-gitignore to disable; pattern overrides",
     level: context.level,
     useCases: [useCases.gitIgnore.name, useCases.gitConflictFriendly.name],
   };
@@ -161,20 +162,20 @@ const filterMetaLocators = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "meta.filter.step",
     title: "Apply filter predicate",
-    note: "built-in or Lua predicate",
+    note: "Lua-only predicate (v1)",
     level: context.level,
     useCases: [useCases.metaFilter.name, useCases.embeddedScripting.name],
   };
   calls.push(call);
-  outputJsonStream(incrContext(context));
+  outputJsonResult(incrContext(context));
 };
 
-// Output JSON: friendly for humans, CI, and AI
-const outputJsonStream = (context: FlowContext) => {
+// Output JSON: machine-oriented by default; aggregated or lines
+const outputJsonResult = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "output.json.lines",
-    title: "Write JSON (pretty/compact/lines)",
-    note: "default: json lines for streams",
+    name: "output.json.result",
+    title: "Write JSON result (array/value/lines)",
+    note: "default: aggregated JSON array; --lines to stream; reduce → single value",
     level: context.level,
     useCases: [useCases.outputJson.name],
   };
@@ -211,18 +212,26 @@ await appendSection("Suggested Go Implementation", [
   "YAML: gopkg.in/yaml.v3 for *.thoth.yaml",
   "Discovery: filepath.WalkDir + gitignore filter (go-gitignore)",
   "Schema: validate locator non-empty; meta is object",
-  "Filter/Map/Reduce: built-in funcs + optional gopher-lua scripts",
+  "Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1",
   "Parallelism: bounded worker pool; channels for records",
-  "Output: JSON lines (default), pretty via --pretty, compact via --compact",
+  "Output: aggregated JSON by default; --lines to stream; --pretty for humans",
   "Commands: thoth find, thoth map, thoth reduce, thoth run (shell)",
-  "Flags: --root, --pattern, --ignore, --workers, --script, --out",
+  "Flags: --root, --pattern, --no-gitignore, --workers, --script, --out",
   "Tests: golden tests for I/O; fs testdata fixtures",
+  "Reduce: outputs a plain JSON value",
+  "Map: returns free-form JSON (any)",
+]);
+
+await appendSection("Design Decisions", [
+  "Filter: Lua-only (v1)",
+  "Map: free-form JSON (any)",
+  "Reduce: plain JSON value",
+  "Output: machine-oriented JSON by default (aggregate unless --lines)",
+  "Gitignore: always on; --no-gitignore to opt out",
 ]);
 
 await appendSection("Open Design Questions", [
-  "Filter expression: prefer small DSL or go with Lua first?",
-  "Map output shape: free-form any vs constrained fields?",
-  "Reduce outputs: single JSON value vs object with metadata?",
-  "Default output: JSON lines or pretty JSON when writing to TTY?",
-  "Gitignore behavior: always on, or opt-out flag --no-gitignore?",
+  "Default worker pool size and tuning flags?",
+  "YAML schema strictness (unknown fields: error or ignore)?",
+  "Which shells to support for 'run' besides bash?",
 ]);

@@ -8,13 +8,13 @@ thoth CLI root command
     Find *.thoth.yaml files
       Parse and validate YAML records
         Apply filter predicate
-          Write JSON (pretty/compact/lines)
+          Write JSON result (array/value/lines)
 ```
 
 Supported use cases:
 
   - Helpful, well-documented flags
-  - JSON output for humans/CI/AI
+  - JSON output for CLI/CI/AI
   - Respect .gitignore by default
   - One file per locator
   - Validate {locator, meta} schema
@@ -40,16 +40,23 @@ Unsupported use cases (yet):
   - YAML: gopkg.in/yaml.v3 for *.thoth.yaml
   - Discovery: filepath.WalkDir + gitignore filter (go-gitignore)
   - Schema: validate locator non-empty; meta is object
-  - Filter/Map/Reduce: built-in funcs + optional gopher-lua scripts
+  - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Parallelism: bounded worker pool; channels for records
-  - Output: JSON lines (default), pretty via --pretty, compact via --compact
+  - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Commands: thoth find, thoth map, thoth reduce, thoth run (shell)
-  - Flags: --root, --pattern, --ignore, --workers, --script, --out
+  - Flags: --root, --pattern, --no-gitignore, --workers, --script, --out
   - Tests: golden tests for I/O; fs testdata fixtures
+  - Reduce: outputs a plain JSON value
+  - Map: returns free-form JSON (any)
+
+## Design Decisions
+  - Filter: Lua-only (v1)
+  - Map: free-form JSON (any)
+  - Reduce: plain JSON value
+  - Output: machine-oriented JSON by default (aggregate unless --lines)
+  - Gitignore: always on; --no-gitignore to opt out
 
 ## Open Design Questions
-  - Filter expression: prefer small DSL or go with Lua first?
-  - Map output shape: free-form any vs constrained fields?
-  - Reduce outputs: single JSON value vs object with metadata?
-  - Default output: JSON lines or pretty JSON when writing to TTY?
-  - Gitignore behavior: always on, or opt-out flag --no-gitignore?
+  - Default worker pool size and tuning flags?
+  - YAML schema strictness (unknown fields: error or ignore)?
+  - Which shells to support for 'run' besides bash?
