@@ -349,7 +349,29 @@ const suggestFor = (call: ComponentCall) => {
   const pkg = guessPkg(call);
   const tokens = toTokens(call.name);
   const func = toGoExported(tokens);
-  const file = `${pkg}/${toSnake(tokens.slice(-2)) || toSnake(tokens)}.go`;
+  const basename = (() => {
+    switch (call.name) {
+      case "meta.filter.step":
+        return "meta_filter_step";
+      case "files.filter.step":
+        return "files_filter_step";
+      case "meta.map.step":
+        return "meta_map_step";
+      case "files.map.step":
+        return "files_map_step";
+      case "meta.reduce.step":
+        return "meta_reduce_step";
+      case "meta.map.post-shell":
+        return "meta_post_shell";
+      case "files.map.post":
+        return "files_map_post";
+      case "files.map.post.update":
+        return "files_post_update";
+      default:
+        return toSnake(tokens.slice(-2)) || toSnake(tokens);
+    }
+  })();
+  const file = `${pkg}/${basename}.go`;
   return { pkg, func, file };
 };
 

@@ -471,12 +471,12 @@ thoth CLI root command [cli.root]
           - note: Lua-only predicate (v1)
           - pkg: internal/pipeline
           - func: MetaFilterStep
-          - file: internal/pipeline/filter_step.go
+          - file: internal/pipeline/meta_filter_step.go
         Apply map transform [meta.map.step]
           - note: Lua-only mapping (v1); parallel by default
           - pkg: internal/pipeline
           - func: MetaMapStep
-          - file: internal/pipeline/map_step.go
+          - file: internal/pipeline/meta_map_step.go
         Execute shell per mapped item [shell.exec]
           - note: Conditional: --run-shell; argv templates preferred (no shell parsing); string templates auto-escape; supports bash/sh/zsh; parallel with bounded workers; feeds post-map/reduce; timeout kills process group
           - pkg: internal/shell
@@ -486,12 +486,12 @@ thoth CLI root command [cli.root]
           - note: Conditional: --post-map-script; Lua transforms {locator,input,shell:{cmd,exitCode,stdout,stderr,durationMs}}
           - pkg: internal/pipeline
           - func: MetaMapPostShell
-          - file: internal/pipeline/post_shell.go
+          - file: internal/pipeline/meta_post_shell.go
         Apply reduce aggregate [meta.reduce.step]
           - note: Lua-only reduce (v1); parallel feed; single JSON value
           - pkg: internal/pipeline
           - func: MetaReduceStep
-          - file: internal/pipeline/reduce_step.go
+          - file: internal/pipeline/meta_reduce_step.go
         Write JSON result (array/value/lines) [output.json.result]
           - note: default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured
           - pkg: internal/output
@@ -510,17 +510,17 @@ thoth CLI root command [cli.root]
           - note: Lua-only predicate (v1) over {file}
           - pkg: internal/pipeline
           - func: FilesFilterStep
-          - file: internal/pipeline/filter_step.go
+          - file: internal/pipeline/files_filter_step.go
         Map filenames [files.map.step]
           - note: Lua-only map (v1) over {file}
           - pkg: internal/pipeline
           - func: FilesMapStep
-          - file: internal/pipeline/map_step.go
+          - file: internal/pipeline/files_map_step.go
         Post-map from files [files.map.post]
           - note: Conditional: inline Lua transforms {file,input} -> any
           - pkg: internal/pipeline
           - func: FilesMapPost
-          - file: internal/pipeline/map_post.go
+          - file: internal/pipeline/files_map_post.go
         Save meta files (*.thoth.yaml) [meta.save]
           - note: Conditional: config.save.enabled or --save; name = <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml; sanitize components; if path exists and belongs to different locator -> error; onExists: ignore|error
           - pkg: internal/save
@@ -544,12 +544,12 @@ thoth CLI root command [cli.root]
           - note: Lua-only predicate (v1) over {file}
           - pkg: internal/pipeline
           - func: FilesFilterStep
-          - file: internal/pipeline/filter_step.go
+          - file: internal/pipeline/files_filter_step.go
         Map filenames [files.map.step]
           - note: Lua-only map (v1) over {file}
           - pkg: internal/pipeline
           - func: FilesMapStep
-          - file: internal/pipeline/map_step.go
+          - file: internal/pipeline/files_map_step.go
         Load existing meta (if any) [meta.load.existing]
           - note: compute expected path by naming convention; read YAML if exists
           - pkg: internal/meta
@@ -559,7 +559,7 @@ thoth CLI root command [cli.root]
           - note: Lua receives {file,input,existing?}; returns either { meta } (full desired) or { patch } (RFC6902)
           - pkg: internal/pipeline
           - func: FilesMapPostUpdate
-          - file: internal/pipeline/post_update.go
+          - file: internal/pipeline/files_post_update.go
         Update meta files (merge/create) [meta.update]
           - note: merge strategy via config.update.merge: shallow|deep|jsonpatch (default shallow); if post-map returns patch, apply RFC6902; else merge existing with returned meta; missing -> create new by naming convention; verify filename hash against current root+relPath (mismatch -> error)
           - pkg: internal/save
@@ -583,12 +583,12 @@ thoth CLI root command [cli.root]
           - note: Lua-only predicate (v1) over {file}
           - pkg: internal/pipeline
           - func: FilesFilterStep
-          - file: internal/pipeline/filter_step.go
+          - file: internal/pipeline/files_filter_step.go
         Map filenames [files.map.step]
           - note: Lua-only map (v1) over {file}
           - pkg: internal/pipeline
           - func: FilesMapStep
-          - file: internal/pipeline/map_step.go
+          - file: internal/pipeline/files_map_step.go
         Load existing meta (if any) [meta.load.existing]
           - note: compute expected path by naming convention; read YAML if exists
           - pkg: internal/meta
@@ -598,7 +598,7 @@ thoth CLI root command [cli.root]
           - note: Lua receives {file,input,existing?}; returns either { meta } (full desired) or { patch } (RFC6902)
           - pkg: internal/pipeline
           - func: FilesMapPostUpdate
-          - file: internal/pipeline/post_update.go
+          - file: internal/pipeline/files_post_update.go
         Compute meta diffs [meta.diff.compute]
           - note: deep diff existing vs patch-applied result; output RFC6902 JSON Patch + summary
           - pkg: internal/diff
