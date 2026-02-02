@@ -744,5 +744,23 @@ map:
     return { locator = locator, name = meta and meta.name }
 ```
 
+## Stage Contracts
+  - Record: struct { Locator string; Meta map[string]any }
+  - FileInfo: struct { Path, RelPath, Dir, Base, Name, Ext string }
+  - ShellResult: struct { Cmd []string; ExitCode int; Stdout []byte; Stderr []byte; Duration time.Duration }
+  - JSONPatch: []PatchOp (RFC6902)
+  - MetaOut: struct { Meta map[string]any }
+  - UpdateOut: struct { Meta map[string]any; Patch JSONPatch } (one of)
+  - 
+  - MetaFilter: func(Record) (bool, error)
+  - MetaMap: func(Record) (any, error)
+  - MetaPostShell: func(Record, ShellResult) (any, error)
+  - MetaReduce: func(acc any, value any) (any, error)
+  - 
+  - FilesFilter: func(FileInfo) (bool, error)
+  - FilesMap: func(FileInfo) (any, error)
+  - FilesPostMap: func(FileInfo, input any) (MetaOut, error)
+  - FilesPostUpdate: func(FileInfo, input any, existing *Record) (UpdateOut, error)
+
 ## Open Design Questions
   - YAML strictness for unknown fields: error or ignore?
