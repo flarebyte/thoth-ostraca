@@ -77,6 +77,9 @@ Unsupported use cases (yet):
   - Schema: required fields (locator, meta); error on missing
   - Validation defaults: unknown top-level keys: error; meta.* keys: allowed
   - Validation config: validation.allowUnknownTopLevel (bool, default false)
+  - Config schema: Ship JSON Schema at docs/schema/thoth.config.schema.json; validate YAML/JSON on load
+  - Config versioning: configVersion string (e.g., '1'); breaking changes bump major; unknown version -> error
+  - Config loader: unknown fields: error by default; allow lenient via env THOTH_CONFIG_LENIENT=true (dev only)
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
   - Lua sandbox: Enable base/table/string/math; disable os/io/coroutine/debug by default, No filesystem/network access; no os.execute/io.popen, Per-script timeout + instruction limit via VM hooks, Deterministic math.random by default; configurable seed, Expose helpers under 'thoth.*' namespace (no global pollution)
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
@@ -658,6 +661,28 @@ diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A    
   - Top-level: unknown keys -> error by default; can allow via validation.allowUnknownTopLevel = true
   - Meta object: unknown keys are allowed (user data)
   - Locator: accept file paths (relative/absolute) and URLs (http/https)
+
+## Config Schema & Versioning
+  - Format: YAML preferred; JSON accepted (schema is JSON Schema)
+  - Versioning: configVersion: '1'; breaking changes bump major (e.g., '2'); unknown version -> error
+  - Unknown fields: error by default; dev-only lenient mode via env THOTH_CONFIG_LENIENT=true (ignored fields)
+  - Defaults: applied at load time; loader returns normalized config (no runtime mutation)
+  - Inline Lua (YAML): use block scalar (|) to avoid quoting/escaping issues; mind indentation
+
+## YAML Tips (Inline Lua)
+Example:
+
+```yaml
+configVersion: '1'
+action: pipeline
+filter:
+  inline: |
+    -- keep when meta.enabled is true
+    return (meta and meta.enabled) == true
+map:
+  inline: |
+    return { locator = locator, name = meta and meta.name }
+```
 
 ## Open Design Questions
   - YAML strictness for unknown fields: error or ignore?
