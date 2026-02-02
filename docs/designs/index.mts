@@ -752,7 +752,7 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ]],
   ["Diff flow", "same as update until patch; compute deep diff; do not write"],
   ["Orphans", "scan existing meta files; if locator path missing on disk, report"],
-  ["Diff output", "RFC 6902 JSON Patch per item + summary (created/modified/deleted/orphan/unchanged)"],
+  ["Diff output", "RFC 6902 JSON Patch per item + summary (modified/unchanged/missing/orphan)"],
   ["internal/diff", "generate patches and optional before/after snapshots for debugging"],
   ["Diff config", "includeSnapshots (bool), output: patch|summary|both (default: both)"],
   ["Exit codes", [
@@ -861,9 +861,11 @@ await appendSection("Result Shapes", [
 
 await appendSection("Diff Output Shape", [
   "Per-item result: { file, status, patch?, before?, after? }",
-  "status ∈ { created, modified, deleted, unchanged, orphan }",
-  "patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test)",
-  "before/after: optional full meta snapshots for debugging (disabled by default)",
+  "status ∈ { modified, unchanged, missing, orphan }",
+  "missing: file exists but no meta found (previously 'created')",
+  "orphan: meta exists but locator file is missing",
+  "patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test) transforming before -> after",
+  "before: existing meta object (if any); after: desired meta after applying patch",
   "Top-level summary: counts per status and totals",
 ]);
 
