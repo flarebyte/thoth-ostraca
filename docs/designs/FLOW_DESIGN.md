@@ -626,6 +626,66 @@ update     { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch|meta) Lua
 diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A        patch list (RFC6902) + summary; orphans flagged
 ```
 
+## Pure helper functions
+
+```
+Compute POSIX relPath from root+path [fs.relpath.posix]
+  - note: pure: joins, cleans, converts to '/' separators
+  - pkg: internal/fs
+  - func: FsRelpathPosix
+  - file: internal/fs/relpath_posix.go
+Sanitize filename components [locator.component.sanitize]
+  - note: pure: lowercase, replace invalid chars, collapse dashes
+  - pkg: internal/save
+  - func: LocatorComponentSanitize
+  - file: internal/save/component_sanitize.go
+Compute sha256 prefix + optional rootTag [locator.hash.tag]
+  - note: pure: hash over canonical root + relPath; prefix length configurable
+  - pkg: internal/save
+  - func: LocatorHashTag
+  - file: internal/save/hash_tag.go
+Build meta filename from relPath [save.build_filename]
+  - note: pure: <sha256[:N]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml
+  - pkg: internal/save
+  - func: SaveBuildFilename
+  - file: internal/save/build_filename.go
+Sort records by locator [output.sort.records]
+  - note: pure: stable, deterministic order for pipeline
+  - pkg: internal/output
+  - func: OutputSortRecords
+  - file: internal/output/sort_records.go
+Sort files by relPath [output.sort.files]
+  - note: pure: stable, deterministic order for create/update/diff
+  - pkg: internal/output
+  - func: OutputSortFiles
+  - file: internal/output/sort_files.go
+Shallow merge objects [merge.shallow]
+  - note: pure: replace top-level keys; arrays replaced entirely
+  - pkg: internal/save
+  - func: MergeShallow
+  - file: internal/save/merge_shallow.go
+Deep merge objects [merge.deep]
+  - note: pure: recursive object merge; arrays replaced (v1)
+  - pkg: internal/save
+  - func: MergeDeep
+  - file: internal/save/merge_deep.go
+Compute RFC6902 patch from before/after [diff.jsonpatch.from]
+  - note: pure: deterministic patch generation
+  - pkg: internal/diff
+  - func: DiffJsonpatchFrom
+  - file: internal/diff/jsonpatch_from.go
+Apply argv placeholders with transforms [template.args.substitute]
+  - note: pure: resolve {json},{locator},{file.*}, enforce strictTemplating
+  - pkg: internal/shell
+  - func: TemplateArgsSubstitute
+  - file: internal/shell/args_substitute.go
+Validate top-level meta schema [validate.meta.top_level]
+  - note: pure: 'locator' string, 'meta' object; unknown top-level guard
+  - pkg: internal/meta
+  - func: ValidateMetaTopLevel
+  - file: internal/meta/top_level.go
+```
+
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
   - internal/config: load/validate YAML (inline Lua strings), defaults

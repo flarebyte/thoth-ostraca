@@ -1085,6 +1085,97 @@ actionRows.push(
 
 await appendSection("Action Script Scope", "```\n" + actionRows.join("\n") + "\n```");
 
+// Suggested pure helper functions (not in main tree)
+const helperCalls: ComponentCall[] = [
+  {
+    name: "fs.relpath.posix",
+    title: "Compute POSIX relPath from root+path",
+    note: "pure: joins, cleans, converts to '/' separators",
+    directory: "internal/fs",
+    level: 0,
+  },
+  {
+    name: "locator.component.sanitize",
+    title: "Sanitize filename components",
+    note: "pure: lowercase, replace invalid chars, collapse dashes",
+    directory: "internal/save",
+    level: 0,
+  },
+  {
+    name: "locator.hash.tag",
+    title: "Compute sha256 prefix + optional rootTag",
+    note: "pure: hash over canonical root + relPath; prefix length configurable",
+    directory: "internal/save",
+    level: 0,
+  },
+  {
+    name: "save.build_filename",
+    title: "Build meta filename from relPath",
+    note: "pure: <sha256[:N]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml",
+    directory: "internal/save",
+    level: 0,
+  },
+  {
+    name: "output.sort.records",
+    title: "Sort records by locator",
+    note: "pure: stable, deterministic order for pipeline",
+    directory: "internal/output",
+    level: 0,
+  },
+  {
+    name: "output.sort.files",
+    title: "Sort files by relPath",
+    note: "pure: stable, deterministic order for create/update/diff",
+    directory: "internal/output",
+    level: 0,
+  },
+  {
+    name: "merge.shallow",
+    title: "Shallow merge objects",
+    note: "pure: replace top-level keys; arrays replaced entirely",
+    directory: "internal/save",
+    level: 0,
+  },
+  {
+    name: "merge.deep",
+    title: "Deep merge objects",
+    note: "pure: recursive object merge; arrays replaced (v1)",
+    directory: "internal/save",
+    level: 0,
+  },
+  {
+    name: "diff.jsonpatch.from",
+    title: "Compute RFC6902 patch from before/after",
+    note: "pure: deterministic patch generation",
+    directory: "internal/diff",
+    level: 0,
+  },
+  {
+    name: "template.args.substitute",
+    title: "Apply argv placeholders with transforms",
+    note: "pure: resolve {json},{locator},{file.*}, enforce strictTemplating",
+    directory: "internal/shell",
+    level: 0,
+  },
+  {
+    name: "validate.meta.top_level",
+    title: "Validate top-level meta schema",
+    note: "pure: 'locator' string, 'meta' object; unknown top-level guard",
+    directory: "internal/meta",
+    level: 0,
+  },
+];
+
+const helperDetailedCalls: ComponentCall[] = helperCalls.map((c) => ({
+  ...c,
+  suggest: suggestFor(c),
+}));
+
+await appendToReport("\n## Pure helper functions\n");
+await appendToReport("```");
+await displayCallsDetailed(helperDetailedCalls);
+await appendToReport("```");
+
 await appendSection("Go Package Outline", GO_PACKAGE_OUTLINE);
 
 await appendSection("Design Decisions", DESIGN_DECISIONS);
