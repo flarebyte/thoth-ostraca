@@ -153,12 +153,33 @@ type DiffOptions = {
 type UpdateOptions = {
   merge?: "shallow" | "deep" | "jsonpatch"; // default shallow
 };
+type LuaOptions = {
+  timeoutMs?: number; // per-script soft timeout (hook-driven)
+  instructionLimit?: number; // max instructions per script (hook)
+  memoryLimitBytes?: number; // soft cap (best-effort), may abort on large allocations
+  libs?: {
+    base?: boolean; // basic language features (enabled)
+    table?: boolean; // enabled
+    string?: boolean; // enabled
+    math?: boolean; // enabled (deterministic random if configured)
+    os?: boolean; // disabled by default
+    io?: boolean; // disabled by default
+    coroutine?: boolean; // disabled by default
+    debug?: boolean; // disabled by default
+  };
+  allowOSExecute?: boolean; // default false (no os.execute / io.popen)
+  allowEnv?: boolean; // default false (no direct os.getenv)
+  envAllowlist?: string[]; // if allowEnv, restrict to these keys
+  deterministicRandom?: boolean; // default true: seed math.random with fixed seed
+  randomSeed?: number; // optional fixed seed override
+};
 type PipelineConfig = {
   configVersion?: string;
   action?: "pipeline" | "create" | "update" | "diff"; // which flow to run
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
   errors?: ErrorPolicy; // error handling strategy
+  lua?: LuaOptions; // lua sandbox and runtime options
   filter?: InlineScript; // skip stage if omitted
   map?: InlineScript; // skip if omitted
   shell?: ShellOptions; // optional shell execution
@@ -182,6 +203,15 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
   },
   workers: 8,
   errors: { mode: "keep-going", embedErrors: true },
+  lua: {
+    timeoutMs: 2000,
+    instructionLimit: 1_000_000,
+    memoryLimitBytes: 8 * 1024 * 1024,
+    libs: { base: true, table: true, string: true, math: true },
+    allowOSExecute: false,
+    allowEnv: false,
+    deterministicRandom: true,
+  },
   validation: { allowUnknownTopLevel: false },
   locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true },
   // Lua inline scripts (concise and self-contained)
@@ -711,6 +741,13 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Validation defaults", "unknown top-level keys: error; meta.* keys: allowed"],
   ["Validation config", "validation.allowUnknownTopLevel (bool, default false)"],
   ["Filter/Map/Reduce", "Lua scripts only (gopher-lua) for v1"],
+  ["Lua sandbox", [
+    "Enable base/table/string/math; disable os/io/coroutine/debug by default",
+    "No filesystem/network access; no os.execute/io.popen",
+    "Per-script timeout + instruction limit via VM hooks",
+    "Deterministic math.random by default; configurable seed",
+    "Expose helpers under 'thoth.*' namespace (no global pollution)",
+  ]],
   ["Parallelism", "bounded worker pool; default workers = runtime.NumCPU()"],
   ["Output", "aggregated JSON by default; --lines to stream; --pretty for humans"],
   ["Ordering", [
@@ -878,12 +915,12 @@ await appendSection("Update Merge Strategy", [
   "Validation: patch must apply cleanly; otherwise per-item error",
 ]);
 
-await appendSection("Lua Builtins", [
-  "locator.kind(locator) -> 'file' | 'url'",
-  "locator.normalize(locator, root?) -> string (canonical: file=repo-relative POSIX path; url=lowercase scheme/host, strip default port)",
-  "locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)",
-  "path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')",
-  "url.is_url(s) -> bool (http/https schemes)",
+await appendSection("Lua Builtins (thoth namespace)", [
+  "thoth.locator.kind(locator) -> 'file' | 'url'",
+  "thoth.locator.normalize(locator, root?) -> string (canonical: file=repo-relative POSIX path; url=lowercase scheme/host, strip default port)",
+  "thoth.locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)",
+  "thoth.path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')",
+  "thoth.url.is_url(s) -> bool (http/https schemes)",
 ]);
 
 await appendSection("Locator Normalization", [
@@ -899,6 +936,17 @@ await appendSection("Discovery Semantics", [
   ".gitignore: honored by default even when not in a git repo (local .gitignore files are parsed)",
   "Symlinks: do not follow by default (discovery.followSymlinks=false)",
   "Exclusions: no magic exclusions beyond .gitignore rules",
+]);
+
+await appendSection("Lua Execution Environment", [
+  "Allowed libs: base, table, string, math (by default)",
+  "Disabled libs: os, io, coroutine, debug (by default)",
+  "Filesystem/Network: not accessible from Lua (only via thoth.* helpers)",
+  "Env: not accessible by default; may be allowed via lua.allowEnv + envAllowlist",
+  "Timeouts: per-script timeout (lua.timeoutMs) and instructionLimit enforced via VM hooks",
+  "Memory: soft limit (lua.memoryLimitBytes); abort on large allocations when feasible",
+  "Randomness: math.random seeded deterministically by default; override via lua.randomSeed; set deterministicRandom=false to use time-based seed",
+  "Helpers: exposed under thoth.* namespace; avoid global pollution",
 ]);
 
 await appendSection("Shell Execution Spec", [

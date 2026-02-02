@@ -78,6 +78,7 @@ Unsupported use cases (yet):
   - Validation defaults: unknown top-level keys: error; meta.* keys: allowed
   - Validation config: validation.allowUnknownTopLevel (bool, default false)
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
+  - Lua sandbox: Enable base/table/string/math; disable os/io/coroutine/debug by default, No filesystem/network access; no os.execute/io.popen, Per-script timeout + instruction limit via VM hooks, Deterministic math.random by default; configurable seed, Expose helpers under 'thoth.*' namespace (no global pollution)
   - Parallelism: bounded worker pool; default workers = runtime.NumCPU()
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Ordering: Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff), Lines: nondeterministic (parallel), each line is independent JSON value
@@ -129,6 +130,20 @@ Unsupported use cases (yet):
   "errors": {
     "mode": "keep-going",
     "embedErrors": true
+  },
+  "lua": {
+    "timeoutMs": 2000,
+    "instructionLimit": 1000000,
+    "memoryLimitBytes": 8388608,
+    "libs": {
+      "base": true,
+      "table": true,
+      "string": true,
+      "math": true
+    },
+    "allowOSExecute": false,
+    "allowEnv": false,
+    "deterministicRandom": true
   },
   "validation": {
     "allowUnknownTopLevel": false
@@ -328,12 +343,12 @@ Unsupported use cases (yet):
   - Post-map return: may return { meta } (full desired) or { patch }; if both present, { patch } is applied
   - Validation: patch must apply cleanly; otherwise per-item error
 
-## Lua Builtins
-  - locator.kind(locator) -> 'file' | 'url'
-  - locator.normalize(locator, root?) -> string (canonical: file=repo-relative POSIX path; url=lowercase scheme/host, strip default port)
-  - locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)
-  - path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')
-  - url.is_url(s) -> bool (http/https schemes)
+## Lua Builtins (thoth namespace)
+  - thoth.locator.kind(locator) -> 'file' | 'url'
+  - thoth.locator.normalize(locator, root?) -> string (canonical: file=repo-relative POSIX path; url=lowercase scheme/host, strip default port)
+  - thoth.locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)
+  - thoth.path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')
+  - thoth.url.is_url(s) -> bool (http/https schemes)
 
 ## Locator Normalization
   - File locators: canonical form is repo-relative POSIX-style path (no leading './', '/' forbidden by default)
@@ -347,6 +362,16 @@ Unsupported use cases (yet):
   - .gitignore: honored by default even when not in a git repo (local .gitignore files are parsed)
   - Symlinks: do not follow by default (discovery.followSymlinks=false)
   - Exclusions: no magic exclusions beyond .gitignore rules
+
+## Lua Execution Environment
+  - Allowed libs: base, table, string, math (by default)
+  - Disabled libs: os, io, coroutine, debug (by default)
+  - Filesystem/Network: not accessible from Lua (only via thoth.* helpers)
+  - Env: not accessible by default; may be allowed via lua.allowEnv + envAllowlist
+  - Timeouts: per-script timeout (lua.timeoutMs) and instructionLimit enforced via VM hooks
+  - Memory: soft limit (lua.memoryLimitBytes); abort on large allocations when feasible
+  - Randomness: math.random seeded deterministically by default; override via lua.randomSeed; set deterministicRandom=false to use time-based seed
+  - Helpers: exposed under thoth.* namespace; avoid global pollution
 
 ## Shell Execution Spec
   - Templating: placeholders {name} with optional transforms {name|json} and {name|sh}
