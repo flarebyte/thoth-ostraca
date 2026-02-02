@@ -286,6 +286,48 @@ Unsupported use cases (yet):
 }
 ```
 
+## Action Config (Lua Limits Example)
+```json
+{
+  "configVersion": "1",
+  "action": "pipeline",
+  "discovery": {
+    "root": ".",
+    "noGitignore": false,
+    "followSymlinks": false
+  },
+  "workers": 4,
+  "errors": {
+    "mode": "keep-going",
+    "embedErrors": true
+  },
+  "lua": {
+    "timeoutMs": 500,
+    "instructionLimit": 100000,
+    "memoryLimitBytes": 2097152,
+    "libs": {
+      "base": true,
+      "table": true,
+      "string": true,
+      "math": true
+    },
+    "deterministicRandom": true,
+    "randomSeed": 1234
+  },
+  "filter": {
+    "inline": "return true"
+  },
+  "map": {
+    "inline": "return { locator = locator, ok = true }"
+  },
+  "output": {
+    "lines": false,
+    "pretty": true,
+    "out": "-"
+  }
+}
+```
+
 ## Lua Data Contracts
   - Filter: fn({ locator, meta }) -> bool
   - Map: fn({ locator, meta }) -> any
@@ -349,6 +391,8 @@ Unsupported use cases (yet):
   - thoth.locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)
   - thoth.path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')
   - thoth.url.is_url(s) -> bool (http/https schemes)
+  - thoth.lua.version() -> string (Lua VM version)
+  - thoth.runtime.limits() -> { timeoutMs, instructionLimit, memoryLimitBytes }
 
 ## Locator Normalization
   - File locators: canonical form is repo-relative POSIX-style path (no leading './', '/' forbidden by default)

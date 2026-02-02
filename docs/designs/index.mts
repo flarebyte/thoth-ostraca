@@ -851,6 +851,31 @@ await appendSection(
   "```json\n" + JSON.stringify(ACTION_CONFIG_DIFF_EXAMPLE, null, 2) + "\n```",
 );
 
+// Minimal example showing Lua time/instruction limits overrides
+export const ACTION_CONFIG_LUA_LIMITS_EXAMPLE: PipelineConfig = {
+  configVersion: "1",
+  action: "pipeline",
+  discovery: { root: ".", noGitignore: false, followSymlinks: false },
+  workers: 4,
+  errors: { mode: "keep-going", embedErrors: true },
+  lua: {
+    timeoutMs: 500, // 0.5s per script
+    instructionLimit: 100_000,
+    memoryLimitBytes: 2 * 1024 * 1024,
+    libs: { base: true, table: true, string: true, math: true },
+    deterministicRandom: true,
+    randomSeed: 1234,
+  },
+  filter: { inline: `return true` },
+  map: { inline: `return { locator = locator, ok = true }` },
+  output: { lines: false, pretty: true, out: "-" },
+};
+
+await appendSection(
+  "Action Config (Lua Limits Example)",
+  "```json\n" + JSON.stringify(ACTION_CONFIG_LUA_LIMITS_EXAMPLE, null, 2) + "\n```",
+);
+
 await appendSection("Lua Data Contracts", [
   "Filter: fn({ locator, meta }) -> bool",
   "Map: fn({ locator, meta }) -> any",
@@ -921,6 +946,8 @@ await appendSection("Lua Builtins (thoth namespace)", [
   "thoth.locator.to_file_path(locator, root) -> string|nil (nil for URLs; validates policy; cleans and joins; rejects absolute and '..' by default)",
   "thoth.path.clean_posix(s) -> string (collapse '.', remove redundant '/', no '..')",
   "thoth.url.is_url(s) -> bool (http/https schemes)",
+  "thoth.lua.version() -> string (Lua VM version)",
+  "thoth.runtime.limits() -> { timeoutMs, instructionLimit, memoryLimitBytes }",
 ]);
 
 await appendSection("Locator Normalization", [
