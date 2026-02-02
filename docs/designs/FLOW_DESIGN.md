@@ -40,6 +40,11 @@ thoth CLI root command
         Compute meta diffs
         Detect orphan meta files
         Write JSON result (array/value/lines)
+      Validate meta files only
+        Find *.thoth.yaml files
+        Parse and validate YAML records
+        Collect validation results
+        Write JSON result (array/value/lines)
 ```
 
 Supported use cases:
@@ -60,6 +65,7 @@ Supported use cases:
   - Create many meta files
   - Update many meta files
   - Diff meta files at scale
+  - Validate meta files only — No transforms or shell; emit validation report
 
 
 Unsupported use cases (yet):
@@ -614,6 +620,30 @@ thoth CLI root command [cli.root]
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
+      Validate meta files only [flow.validate]
+        - pkg: internal/pipeline
+        - func: FlowValidate
+        - file: internal/pipeline/flow_validate.go
+        Find *.thoth.yaml files [fs.discovery]
+          - note: walk root; .gitignore ON by default even outside git repos; --no-gitignore to disable; do not follow symlinks by default
+          - pkg: internal/fs
+          - func: FsDiscovery
+          - file: internal/fs/fs_discovery.go
+        Parse and validate YAML records [meta.parse]
+          - note: yaml.v3; strict fields; types; locator canonicalization; top-level unknown = error (unless validation.allowUnknownTopLevel); inside meta: unknown allowed
+          - pkg: internal/meta
+          - func: MetaParse
+          - file: internal/meta/meta_parse.go
+        Collect validation results [meta.validate.only]
+          - note: Schema + locator checks only; no filter/map/reduce/shell
+          - pkg: internal/pipeline
+          - func: MetaValidateOnly
+          - file: internal/pipeline/validate_only.go
+        Write JSON result (array/value/lines) [output.json.result]
+          - note: default: aggregated JSON array (sorted by locator/relPath); --lines streams nondeterministically; reduce → single value; embed per-item errors when configured
+          - pkg: internal/output
+          - func: OutputJsonResult
+          - file: internal/output/json_result.go
 ```
 
 ## Action Script Scope
@@ -624,6 +654,7 @@ pipeline   { locator, meta }          Lua (yes)  Lua (yes)  Lua (shell)  Lua (ye
 create     { file }                   Lua (yes)  Lua (yes)  Lua (yes)    Lua (opt)  array of post-map results; save if enabled
 update     { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch|meta) Lua (opt)  array of updates (dry-run) or write changes
 diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A        patch list (RFC6902) + summary; orphans flagged
+validate   { locator, meta }          N/A        N/A        N/A          N/A        validation report array                   
 ```
 
 ## Pure helper functions

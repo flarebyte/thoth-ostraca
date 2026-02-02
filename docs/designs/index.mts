@@ -93,6 +93,11 @@ const useCases = {
     title: "Validate {locator, meta} schema",
     note: "Required fields: locator:string, meta:object; error on missing",
   },
+  metaValidateOnly: {
+    name: "meta.validate",
+    title: "Validate meta files only",
+    note: "No transforms or shell; emit validation report",
+  },
 };
 
 const getByName = (expectedName: string) =>
@@ -175,7 +180,7 @@ type LuaOptions = {
 };
 type PipelineConfig = {
   configVersion?: string;
-  action?: "pipeline" | "create" | "update" | "diff"; // which flow to run
+  action?: "pipeline" | "create" | "update" | "diff" | "validate"; // which flow to run
   discovery?: DiscoveryOptions;
   workers?: number; // default: CPU count
   errors?: ErrorPolicy; // error handling strategy
@@ -423,6 +428,8 @@ const routeByActionType = (context: FlowContext) => {
   updateFlow(incrContext(context));
   // Diff flow (show changes without writing; detect orphans)
   diffFlow(incrContext(context));
+  // Validate flow (schema/locator only; no transforms/shell)
+  validateFlow(incrContext(context));
 };
 
 const pipelineFlow = (context: FlowContext) => {
@@ -491,6 +498,31 @@ const diffFlow = (context: FlowContext) => {
   computeMetaDiffs(incrContext(context));
   scanForOrphanMetas(incrContext(context));
   outputJsonResult(incrContext(context));
+};
+
+const validateFlow = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "flow.validate",
+    title: "Validate meta files only",
+    level: context.level,
+    useCases: [useCases.metaValidateOnly.name, useCases.metaSchema.name],
+  };
+  calls.push(call);
+  findMetaLocators(incrContext(context));
+  parseYamlRecords(incrContext(context));
+  validateMetaOnly(incrContext(context));
+  outputJsonResult(incrContext(context));
+};
+
+const validateMetaOnly = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "meta.validate.only",
+    title: "Collect validation results",
+    note: "Schema + locator checks only; no filter/map/reduce/shell",
+    level: context.level,
+    useCases: [useCases.metaValidateOnly.name, useCases.metaSchema.name],
+  };
+  calls.push(call);
 };
 
 // File discovery: respects .gitignore and finds *.thoth.yaml files
@@ -1080,6 +1112,18 @@ actionRows.push(
     pad("Lua (patch)", 12),
     pad("N/A", 10),
     pad("patch list (RFC6902) + summary; orphans flagged", 42),
+  ].join(" "),
+);
+
+actionRows.push(
+  [
+    pad("validate", 10),
+    pad("{ locator, meta }", 26),
+    pad("N/A", 10),
+    pad("N/A", 10),
+    pad("N/A", 12),
+    pad("N/A", 10),
+    pad("validation report array", 42),
   ].join(" "),
 );
 
