@@ -35,6 +35,24 @@ export type ComponentCall = {
 };
 
 /**
+ * One stickie per idea by default
+ */
+export type Stickie = {
+  //format for name: blackboard-export-format
+  name: string;
+  // Keep each note concise and focused on what is not obvious, with emphasis
+  // on the “why” (intent, trade-offs, constraints, and rationale). Prefer neutral,
+  // implementation-agnostic phrasing.
+  note?: string;
+  //code in programming language
+  code?: string;
+  // Use labels from this controlled set when
+  // relevant: usecase, example, flow, design, implementation, decision, security, operations,
+  // compliance, glossary, principle, validation, howto, faq, library, wip, stable.
+  labels: string[];
+};
+
+/**
  * Carry indentation depth while walking the design tree.
  */
 export type FlowContext = {
@@ -159,7 +177,9 @@ export const appendUseCases = async (
   catalogByName: Record<string, UseCase>,
 ) => {
   await appendToReport(`${heading}\n`);
-  await appendToReport(toBulletPoints(toUseCaseLines(useCaseNames, catalogByName)));
+  await appendToReport(
+    toBulletPoints(toUseCaseLines(useCaseNames, catalogByName)),
+  );
   await appendToReport("\n");
 };
 
