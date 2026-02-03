@@ -14,6 +14,7 @@ import { calls } from "./calls.mts";
 import { cliRoot } from "./flows.mts";
 import { mustUseCases, useCaseCatalogByName } from "./use_cases.mts";
 import { suggestFor } from "./suggestions.mts";
+import { stringify as yamlStringify } from "bun:yaml";
 import {
   ACTION_CONFIG_EXAMPLE,
   ACTION_CONFIG_CREATE_EXAMPLE,
@@ -151,24 +152,24 @@ export const generateFlowDesignReport = async () => {
     "Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value",
   ]);
   await appendSection(
-    "Action Config (JSON Example)",
-    "```json\n" + JSON.stringify(ACTION_CONFIG_EXAMPLE, null, 2) + "\n```",
+    "Action Config (YAML Example)",
+    "```yaml\n" + yamlStringify(ACTION_CONFIG_EXAMPLE, { indent: 2 }) + "```",
   );
   await appendSection(
     "Action Config (Create Example)",
-    "```json\n" + JSON.stringify(ACTION_CONFIG_CREATE_EXAMPLE, null, 2) + "\n```",
+    "```yaml\n" + yamlStringify(ACTION_CONFIG_CREATE_EXAMPLE, { indent: 2 }) + "```",
   );
   await appendSection(
     "Action Config (Create Minimal Example)",
-    "```json\n" + JSON.stringify(ACTION_CONFIG_CREATE_MINIMAL, null, 2) + "\n```",
+    "```yaml\n" + yamlStringify(ACTION_CONFIG_CREATE_MINIMAL, { indent: 2 }) + "```",
   );
   await appendSection(
     "Action Config (Diff Example)",
-    "```json\n" + JSON.stringify(ACTION_CONFIG_DIFF_EXAMPLE, null, 2) + "\n```",
+    "```yaml\n" + yamlStringify(ACTION_CONFIG_DIFF_EXAMPLE, { indent: 2 }) + "```",
   );
   await appendSection(
     "Action Config (Lua Limits Example)",
-    "```json\n" + JSON.stringify(ACTION_CONFIG_LUA_LIMITS_EXAMPLE, null, 2) + "\n```",
+    "```yaml\n" + yamlStringify(ACTION_CONFIG_LUA_LIMITS_EXAMPLE, { indent: 2 }) + "```",
   );
 
   // Narrative sections

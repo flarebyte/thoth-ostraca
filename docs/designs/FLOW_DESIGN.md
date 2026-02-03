@@ -125,216 +125,185 @@ Unsupported use cases (yet):
   - Reduce: consumes values in the same deterministic order as the aggregated array
   - Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value
 
-## Action Config (JSON Example)
-```json
-{
-  "configVersion": "1",
-  "action": "pipeline",
-  "discovery": {
-    "root": ".",
-    "noGitignore": false,
-    "followSymlinks": false
-  },
-  "workers": 8,
-  "errors": {
-    "mode": "keep-going",
-    "embedErrors": true
-  },
-  "lua": {
-    "timeoutMs": 2000,
-    "instructionLimit": 1000000,
-    "memoryLimitBytes": 8388608,
-    "libs": {
-      "base": true,
-      "table": true,
-      "string": true,
-      "math": true
-    },
-    "allowOSExecute": false,
-    "allowEnv": false,
-    "deterministicRandom": true
-  },
-  "validation": {
-    "allowUnknownTopLevel": false
-  },
-  "locatorPolicy": {
-    "allowAbsolute": false,
-    "allowParentRefs": false,
-    "posixStyle": true
-  },
-  "filter": {
-    "inline": "-- keep records with meta.enabled == true\nreturn (meta and meta.enabled) == true"
-  },
-  "map": {
-    "inline": "-- project selected fields\nreturn { locator = locator, name = meta and meta.name }"
-  },
-  "shell": {
-    "enabled": true,
-    "program": "bash",
-    "argsTemplate": [
-      "echo",
-      "{json}"
-    ],
-    "workingDir": ".",
-    "env": {
-      "CI": "true"
-    },
-    "timeoutMs": 60000,
-    "failFast": true,
-    "capture": {
-      "stdout": true,
-      "stderr": true,
-      "maxBytes": 1048576
-    },
-    "strictTemplating": true,
-    "killProcessGroup": true,
-    "termGraceMs": 2000
-  },
-  "postMap": {
-    "inline": "-- summarize shell result\nreturn { locator = locator, exit = shell.exitCode }"
-  },
-  "reduce": {
-    "inline": "-- count items\nreturn (acc or 0) + 1"
-  },
-  "output": {
-    "lines": false,
-    "pretty": false,
-    "out": "-"
-  }
-}
+## Action Config (YAML Example)
+```yaml
+configVersion: "1"
+action: pipeline
+discovery:
+  root: .
+  noGitignore: false
+  followSymlinks: false
+workers: 8
+errors:
+  mode: keep-going
+  embedErrors: true
+lua:
+  timeoutMs: 2000
+  instructionLimit: 1000000
+  memoryLimitBytes: 8388608
+  libs:
+    base: true
+    table: true
+    string: true
+    math: true
+  allowOSExecute: false
+  allowEnv: false
+  deterministicRandom: true
+validation:
+  allowUnknownTopLevel: false
+locatorPolicy:
+  allowAbsolute: false
+  allowParentRefs: false
+  posixStyle: true
+filter:
+  inline: |-
+    -- keep records with meta.enabled == true
+    return (meta and meta.enabled) == true
+map:
+  inline: |-
+    -- project selected fields
+    return { locator = locator, name = meta and meta.name }
+shell:
+  enabled: true
+  program: bash
+  argsTemplate:
+    - echo
+    - "{json}"
+  workingDir: .
+  env:
+    CI: "true"
+  timeoutMs: 60000
+  failFast: true
+  capture:
+    stdout: true
+    stderr: true
+    maxBytes: 1048576
+  strictTemplating: true
+  killProcessGroup: true
+  termGraceMs: 2000
+postMap:
+  inline: |-
+    -- summarize shell result
+    return { locator = locator, exit = shell.exitCode }
+reduce:
+  inline: |-
+    -- count items
+    return (acc or 0) + 1
+output:
+  lines: false
+  pretty: false
+  out: "-"
 ```
 
 ## Action Config (Create Example)
-```json
-{
-  "configVersion": "1",
-  "action": "create",
-  "discovery": {
-    "root": ".",
-    "noGitignore": false
-  },
-  "workers": 8,
-  "filter": {
-    "inline": "-- only process markdown files\nreturn string.match(file.ext or \"\", \"^%.md$\") ~= nil"
-  },
-  "map": {
-    "inline": "-- produce initial meta from file info\nreturn { title = file.base, category = file.dir }"
-  },
-  "postMap": {
-    "inline": "-- finalize meta shape\nreturn { meta = { title = (input.title or file.base) } }"
-  },
-  "output": {
-    "lines": false,
-    "pretty": false,
-    "out": "-"
-  },
-  "save": {
-    "enabled": false,
-    "onExists": "ignore"
-  }
-}
+```yaml
+configVersion: "1"
+action: create
+discovery:
+  root: .
+  noGitignore: false
+workers: 8
+filter:
+  inline: |-
+    -- only process markdown files
+    return string.match(file.ext or "", "^%.md$") ~= nil
+map:
+  inline: |-
+    -- produce initial meta from file info
+    return { title = file.base, category = file.dir }
+postMap:
+  inline: |-
+    -- finalize meta shape
+    return { meta = { title = (input.title or file.base) } }
+output:
+  lines: false
+  pretty: false
+  out: "-"
+save:
+  enabled: false
+  onExists: ignore
 ```
 
 ## Action Config (Create Minimal Example)
-```json
-{
-  "configVersion": "1",
-  "action": "create",
-  "discovery": {
-    "root": ".",
-    "noGitignore": false
-  },
-  "filter": {
-    "inline": "return true"
-  },
-  "map": {
-    "inline": "return { meta = { created = true } }"
-  },
-  "output": {
-    "lines": false,
-    "pretty": true,
-    "out": "-"
-  },
-  "save": {
-    "enabled": false,
-    "onExists": "ignore",
-    "hashLen": 15
-  }
-}
+```yaml
+configVersion: "1"
+action: create
+discovery:
+  root: .
+  noGitignore: false
+filter:
+  inline: return true
+map:
+  inline: return { meta = { created = true } }
+output:
+  lines: false
+  pretty: true
+  out: "-"
+save:
+  enabled: false
+  onExists: ignore
+  hashLen: 15
 ```
 
 ## Action Config (Diff Example)
-```json
-{
-  "configVersion": "1",
-  "action": "diff",
-  "discovery": {
-    "root": ".",
-    "noGitignore": false
-  },
-  "workers": 8,
-  "errors": {
-    "mode": "keep-going",
-    "embedErrors": true
-  },
-  "filter": {
-    "inline": "-- example: only .json files\nreturn string.match(file.ext or \"\", \"^%.json$\") ~= nil"
-  },
-  "map": {
-    "inline": "-- compute desired meta fields from filename\nreturn { category = file.dir }"
-  },
-  "diff": {
-    "includeSnapshots": false,
-    "output": "both"
-  },
-  "output": {
-    "lines": false,
-    "pretty": true,
-    "out": "-"
-  }
-}
+```yaml
+configVersion: "1"
+action: diff
+discovery:
+  root: .
+  noGitignore: false
+workers: 8
+errors:
+  mode: keep-going
+  embedErrors: true
+filter:
+  inline: |-
+    -- example: only .json files
+    return string.match(file.ext or "", "^%.json$") ~= nil
+map:
+  inline: |-
+    -- compute desired meta fields from filename
+    return { category = file.dir }
+diff:
+  includeSnapshots: false
+  output: both
+output:
+  lines: false
+  pretty: true
+  out: "-"
 ```
 
 ## Action Config (Lua Limits Example)
-```json
-{
-  "configVersion": "1",
-  "action": "pipeline",
-  "discovery": {
-    "root": ".",
-    "noGitignore": false,
-    "followSymlinks": false
-  },
-  "workers": 4,
-  "errors": {
-    "mode": "keep-going",
-    "embedErrors": true
-  },
-  "lua": {
-    "timeoutMs": 500,
-    "instructionLimit": 100000,
-    "memoryLimitBytes": 2097152,
-    "libs": {
-      "base": true,
-      "table": true,
-      "string": true,
-      "math": true
-    },
-    "deterministicRandom": true,
-    "randomSeed": 1234
-  },
-  "filter": {
-    "inline": "return true"
-  },
-  "map": {
-    "inline": "return { locator = locator, ok = true }"
-  },
-  "output": {
-    "lines": false,
-    "pretty": true,
-    "out": "-"
-  }
-}
+```yaml
+configVersion: "1"
+action: pipeline
+discovery:
+  root: .
+  noGitignore: false
+  followSymlinks: false
+workers: 4
+errors:
+  mode: keep-going
+  embedErrors: true
+lua:
+  timeoutMs: 500
+  instructionLimit: 100000
+  memoryLimitBytes: 2097152
+  libs:
+    base: true
+    table: true
+    string: true
+    math: true
+  deterministicRandom: true
+  randomSeed: 1234
+filter:
+  inline: return true
+map:
+  inline: return { locator = locator, ok = true }
+output:
+  lines: false
+  pretty: true
+  out: "-"
 ```
 
 ## Lua Data Contracts
