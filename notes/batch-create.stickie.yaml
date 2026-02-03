@@ -1,0 +1,4 @@
+name: batch-create
+note: Create many meta files
+labels:
+  - usecase

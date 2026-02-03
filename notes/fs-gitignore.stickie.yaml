@@ -1,0 +1,4 @@
+name: fs-gitignore
+note: Respect .gitignore by default — Always on; opt-out via --no-gitignore
+labels:
+  - usecase

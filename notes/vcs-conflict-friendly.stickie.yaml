@@ -1,0 +1,4 @@
+name: vcs-conflict-friendly
+note: One file per locator — Minimize merge conflicts
+labels:
+  - usecase

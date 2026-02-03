@@ -1,0 +1,4 @@
+name: meta-reduce
+note: Reduce across meta set — aggregate stream → single result
+labels:
+  - usecase

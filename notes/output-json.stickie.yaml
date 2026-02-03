@@ -1,0 +1,5 @@
+name: output-json
+note: JSON output for CLI/CI/AI — Machine-oriented default; aggregated JSON;
+  lines optional
+labels:
+  - usecase

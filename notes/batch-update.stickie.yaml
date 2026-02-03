@@ -1,0 +1,4 @@
+name: batch-update
+note: Update many meta files
+labels:
+  - usecase

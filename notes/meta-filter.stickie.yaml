@@ -1,0 +1,4 @@
+name: meta-filter
+note: Filter meta by locator — boolean predicate over {locator, meta}
+labels:
+  - usecase

@@ -1,0 +1,4 @@
+name: meta-map
+note: Map meta records — transform {locator, meta} → any
+labels:
+  - usecase

@@ -1,0 +1,5 @@
+name: meta-schema
+note: "Validate {locator, meta} schema — Required fields: locator:string,
+  meta:object; error on missing"
+labels:
+  - usecase
