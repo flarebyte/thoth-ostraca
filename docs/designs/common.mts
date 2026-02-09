@@ -1,4 +1,5 @@
-import { appendFile, writeFile } from "node:fs/promises";
+import { appendFile, writeFile, mkdir } from "node:fs/promises";
+import { stringify as yamlStringify } from "bun:yaml";
 
 /**
  * Canonical description of a capability or behavior we want to support.
@@ -140,6 +141,42 @@ export const toBulletPoints = (lines: string[]) =>
   lines.map((line) => `  - ${line}`).join("\n");
 
 /**
+ * Convert a free-form title/name into a dash-lower slug suitable for stickie names and filenames.
+ * Rules: lowercase, replace non [a-z0-9] with '-', collapse repeats, trim edges.
+ */
+export const toStickieName = (s: string): string =>
+  s
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+
+/**
+ * Create a stickie YAML file for a section under `notes/`.
+ * Non-fatal: any error while writing the stickie is swallowed so docs generation continues.
+ */
+export const writeSectionStickie = async (
+  title: string,
+  lines: string[] | string,
+  outDir = "notes",
+) => {
+  try {
+    await mkdir(outDir, { recursive: true });
+    const name = toStickieName(title);
+    const note = Array.isArray(lines) ? toBulletPoints(lines) : lines;
+    const stickie: Stickie = {
+      name,
+      note,
+      labels: ["design"],
+    };
+    const yaml = yamlStringify(stickie, { indent: 2 });
+    await writeFile(`${outDir}/${name}.stickie.yaml`, yaml, "utf8");
+  } catch (_) {
+    // Best-effort: ignore errors (e.g., sandboxed environments)
+  }
+};
+
+/**
  * Convenience to add a titled section to the report.
  */
 export const appendSection = async (
@@ -152,6 +189,8 @@ export const appendSection = async (
   } else {
     await appendToReport(lines);
   }
+  // Also emit a stickie for this section (best-effort)
+  await writeSectionStickie(title, lines);
 };
 
 /**

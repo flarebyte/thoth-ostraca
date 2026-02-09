@@ -1,0 +1,12 @@
+name: lua-execution-environment
+note: >2-
+    - Allowed libs: base, table, string, math (by default)
+    - Disabled libs: os, io, coroutine, debug (by default)
+    - Filesystem/Network: not accessible from Lua (only via thoth.* helpers)
+    - Env: not accessible by default; may be allowed via lua.allowEnv + envAllowlist
+    - Timeouts: per-script timeout (lua.timeoutMs) and instructionLimit enforced via VM hooks
+    - Memory: soft limit (lua.memoryLimitBytes); abort on large allocations when feasible
+    - Randomness: math.random seeded deterministically by default; override via lua.randomSeed; set deterministicRandom=false to use time-based seed
+    - Helpers: exposed under thoth.* namespace; avoid global pollution
+labels:
+  - design

@@ -1,0 +1,4 @@
+name: open-design-questions
+note: "  - YAML strictness for unknown fields: error or ignore?"
+labels:
+  - design

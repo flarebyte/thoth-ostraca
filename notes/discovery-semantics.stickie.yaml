@@ -1,0 +1,8 @@
+name: discovery-semantics
+note: >2-
+    - .gitignore: honored by default even when not in a git repo (local
+  .gitignore files are parsed)
+    - Symlinks: do not follow by default (discovery.followSymlinks=false)
+    - Exclusions: no magic exclusions beyond .gitignore rules
+labels:
+  - design

@@ -1,0 +1,72 @@
+name: action-config-yaml-example
+note: |-
+  ```yaml
+  configVersion: "1"
+  action: pipeline
+  discovery:
+    root: .
+    noGitignore: false
+    followSymlinks: false
+  workers: 8
+  errors:
+    mode: keep-going
+    embedErrors: true
+  lua:
+    timeoutMs: 2000
+    instructionLimit: 1000000
+    memoryLimitBytes: 8388608
+    libs:
+      base: true
+      table: true
+      string: true
+      math: true
+    allowOSExecute: false
+    allowEnv: false
+    deterministicRandom: true
+  validation:
+    allowUnknownTopLevel: false
+  locatorPolicy:
+    allowAbsolute: false
+    allowParentRefs: false
+    posixStyle: true
+  filter:
+    inline: |-
+      -- keep records with meta.enabled == true
+      return (meta and meta.enabled) == true
+  map:
+    inline: |-
+      -- project selected fields
+      return { locator = locator, name = meta and meta.name }
+  shell:
+    enabled: true
+    program: bash
+    argsTemplate:
+      - echo
+      - "{json}"
+    workingDir: .
+    env:
+      CI: "true"
+    timeoutMs: 60000
+    failFast: true
+    capture:
+      stdout: true
+      stderr: true
+      maxBytes: 1048576
+    strictTemplating: true
+    killProcessGroup: true
+    termGraceMs: 2000
+  postMap:
+    inline: |-
+      -- summarize shell result
+      return { locator = locator, exit = shell.exitCode }
+  reduce:
+    inline: |-
+      -- count items
+      return (acc or 0) + 1
+  output:
+    lines: false
+    pretty: false
+    out: "-"
+  ```
+labels:
+  - design

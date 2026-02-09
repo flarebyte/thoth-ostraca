@@ -1,0 +1,11 @@
+name: reduce-behavior
+note: >2-
+    - pipeline.reduce: accumulates over map or post-map(shell) results in
+  deterministic order (sorted by locator); returns a single JSON value
+    - create.reduce (optional): accumulates over post-map results in deterministic order (sorted by file.relPath); dry-run friendly
+    - update.reduce (optional): accumulates over post-map patches/simulated results in deterministic order (sorted by file.relPath)
+    - acc initialization: starts as nil in Lua (use 'acc or <default>'); any JSON-serializable value allowed
+    - when reduce is present: output is a single JSON value; --lines is ignored
+    - diff: reduce not applicable (summary auto-generated)
+labels:
+  - design

@@ -1,0 +1,8 @@
+name: schema-validation
+note: >2-
+    - Top-level: required keys 'locator' (string, non-empty) and 'meta' (object)
+    - Top-level: unknown keys -> error by default; can allow via validation.allowUnknownTopLevel = true
+    - Meta object: unknown keys are allowed (user data)
+    - Locator: accept file paths (relative/absolute) and URLs (http/https)
+labels:
+  - design

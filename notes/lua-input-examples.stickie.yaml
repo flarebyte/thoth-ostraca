@@ -1,0 +1,9 @@
+name: lua-input-examples
+note: >2-
+    - pipeline.filter/map: { locator = "path/or/url", meta = { ... } }
+    - pipeline.post-map(shell): { locator, input = <map result>, shell = { cmd, exitCode, stdout, stderr, durationMs } }
+    - create.filter/map: { file = { path, relPath, dir, base, name, ext } }
+    - update.post-map: { file, input = <map result>, existing = { locator, meta }? }
+    - diff.post-map: { file, input = <map result>, existing = { locator, meta }? }
+labels:
+  - design

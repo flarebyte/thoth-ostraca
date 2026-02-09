@@ -1,0 +1,8 @@
+name: ordering-determinism
+note: >2-
+    - Aggregated output (array): deterministic sort
+    - Sort key: 'locator' for pipeline; 'file.relPath' for create/update/diff
+    - Reduce: consumes values in the same deterministic order as the aggregated array
+    - Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value
+labels:
+  - design

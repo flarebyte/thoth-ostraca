@@ -1,0 +1,31 @@
+name: action-config-create-example
+note: |-
+  ```yaml
+  configVersion: "1"
+  action: create
+  discovery:
+    root: .
+    noGitignore: false
+  workers: 8
+  filter:
+    inline: |-
+      -- only process markdown files
+      return string.match(file.ext or "", "^%.md$") ~= nil
+  map:
+    inline: |-
+      -- produce initial meta from file info
+      return { title = file.base, category = file.dir }
+  postMap:
+    inline: |-
+      -- finalize meta shape
+      return { meta = { title = (input.title or file.base) } }
+  output:
+    lines: false
+    pretty: false
+    out: "-"
+  save:
+    enabled: false
+    onExists: ignore
+  ```
+labels:
+  - design

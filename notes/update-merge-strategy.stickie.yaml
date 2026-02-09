@@ -1,0 +1,10 @@
+name: update-merge-strategy
+note: >2-
+    - config.update.merge: 'shallow' | 'deep' | 'jsonpatch' (default 'shallow')
+    - shallow: replace top-level keys; arrays replaced entirely
+    - deep: recursive merge for objects; arrays replaced (v1 semantics)
+    - jsonpatch: apply RFC6902 operations from post-map { patch }
+    - Post-map return: may return { meta } (full desired) or { patch }; if both present, { patch } is applied
+    - Validation: patch must apply cleanly; otherwise per-item error
+labels:
+  - design

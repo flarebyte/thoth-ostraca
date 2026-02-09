@@ -1,0 +1,30 @@
+name: action-config-diff-example
+note: |-
+  ```yaml
+  configVersion: "1"
+  action: diff
+  discovery:
+    root: .
+    noGitignore: false
+  workers: 8
+  errors:
+    mode: keep-going
+    embedErrors: true
+  filter:
+    inline: |-
+      -- example: only .json files
+      return string.match(file.ext or "", "^%.json$") ~= nil
+  map:
+    inline: |-
+      -- compute desired meta fields from filename
+      return { category = file.dir }
+  diff:
+    includeSnapshots: false
+    output: both
+  output:
+    lines: false
+    pretty: true
+    out: "-"
+  ```
+labels:
+  - design
