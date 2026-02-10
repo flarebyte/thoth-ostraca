@@ -13,6 +13,7 @@ import {
   reduceMetaRecords,
   outputJsonResult,
   findFilesForCreate,
+  enrichFilesWithOptionalInfo,
   filterFilenames,
   mapFilenames,
   postMapFromFiles,
@@ -101,6 +102,7 @@ export const createFlow = (context: FlowContext) => {
   };
   calls.push(call);
   findFilesForCreate(incrContext(context));
+  enrichFilesWithOptionalInfo(incrContext(context));
   filterFilenames(incrContext(context));
   mapFilenames(incrContext(context));
   postMapFromFiles(incrContext(context));
@@ -117,6 +119,7 @@ export const updateFlow = (context: FlowContext) => {
   };
   calls.push(call);
   findFilesForUpdate(incrContext(context));
+  enrichFilesWithOptionalInfo(incrContext(context));
   filterFilenames(incrContext(context));
   mapFilenames(incrContext(context));
   loadExistingMeta(incrContext(context));
@@ -134,6 +137,7 @@ export const diffFlow = (context: FlowContext) => {
   };
   calls.push(call);
   findFilesForUpdate(incrContext(context));
+  enrichFilesWithOptionalInfo(incrContext(context));
   filterFilenames(incrContext(context));
   mapFilenames(incrContext(context));
   loadExistingMeta(incrContext(context));
@@ -156,4 +160,3 @@ export const validateFlow = (context: FlowContext) => {
   validateMetaOnly(incrContext(context));
   outputJsonResult(incrContext(context));
 };
-

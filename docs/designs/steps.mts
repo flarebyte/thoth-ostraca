@@ -36,6 +36,17 @@ export const findFilesForCreate = (context: FlowContext) => {
   calls.push(call);
 };
 
+export const enrichFilesWithOptionalInfo = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "files.enrich",
+    title: "Enrich files with OS/Git info",
+    note: "Conditional: files.info and/or files.git; attach file.info (os.Stat) and file.git (go-git status/last commit)",
+    level: context.level,
+    useCases: [useCases.filesInfo.name, useCases.filesGit.name],
+  };
+  calls.push(call);
+};
+
 export const findFilesForUpdate = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "fs.discovery.files.update",

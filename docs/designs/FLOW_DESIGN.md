@@ -18,6 +18,7 @@ thoth CLI root command
         Write JSON result (array/value/lines)
       Create meta files flow
         Find files recursively (gitignore)
+        Enrich files with OS/Git info
         Filter filenames
         Map filenames
         Post-map from files
@@ -25,6 +26,7 @@ thoth CLI root command
         Write JSON result (array/value/lines)
       Update meta files flow
         Find files recursively (update)
+        Enrich files with OS/Git info
         Filter filenames
         Map filenames
         Load existing meta (if any)
@@ -33,6 +35,7 @@ thoth CLI root command
         Write JSON result (array/value/lines)
       Diff meta files flow
         Find files recursively (update)
+        Enrich files with OS/Git info
         Filter filenames
         Map filenames
         Load existing meta (if any)
@@ -486,6 +489,11 @@ thoth CLI root command [cli.root]
           - pkg: internal/fs
           - func: FsDiscoveryFiles
           - file: internal/fs/discovery_files.go
+        Enrich files with OS/Git info [files.enrich]
+          - note: Conditional: files.info and/or files.git; attach file.info (os.Stat) and file.git (go-git status/last commit)
+          - pkg: internal/pipeline
+          - func: FilesEnrich
+          - file: internal/pipeline/files_enrich.go
         Filter filenames [files.filter.step]
           - note: Lua-only predicate (v1) over {file}
           - pkg: internal/pipeline
@@ -520,6 +528,11 @@ thoth CLI root command [cli.root]
           - pkg: internal/fs
           - func: FsDiscoveryFilesUpdate
           - file: internal/fs/files_update.go
+        Enrich files with OS/Git info [files.enrich]
+          - note: Conditional: files.info and/or files.git; attach file.info (os.Stat) and file.git (go-git status/last commit)
+          - pkg: internal/pipeline
+          - func: FilesEnrich
+          - file: internal/pipeline/files_enrich.go
         Filter filenames [files.filter.step]
           - note: Lua-only predicate (v1) over {file}
           - pkg: internal/pipeline
@@ -559,6 +572,11 @@ thoth CLI root command [cli.root]
           - pkg: internal/fs
           - func: FsDiscoveryFilesUpdate
           - file: internal/fs/files_update.go
+        Enrich files with OS/Git info [files.enrich]
+          - note: Conditional: files.info and/or files.git; attach file.info (os.Stat) and file.git (go-git status/last commit)
+          - pkg: internal/pipeline
+          - func: FilesEnrich
+          - file: internal/pipeline/files_enrich.go
         Filter filenames [files.filter.step]
           - note: Lua-only predicate (v1) over {file}
           - pkg: internal/pipeline
@@ -695,6 +713,7 @@ Validate top-level meta schema [validate.meta.top_level]
   - cmd/thoth: cobra wiring, --config parsing, action routing
   - internal/config: load/validate YAML (inline Lua strings), defaults
   - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true; optional Git via go-git when files.git=true)
+  - internal/git: repository detection + file status and last-commit via go-git (files.git=true)
   - internal/meta: YAML read/write of {locator, meta}
   - internal/lua: gopher-lua helpers to run inline scripts with typed inputs
   - internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool
