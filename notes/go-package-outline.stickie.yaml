@@ -2,7 +2,7 @@ name: go-package-outline
 note: >2-
     - cmd/thoth: cobra wiring, --config parsing, action routing
     - internal/config: load/validate YAML (inline Lua strings), defaults
-    - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true)
+    - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true; optional Git via go-git when files.git=true)
     - internal/meta: YAML read/write of {locator, meta}
     - internal/lua: gopher-lua helpers to run inline scripts with typed inputs
     - internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool

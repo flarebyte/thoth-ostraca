@@ -16,12 +16,17 @@ export type OutputOptions = {
 // are populated in addition to path components.
 export type FilesInputOptions = {
   info?: boolean; // default false: include size/mode/modTime/isDir when true
+  git?: boolean; // default false: include Git metadata (file.git) when true
 };
 
 // File input object shape (Lua-visible as `file`):
 // - Always present: { path, relPath, dir, base, name, ext }
 // - When files.info=true: { size (int), mode (string or numeric), modTime (RFC3339 string), isDir (bool) }
 //   Exact runtime encoding tbd; intent is to mirror key os.FileInfo fields for filtering/mapping convenience.
+// - When files.git=true: file.git = {
+//     tracked (bool), ignored (bool),
+//     lastCommitSha (string), lastAuthorName (string), lastAuthorEmail (string), lastCommitTime (RFC3339 string)
+//   } (populated via go-git when repository is detected)
 export type ShellCapture = { stdout?: boolean; stderr?: boolean; maxBytes?: number };
 export type ShellOptions = {
   enabled?: boolean; // set true to run shell step
@@ -167,8 +172,8 @@ export const ACTION_CONFIG_CREATE_EXAMPLE: PipelineConfig = {
     root: ".",
     noGitignore: false,
   },
-  // When true, expose os.FileInfo-derived fields on {file}
-  files: { info: true },
+  // When true, expose os.FileInfo-derived fields and Git metadata on {file}
+  files: { info: true, git: true },
   workers: 8,
   // Filter filenames (receive { file })
   filter: {

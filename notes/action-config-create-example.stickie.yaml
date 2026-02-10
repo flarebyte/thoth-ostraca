@@ -8,6 +8,7 @@ note: |-
     noGitignore: false
   files:
     info: true
+    git: true
   workers: 8
   filter:
     inline: |-

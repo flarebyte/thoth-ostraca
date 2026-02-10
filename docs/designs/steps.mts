@@ -75,7 +75,7 @@ export const filterFilenames = (context: FlowContext) => {
     title: "Filter filenames",
     note: "Lua-only predicate (v1) over {file}",
     level: context.level,
-    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name, useCases.filesInfo.name],
+    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name, useCases.filesInfo.name, useCases.filesGit.name],
   };
   calls.push(call);
 };
@@ -86,7 +86,7 @@ export const mapFilenames = (context: FlowContext) => {
     title: "Map filenames",
     note: "Lua-only map (v1) over {file}",
     level: context.level,
-    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name, useCases.filesInfo.name],
+    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name, useCases.filesInfo.name, useCases.filesGit.name],
   };
   calls.push(call);
 };
@@ -97,7 +97,7 @@ export const postMapFromFiles = (context: FlowContext) => {
     title: "Post-map from files",
     note: "Conditional: inline Lua transforms {file,input} -> any",
     level: context.level,
-    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name, useCases.filesInfo.name],
+    useCases: [useCases.batchCreate.name, useCases.embeddedScripting.name, useCases.filesInfo.name, useCases.filesGit.name],
   };
   calls.push(call);
 };
@@ -130,7 +130,7 @@ export const postMapUpdateFromFiles = (context: FlowContext) => {
     title: "Post-map for update (with existing)",
     note: "Lua receives {file,input,existing?}; returns either { meta } (full desired) or { patch } (RFC6902)",
     level: context.level,
-    useCases: [useCases.batchUpdate.name, useCases.embeddedScripting.name, useCases.filesInfo.name],
+    useCases: [useCases.batchUpdate.name, useCases.embeddedScripting.name, useCases.filesInfo.name, useCases.filesGit.name],
   };
   calls.push(call);
 };

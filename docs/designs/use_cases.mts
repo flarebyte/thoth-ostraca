@@ -6,6 +6,11 @@ export const useCases: Record<string, UseCase> = {
     title: "Expose os.FileInfo for inputs",
     note: "Include size, mode, modTime, isDir for filtering/mapping when enabled",
   },
+  filesGit: {
+    name: "files.git",
+    title: "Expose Git metadata for inputs",
+    note: "Use go-git to provide tracked/ignored and last commit info when enabled",
+  },
   metaFilter: {
     name: "meta.filter",
     title: "Filter meta by locator",
