@@ -11,6 +11,17 @@ export type OutputOptions = {
   pretty?: boolean; // default false
   out?: string; // file path or "-" for stdout
 };
+// Options controlling what fields are available on the {file} input object
+// used by files.filter/map/postMap. When info=true, os.FileInfo-derived fields
+// are populated in addition to path components.
+export type FilesInputOptions = {
+  info?: boolean; // default false: include size/mode/modTime/isDir when true
+};
+
+// File input object shape (Lua-visible as `file`):
+// - Always present: { path, relPath, dir, base, name, ext }
+// - When files.info=true: { size (int), mode (string or numeric), modTime (RFC3339 string), isDir (bool) }
+//   Exact runtime encoding tbd; intent is to mirror key os.FileInfo fields for filtering/mapping convenience.
 export type ShellCapture = { stdout?: boolean; stderr?: boolean; maxBytes?: number };
 export type ShellOptions = {
   enabled?: boolean; // set true to run shell step
@@ -77,6 +88,7 @@ export type PipelineConfig = {
   configVersion?: string;
   action?: "pipeline" | "create" | "update" | "diff" | "validate"; // which flow to run
   discovery?: DiscoveryOptions;
+  files?: FilesInputOptions; // control available {file} fields for filtering/mapping
   workers?: number; // default: CPU count
   errors?: ErrorPolicy; // error handling strategy
   lua?: LuaOptions; // lua sandbox and runtime options
@@ -155,6 +167,8 @@ export const ACTION_CONFIG_CREATE_EXAMPLE: PipelineConfig = {
     root: ".",
     noGitignore: false,
   },
+  // When true, expose os.FileInfo-derived fields on {file}
+  files: { info: true },
   workers: 8,
   // Filter filenames (receive { file })
   filter: {

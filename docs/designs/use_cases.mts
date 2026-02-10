@@ -1,6 +1,11 @@
 import { UseCase } from "./common.mts";
 
 export const useCases: Record<string, UseCase> = {
+  filesInfo: {
+    name: "files.info",
+    title: "Expose os.FileInfo for inputs",
+    note: "Include size, mode, modTime, isDir for filtering/mapping when enabled",
+  },
   metaFilter: {
     name: "meta.filter",
     title: "Filter meta by locator",
@@ -92,4 +97,3 @@ export const mustUseCases = new Set([
 
 export const useCaseCatalogByName: Record<string, { name: string; title: string; note?: string }> =
   Object.fromEntries(Object.values(useCases).map((u) => [u.name, u]));
-

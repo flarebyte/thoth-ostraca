@@ -6,6 +6,8 @@ note: |-
   discovery:
     root: .
     noGitignore: false
+  files:
+    info: true
   workers: 8
   filter:
     inline: |-

@@ -63,6 +63,7 @@ Supported use cases:
   - Run shell using map output — Support bash, sh, zsh early
   - Reduce across meta set — aggregate stream → single result
   - Create many meta files
+  - Expose os.FileInfo for inputs — Include size, mode, modTime, isDir for filtering/mapping when enabled
   - Update many meta files
   - Diff meta files at scale
   - Validate meta files only — No transforms or shell; emit validation report
@@ -202,6 +203,8 @@ action: create
 discovery:
   root: .
   noGitignore: false
+files:
+  info: true
 workers: 8
 filter:
   inline: |-
@@ -689,7 +692,7 @@ Validate top-level meta schema [validate.meta.top_level]
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
   - internal/config: load/validate YAML (inline Lua strings), defaults
-  - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext})
+  - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true)
   - internal/meta: YAML read/write of {locator, meta}
   - internal/lua: gopher-lua helpers to run inline scripts with typed inputs
   - internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool
@@ -746,7 +749,7 @@ map:
 
 ## Stage Contracts
   - Record: struct { Locator string; Meta map[string]any }
-  - FileInfo: struct { Path, RelPath, Dir, Base, Name, Ext string }
+  - FileInfo: struct { Path, RelPath, Dir, Base, Name, Ext string } + optional { Size int64; Mode os.FileMode; Mod time.Time; IsDir bool } when files.info=true
   - ShellResult: struct { Cmd []string; ExitCode int; Stdout []byte; Stderr []byte; Duration time.Duration }
   - JSONPatch: []PatchOp (RFC6902)
   - MetaOut: struct { Meta map[string]any }
