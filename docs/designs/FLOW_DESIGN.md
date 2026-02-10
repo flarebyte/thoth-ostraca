@@ -64,7 +64,7 @@ Supported use cases:
   - Reduce across meta set — aggregate stream → single result
   - Create many meta files
   - Expose os.FileInfo for inputs — Include size, mode, modTime, isDir for filtering/mapping when enabled
-  - Expose Git metadata for inputs — Use go-git to provide tracked/ignored and last commit info when enabled
+  - Expose Git metadata for inputs — Use go-git to provide tracked/ignored, worktree status, and last commit info when enabled
   - Update many meta files
   - Diff meta files at scale
   - Validate meta files only — No transforms or shell; emit validation report
@@ -752,7 +752,7 @@ map:
 ## Stage Contracts
   - Record: struct { Locator string; Meta map[string]any }
   - FileInfo: struct { Path, RelPath, Dir, Base, Name, Ext string } + optional { Size int64; Mode os.FileMode; Mod time.Time; IsDir bool } when files.info=true
-  - GitInfo (file.git when files.git=true): struct { Tracked bool; Ignored bool; LastCommitSha string; LastAuthorName string; LastAuthorEmail string; LastCommitTime time.Time }
+  - GitInfo (file.git when files.git=true): struct { Tracked bool; Ignored bool; LastCommitSha string; LastAuthorName string; LastAuthorEmail string; LastCommitTime time.Time; Status string; WorktreeStatus string; StagingStatus string }
   - ShellResult: struct { Cmd []string; ExitCode int; Stdout []byte; Stderr []byte; Duration time.Duration }
   - JSONPatch: []PatchOp (RFC6902)
   - MetaOut: struct { Meta map[string]any }

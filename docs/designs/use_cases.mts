@@ -9,7 +9,7 @@ export const useCases: Record<string, UseCase> = {
   filesGit: {
     name: "files.git",
     title: "Expose Git metadata for inputs",
-    note: "Use go-git to provide tracked/ignored and last commit info when enabled",
+    note: "Use go-git to provide tracked/ignored, worktree status, and last commit info when enabled",
   },
   metaFilter: {
     name: "meta.filter",

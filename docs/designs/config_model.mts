@@ -25,7 +25,10 @@ export type FilesInputOptions = {
 //   Exact runtime encoding tbd; intent is to mirror key os.FileInfo fields for filtering/mapping convenience.
 // - When files.git=true: file.git = {
 //     tracked (bool), ignored (bool),
-//     lastCommitSha (string), lastAuthorName (string), lastAuthorEmail (string), lastCommitTime (RFC3339 string)
+//     lastCommitSha (string), lastAuthorName (string), lastAuthorEmail (string), lastCommitTime (RFC3339 string),
+//     -- status from worktree.Status():
+//     status (string: one of "unmodified","modified","added","deleted","renamed","copied","unmerged","untracked","ignored"),
+//     worktreeStatus (string: same enum), stagingStatus (string: same enum)
 //   } (populated via go-git when repository is detected)
 export type ShellCapture = { stdout?: boolean; stderr?: boolean; maxBytes?: number };
 export type ShellOptions = {
