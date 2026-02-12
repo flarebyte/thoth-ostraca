@@ -1,4 +1,0 @@
-name: action-config
-note: Load action config file — Prefer YAML; allow JSON
-labels:
-  - usecase

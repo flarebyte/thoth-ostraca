@@ -1,4 +1,0 @@
-name: map-shell
-note: Run shell using map output — Support bash, sh, zsh early
-labels:
-  - usecase

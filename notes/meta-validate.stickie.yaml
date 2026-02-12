@@ -1,4 +1,0 @@
-name: meta-validate
-note: Validate meta files only — No transforms or shell; emit validation report
-labels:
-  - usecase

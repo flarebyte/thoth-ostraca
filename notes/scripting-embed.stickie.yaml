@@ -1,4 +1,0 @@
-name: scripting-embed
-note: "Script filter/map/reduce — Lua only (v1): small + popular"
-labels:
-  - usecase
