@@ -1,0 +1,14 @@
+name: risk-configuration-and-scripting-complexity
+note: >-
+  Description:
+
+  - Users may struggle with config structure, schema errors, or Lua script
+  pitfalls, leading to confusion and misconfiguration.
+
+
+  Mitigation:
+
+  - CUE schema validation with clear errors, concise examples, helpful CLI
+  flags, and good error messages at each stage.
+labels:
+  - design

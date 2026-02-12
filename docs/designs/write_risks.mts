@@ -1,4 +1,5 @@
 import { writeFile } from "node:fs/promises";
+import { writeSectionStickie } from "./common.mts";
 import { risks } from "./risks.mts";
 
 const RISKS_PATH = "docs/RISKS.md";
@@ -29,5 +30,15 @@ export const generateRisksReport = async () => {
   }
 
   await writeFile(RISKS_PATH, lines.join("\n"), "utf8");
-};
 
+  // Also generate one stickie per risk with markdown-like sections in the note.
+  for (const r of entries) {
+    const title = `Risk: ${r.title}`;
+    const note = [
+      `Description:\n- ${r.description}`,
+      `Mitigation:\n- ${r.mitigation}`,
+    ].join("\n\n");
+    // Place under notes/ root folder (no subfolder)
+    await writeSectionStickie(title, note, "notes");
+  }
+};
