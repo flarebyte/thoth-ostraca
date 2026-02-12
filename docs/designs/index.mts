@@ -1,4 +1,5 @@
 import { generateFlowDesignReport } from "./write_report.mts";
+import { generateRisksReport } from "./write_risks.mts";
 
 // Re-export config examples to preserve the previous API surface
 export {
@@ -8,4 +9,4 @@ export {
 } from "./config_model.mts";
 
 await generateFlowDesignReport();
-
+await generateRisksReport();

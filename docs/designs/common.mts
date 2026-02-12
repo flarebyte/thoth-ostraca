@@ -14,6 +14,20 @@ export type UseCase = {
 };
 
 /**
+ * Canonical description of a risk in the design.
+ * - name: short machine-friendly identifier
+ * - title: concise human-friendly description
+ * - description: what could go wrong and why
+ * - mitigation: actions or controls to reduce impact/likelihood
+ */
+export type Risk = {
+  name: string;
+  title: string;
+  description: string;
+  mitigation: string;
+};
+
+/**
  * A single step in the flow-tree that the CLI will execute.
  * - name/title: brief identifiers for the step
  * - note: optional clarifying detail
@@ -236,3 +250,9 @@ export const appendKeyValueList = async (
   });
   await appendToReport(toBulletPoints(lines));
 };
+
+/**
+ * Baseline risk catalogue for the project.
+ * Add or refine entries as the design evolves.
+ */
+// Risk records live in docs/designs/risks.mts
