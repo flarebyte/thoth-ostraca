@@ -54,7 +54,7 @@ Supported use cases:
 
   - Helpful, well-documented flags
   - JSON output for CLI/CI/AI — Machine-oriented default; aggregated JSON; lines optional
-  - Load action config file — Prefer YAML; allow JSON
+  - Load action config file — Prefer CUE (.cue) with schema validation
   - Respect .gitignore by default — Always on; opt-out via --no-gitignore
   - One file per locator — Minimize merge conflicts
   - Validate {locator, meta} schema — Required fields: locator:string, meta:object; error on missing
@@ -83,12 +83,12 @@ Unsupported use cases (yet):
   - Module: go 1.22; command name: thoth
   - CLI: cobra for command tree; viper optional
   - Types: type Record struct { Locator string; Meta map[string]any }
-  - YAML: gopkg.in/yaml.v3 for *.thoth.yaml
+  - YAML: gopkg.in/yaml.v3 for *.thoth.yaml (meta records)
   - Discovery: filepath.WalkDir + gitignore filter (go-gitignore); apply .gitignore even if not a git repo; do not follow symlinks by default
   - Schema: required fields (locator, meta); error on missing
   - Validation defaults: unknown top-level keys: error; meta.* keys: allowed
   - Validation config: validation.allowUnknownTopLevel (bool, default false)
-  - Config schema: Ship JSON Schema at docs/schema/thoth.config.schema.json; validate YAML/JSON on load
+  - Config schema: Ship CUE schema at docs/schema/thoth.config.cue; validate .cue on load
   - Config versioning: configVersion string (e.g., '1'); breaking changes bump major; unknown version -> error
   - Config loader: unknown fields: error by default; allow lenient via env THOTH_CONFIG_LENIENT=true (dev only)
   - Filter/Map/Reduce: Lua scripts only (gopher-lua) for v1
@@ -98,7 +98,7 @@ Unsupported use cases (yet):
   - Ordering: Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff), Lines: nondeterministic (parallel), each line is independent JSON value
   - Errors: Policy: errors.mode keep-going|fail-fast (default keep-going), Embed: errors.embedErrors=true includes per-item error objects; final exit non-zero if any error, Parse/validation errors: reported per-item when possible; fatal config/load errors abort early
   - Commands: thoth run (exec action config: pipeline/create/update/diff)
-  - Flags: --config (YAML preferred; JSON accepted), --save (enable saving in create)
+  - Flags: --config (.cue CUE file), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: Lua fn(acc, value) -> acc; initial acc=nil (Lua sees nil), Applies in deterministic order (locator/relPath sort), Any JSON-serializable acc allowed (object/array/number/string/bool/null)
   - Map: returns free-form JSON (any)
@@ -130,188 +130,73 @@ Unsupported use cases (yet):
   - Reduce: consumes values in the same deterministic order as the aggregated array
   - Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value
 
-## Action Config (YAML Example)
-```yaml
+## Action Config (CUE Example)
+```cue
 configVersion: "1"
-action: pipeline
-discovery:
-  root: .
-  noGitignore: false
-  followSymlinks: false
+action: "pipeline"
+discovery: { root: ".", noGitignore: false, followSymlinks: false }
 workers: 8
-errors:
-  mode: keep-going
-  embedErrors: true
-lua:
-  timeoutMs: 2000
-  instructionLimit: 1000000
-  memoryLimitBytes: 8388608
-  libs:
-    base: true
-    table: true
-    string: true
-    math: true
-  allowOSExecute: false
-  allowEnv: false
-  deterministicRandom: true
-validation:
-  allowUnknownTopLevel: false
-locatorPolicy:
-  allowAbsolute: false
-  allowParentRefs: false
-  posixStyle: true
-filter:
-  inline: |-
-    -- keep records with meta.enabled == true
-    return (meta and meta.enabled) == true
-map:
-  inline: |-
-    -- project selected fields
-    return { locator = locator, name = meta and meta.name }
-shell:
-  enabled: true
-  program: bash
-  argsTemplate:
-    - echo
-    - "{json}"
-  workingDir: .
-  env:
-    CI: "true"
-  timeoutMs: 60000
-  failFast: true
-  capture:
-    stdout: true
-    stderr: true
-    maxBytes: 1048576
-  strictTemplating: true
-  killProcessGroup: true
-  termGraceMs: 2000
-postMap:
-  inline: |-
-    -- summarize shell result
-    return { locator = locator, exit = shell.exitCode }
-reduce:
-  inline: |-
-    -- count items
-    return (acc or 0) + 1
-output:
-  lines: false
-  pretty: false
-  out: "-"
+errors: { mode: "keep-going", embedErrors: true }
+lua: { timeoutMs: 2000, instructionLimit: 1000000, memoryLimitBytes: 8388608, libs: { base: true, table: true, string: true, math: true }, deterministicRandom: true }
+validation: { allowUnknownTopLevel: false }
+locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true }
+filter: { inline: "return (meta and meta.enabled) == true" }
+map:    { inline: "return { locator = locator, name = meta and meta.name }" }
+shell:  { enabled: true, program: "bash", argsTemplate: ["echo", "{json}"], workingDir: ".", env: { CI: "true" }, timeoutMs: 60000, failFast: true, capture: { stdout: true, stderr: true, maxBytes: 1048576 }, strictTemplating: true, killProcessGroup: true, termGraceMs: 2000 }
+postMap:{ inline: "return { locator = locator, exit = shell.exitCode }" }
+reduce: { inline: "return (acc or 0) + 1" }
+output: { lines: false, pretty: false, out: "-" }
 ```
 
-## Action Config (Create Example)
-```yaml
+## Action Config (Create Example, CUE)
+```cue
 configVersion: "1"
-action: create
-discovery:
-  root: .
-  noGitignore: false
-files:
-  info: true
-  git: true
+action: "create"
+discovery: { root: ".", noGitignore: false }
+files: { info: true, git: true }
 workers: 8
-filter:
-  inline: |-
-    -- only process markdown files
-    return string.match(file.ext or "", "^%.md$") ~= nil
-map:
-  inline: |-
-    -- produce initial meta from file info
-    return { title = file.base, category = file.dir }
-postMap:
-  inline: |-
-    -- finalize meta shape
-    return { meta = { title = (input.title or file.base) } }
-output:
-  lines: false
-  pretty: false
-  out: "-"
-save:
-  enabled: false
-  onExists: ignore
+filter: { inline: "return string.match(file.ext or "", "^%.md$") ~= nil" }
+map:    { inline: "return { title = file.base, category = file.dir }" }
+postMap:{ inline: "return { meta = { title = (input.title or file.base) } }" }
+output: { lines: false, pretty: false, out: "-" }
+save:   { enabled: false, onExists: "ignore" }
 ```
 
-## Action Config (Create Minimal Example)
-```yaml
+## Action Config (Create Minimal, CUE)
+```cue
 configVersion: "1"
-action: create
-discovery:
-  root: .
-  noGitignore: false
-filter:
-  inline: return true
-map:
-  inline: return { meta = { created = true } }
-output:
-  lines: false
-  pretty: true
-  out: "-"
-save:
-  enabled: false
-  onExists: ignore
-  hashLen: 15
+action: "create"
+discovery: { root: ".", noGitignore: false }
+filter: { inline: "return true" }
+map:    { inline: "return { meta = { created = true } }" }
+output: { lines: false, pretty: true, out: "-" }
+save:   { enabled: false, onExists: "ignore", hashLen: 15 }
 ```
 
-## Action Config (Diff Example)
-```yaml
+## Action Config (Diff Example, CUE)
+```cue
 configVersion: "1"
-action: diff
-discovery:
-  root: .
-  noGitignore: false
+action: "diff"
+discovery: { root: ".", noGitignore: false }
 workers: 8
-errors:
-  mode: keep-going
-  embedErrors: true
-filter:
-  inline: |-
-    -- example: only .json files
-    return string.match(file.ext or "", "^%.json$") ~= nil
-map:
-  inline: |-
-    -- compute desired meta fields from filename
-    return { category = file.dir }
-diff:
-  includeSnapshots: false
-  output: both
-output:
-  lines: false
-  pretty: true
-  out: "-"
+errors: { mode: "keep-going", embedErrors: true }
+filter: { inline: "return string.match(file.ext or "", "^%.json$") ~= nil" }
+map:    { inline: "return { category = file.dir }" }
+diff:   { includeSnapshots: false, output: "both" }
+output: { lines: false, pretty: true, out: "-" }
 ```
 
-## Action Config (Lua Limits Example)
-```yaml
+## Action Config (Lua Limits, CUE)
+```cue
 configVersion: "1"
-action: pipeline
-discovery:
-  root: .
-  noGitignore: false
-  followSymlinks: false
+action: "pipeline"
+discovery: { root: ".", noGitignore: false, followSymlinks: false }
 workers: 4
-errors:
-  mode: keep-going
-  embedErrors: true
-lua:
-  timeoutMs: 500
-  instructionLimit: 100000
-  memoryLimitBytes: 2097152
-  libs:
-    base: true
-    table: true
-    string: true
-    math: true
-  deterministicRandom: true
-  randomSeed: 1234
-filter:
-  inline: return true
-map:
-  inline: return { locator = locator, ok = true }
-output:
-  lines: false
-  pretty: true
-  out: "-"
+errors: { mode: "keep-going", embedErrors: true }
+lua: { timeoutMs: 500, instructionLimit: 100000, memoryLimitBytes: 2097152, libs: { base: true, table: true, string: true, math: true }, deterministicRandom: true, randomSeed: 1234 }
+filter: { inline: "return true" }
+map:    { inline: "return { locator = locator, ok = true }" }
+output: { lines: false, pretty: true, out: "-" }
 ```
 
 ## Lua Data Contracts
@@ -422,12 +307,12 @@ thoth CLI root command [cli.root]
   - func: CliRoot
   - file: cmd/thoth/cli_root.go
   Parse args for run [cli.run]
-    - note: flags: --config (YAML preferred; JSON accepted). All other options belong in the action config.
+    - note: flags: --config (CUE .cue file). All other options belong in the action config.
     - pkg: cmd/thoth
     - func: CliRun
     - file: cmd/thoth/cli_run.go
     Load action config file [action.config.load]
-      - note: --config path; YAML preferred; JSON accepted; drives entire pipeline
+      - note: --config path; CUE schema-validated .cue; drives entire pipeline
       - pkg: internal/config
       - func: ActionConfigLoad
       - file: internal/config/config_load.go
@@ -711,7 +596,7 @@ Validate top-level meta schema [validate.meta.top_level]
 
 ## Go Package Outline
   - cmd/thoth: cobra wiring, --config parsing, action routing
-  - internal/config: load/validate YAML (inline Lua strings), defaults
+  - internal/config: load/validate CUE (inline Lua strings), defaults
   - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true; optional Git via go-git when files.git=true)
   - internal/git: repository detection + file status and last-commit via go-git (files.git=true)
   - internal/meta: YAML read/write of {locator, meta}
@@ -747,25 +632,20 @@ Validate top-level meta schema [validate.meta.top_level]
   - Locator: accept file paths (relative/absolute) and URLs (http/https)
 
 ## Config Schema & Versioning
-  - Format: YAML preferred; JSON accepted (schema is JSON Schema)
+  - Format: CUE (.cue) preferred; schema lives at docs/schema/thoth.config.cue
+  - Validation: configs are evaluated and validated against CUE schema; unknown fields rejected by default
   - Versioning: configVersion: '1'; breaking changes bump major (e.g., '2'); unknown version -> error
-  - Unknown fields: error by default; dev-only lenient mode via env THOTH_CONFIG_LENIENT=true (ignored fields)
-  - Defaults: applied at load time; loader returns normalized config (no runtime mutation)
-  - Inline Lua (YAML): use block scalar (|) to avoid quoting/escaping issues; mind indentation
+  - Defaults: encoded directly in CUE schema; loader evaluates to a normalized config
+  - Inline Lua (CUE): use quoted strings for short code or triple-quoted strings for multi-line scripts
 
-## YAML Tips (Inline Lua)
+## CUE Tips (Inline Lua)
 Example:
 
-```yaml
-configVersion: '1'
-action: pipeline
-filter:
-  inline: |
-    -- keep when meta.enabled is true
-    return (meta and meta.enabled) == true
-map:
-  inline: |
-    return { locator = locator, name = meta and meta.name }
+```cue
+configVersion: "1"
+action: "pipeline"
+filter: { inline: "return (meta and meta.enabled) == true" }
+map:    { inline: "return { locator = locator, name = meta and meta.name }" }
 ```
 
 ## Stage Contracts

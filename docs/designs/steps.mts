@@ -183,7 +183,7 @@ export const loadActionConfig = (context: FlowContext) => {
   const call: ComponentCall = {
     name: "action.config.load",
     title: "Load action config file",
-    note: "--config path; YAML preferred; JSON accepted; drives entire pipeline",
+    note: "--config path; CUE schema-validated .cue; drives entire pipeline",
     level: context.level,
     useCases: [useCases.actionConfig.name],
   };

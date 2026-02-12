@@ -1,7 +1,7 @@
 name: go-package-outline
 note: >2-
     - cmd/thoth: cobra wiring, --config parsing, action routing
-    - internal/config: load/validate YAML (inline Lua strings), defaults
+    - internal/config: load/validate CUE (inline Lua strings), defaults
     - internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true; optional Git via go-git when files.git=true)
     - internal/git: repository detection + file status and last-commit via go-git (files.git=true)
     - internal/meta: YAML read/write of {locator, meta}

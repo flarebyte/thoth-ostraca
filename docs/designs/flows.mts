@@ -47,7 +47,7 @@ export const cliArgsRun = (context: FlowContext) => {
     name: "cli.run",
     title: "Parse args for run",
     directory: "cmd/thoth",
-    note: "flags: --config (YAML preferred; JSON accepted). All other options belong in the action config.",
+    note: "flags: --config (CUE .cue file). All other options belong in the action config.",
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };

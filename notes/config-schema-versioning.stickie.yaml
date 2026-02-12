@@ -1,9 +1,9 @@
 name: config-schema-versioning
 note: >2-
-    - Format: YAML preferred; JSON accepted (schema is JSON Schema)
+    - Format: CUE (.cue) preferred; schema lives at docs/schema/thoth.config.cue
+    - Validation: configs are evaluated and validated against CUE schema; unknown fields rejected by default
     - Versioning: configVersion: '1'; breaking changes bump major (e.g., '2'); unknown version -> error
-    - Unknown fields: error by default; dev-only lenient mode via env THOTH_CONFIG_LENIENT=true (ignored fields)
-    - Defaults: applied at load time; loader returns normalized config (no runtime mutation)
-    - Inline Lua (YAML): use block scalar (|) to avoid quoting/escaping issues; mind indentation
+    - Defaults: encoded directly in CUE schema; loader evaluates to a normalized config
+    - Inline Lua (CUE): use quoted strings for short code or triple-quoted strings for multi-line scripts
 labels:
   - design

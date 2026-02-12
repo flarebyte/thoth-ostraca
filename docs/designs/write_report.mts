@@ -14,18 +14,11 @@ import { calls } from "./calls.mts";
 import { cliRoot } from "./flows.mts";
 import { mustUseCases, useCaseCatalogByName } from "./use_cases.mts";
 import { suggestFor } from "./suggestions.mts";
-import { stringify as yamlStringify } from "bun:yaml";
-import {
-  ACTION_CONFIG_EXAMPLE,
-  ACTION_CONFIG_CREATE_EXAMPLE,
-  ACTION_CONFIG_CREATE_MINIMAL,
-  ACTION_CONFIG_DIFF_EXAMPLE,
-  ACTION_CONFIG_LUA_LIMITS_EXAMPLE,
-} from "./config_model.mts";
+// CUE is the preferred format for action configs; examples are embedded below
 
 const GO_PACKAGE_OUTLINE: string[] = [
   "cmd/thoth: cobra wiring, --config parsing, action routing",
-  "internal/config: load/validate YAML (inline Lua strings), defaults",
+  "internal/config: load/validate CUE (inline Lua strings), defaults",
   "internal/fs: walk with gitignore, file info struct ({path, relPath, dir, base, name, ext} + optional {size, mode, modTime, isDir} when files.info=true; optional Git via go-git when files.git=true)",
   "internal/git: repository detection + file status and last-commit via go-git (files.git=true)",
   "internal/meta: YAML read/write of {locator, meta}",
@@ -52,12 +45,12 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
   ["Module", "go 1.22; command name: thoth"],
   ["CLI", "cobra for command tree; viper optional"],
   ["Types", "type Record struct { Locator string; Meta map[string]any }"],
-  ["YAML", "gopkg.in/yaml.v3 for *.thoth.yaml"],
+  ["YAML", "gopkg.in/yaml.v3 for *.thoth.yaml (meta records)"],
   ["Discovery", "filepath.WalkDir + gitignore filter (go-gitignore); apply .gitignore even if not a git repo; do not follow symlinks by default"],
   ["Schema", "required fields (locator, meta); error on missing"],
   ["Validation defaults", "unknown top-level keys: error; meta.* keys: allowed"],
   ["Validation config", "validation.allowUnknownTopLevel (bool, default false)"],
-  ["Config schema", "Ship JSON Schema at docs/schema/thoth.config.schema.json; validate YAML/JSON on load"],
+  ["Config schema", "Ship CUE schema at docs/schema/thoth.config.cue; validate .cue on load"],
   ["Config versioning", "configVersion string (e.g., '1'); breaking changes bump major; unknown version -> error"],
   ["Config loader", "unknown fields: error by default; allow lenient via env THOTH_CONFIG_LENIENT=true (dev only)"],
   ["Filter/Map/Reduce", "Lua scripts only (gopher-lua) for v1"],
@@ -80,7 +73,7 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
     "Parse/validation errors: reported per-item when possible; fatal config/load errors abort early",
   ]],
   ["Commands", "thoth run (exec action config: pipeline/create/update/diff)"],
-  ["Flags", "--config (YAML preferred; JSON accepted), --save (enable saving in create)"],
+  ["Flags", "--config (.cue CUE file), --save (enable saving in create)"],
   ["Tests", "golden tests for I/O; fs testdata fixtures"],
   ["Reduce", [
     "Lua fn(acc, value) -> acc; initial acc=nil (Lua sees nil)",
@@ -153,24 +146,88 @@ export const generateFlowDesignReport = async () => {
     "Streaming (--lines): order is nondeterministic due to parallelism; each line is independent JSON value",
   ]);
   await appendSection(
-    "Action Config (YAML Example)",
-    "```yaml\n" + yamlStringify(ACTION_CONFIG_EXAMPLE, { indent: 2 }) + "```",
+    "Action Config (CUE Example)",
+    "```cue\n" +
+      [
+        'configVersion: "1"',
+        'action: "pipeline"',
+        "discovery: { root: \".\", noGitignore: false, followSymlinks: false }",
+        "workers: 8",
+        "errors: { mode: \"keep-going\", embedErrors: true }",
+        "lua: { timeoutMs: 2000, instructionLimit: 1000000, memoryLimitBytes: 8388608, libs: { base: true, table: true, string: true, math: true }, deterministicRandom: true }",
+        "validation: { allowUnknownTopLevel: false }",
+        "locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true }",
+        'filter: { inline: "return (meta and meta.enabled) == true" }',
+        'map:    { inline: "return { locator = locator, name = meta and meta.name }" }',
+        'shell:  { enabled: true, program: "bash", argsTemplate: ["echo", "{json}"], workingDir: ".", env: { CI: "true" }, timeoutMs: 60000, failFast: true, capture: { stdout: true, stderr: true, maxBytes: 1048576 }, strictTemplating: true, killProcessGroup: true, termGraceMs: 2000 }',
+        'postMap:{ inline: "return { locator = locator, exit = shell.exitCode }" }',
+        'reduce: { inline: "return (acc or 0) + 1" }',
+        'output: { lines: false, pretty: false, out: "-" }',
+      ].join("\n") +
+      "\n```",
   );
   await appendSection(
-    "Action Config (Create Example)",
-    "```yaml\n" + yamlStringify(ACTION_CONFIG_CREATE_EXAMPLE, { indent: 2 }) + "```",
+    "Action Config (Create Example, CUE)",
+    "```cue\n" +
+      [
+        'configVersion: "1"',
+        'action: "create"',
+        'discovery: { root: ".", noGitignore: false }',
+        'files: { info: true, git: true }',
+        'workers: 8',
+        'filter: { inline: "return string.match(file.ext or \"\", \"^%.md$\") ~= nil" }',
+        'map:    { inline: "return { title = file.base, category = file.dir }" }',
+        'postMap:{ inline: "return { meta = { title = (input.title or file.base) } }" }',
+        'output: { lines: false, pretty: false, out: "-" }',
+        'save:   { enabled: false, onExists: "ignore" }',
+      ].join("\n") +
+      "\n```",
   );
   await appendSection(
-    "Action Config (Create Minimal Example)",
-    "```yaml\n" + yamlStringify(ACTION_CONFIG_CREATE_MINIMAL, { indent: 2 }) + "```",
+    "Action Config (Create Minimal, CUE)",
+    "```cue\n" +
+      [
+        'configVersion: "1"',
+        'action: "create"',
+        'discovery: { root: ".", noGitignore: false }',
+        'filter: { inline: "return true" }',
+        'map:    { inline: "return { meta = { created = true } }" }',
+        'output: { lines: false, pretty: true, out: "-" }',
+        'save:   { enabled: false, onExists: "ignore", hashLen: 15 }',
+      ].join("\n") +
+      "\n```",
   );
   await appendSection(
-    "Action Config (Diff Example)",
-    "```yaml\n" + yamlStringify(ACTION_CONFIG_DIFF_EXAMPLE, { indent: 2 }) + "```",
+    "Action Config (Diff Example, CUE)",
+    "```cue\n" +
+      [
+        'configVersion: "1"',
+        'action: "diff"',
+        'discovery: { root: ".", noGitignore: false }',
+        'workers: 8',
+        'errors: { mode: "keep-going", embedErrors: true }',
+        'filter: { inline: "return string.match(file.ext or \"\", \"^%.json$\") ~= nil" }',
+        'map:    { inline: "return { category = file.dir }" }',
+        'diff:   { includeSnapshots: false, output: "both" }',
+        'output: { lines: false, pretty: true, out: "-" }',
+      ].join("\n") +
+      "\n```",
   );
   await appendSection(
-    "Action Config (Lua Limits Example)",
-    "```yaml\n" + yamlStringify(ACTION_CONFIG_LUA_LIMITS_EXAMPLE, { indent: 2 }) + "```",
+    "Action Config (Lua Limits, CUE)",
+    "```cue\n" +
+      [
+        'configVersion: "1"',
+        'action: "pipeline"',
+        'discovery: { root: ".", noGitignore: false, followSymlinks: false }',
+        'workers: 4',
+        'errors: { mode: "keep-going", embedErrors: true }',
+        'lua: { timeoutMs: 500, instructionLimit: 100000, memoryLimitBytes: 2097152, libs: { base: true, table: true, string: true, math: true }, deterministicRandom: true, randomSeed: 1234 }',
+        'filter: { inline: "return true" }',
+        'map:    { inline: "return { locator = locator, ok = true }" }',
+        'output: { lines: false, pretty: true, out: "-" }',
+      ].join("\n") +
+      "\n```",
   );
 
   // Narrative sections
@@ -445,25 +502,20 @@ export const generateFlowDesignReport = async () => {
     "Locator: accept file paths (relative/absolute) and URLs (http/https)",
   ]);
   await appendSection("Config Schema & Versioning", [
-    "Format: YAML preferred; JSON accepted (schema is JSON Schema)",
+    "Format: CUE (.cue) preferred; schema lives at docs/schema/thoth.config.cue",
+    "Validation: configs are evaluated and validated against CUE schema; unknown fields rejected by default",
     "Versioning: configVersion: '1'; breaking changes bump major (e.g., '2'); unknown version -> error",
-    "Unknown fields: error by default; dev-only lenient mode via env THOTH_CONFIG_LENIENT=true (ignored fields)",
-    "Defaults: applied at load time; loader returns normalized config (no runtime mutation)",
-    "Inline Lua (YAML): use block scalar (|) to avoid quoting/escaping issues; mind indentation",
+    "Defaults: encoded directly in CUE schema; loader evaluates to a normalized config",
+    "Inline Lua (CUE): use quoted strings for short code or triple-quoted strings for multi-line scripts",
   ]);
   await appendSection(
-    "YAML Tips (Inline Lua)",
-    "Example:\n\n```yaml\n" +
+    "CUE Tips (Inline Lua)",
+    "Example:\n\n```cue\n" +
       [
-        "configVersion: '1'",
-        "action: pipeline",
-        "filter:",
-        "  inline: |",
-        "    -- keep when meta.enabled is true",
-        "    return (meta and meta.enabled) == true",
-        "map:",
-        "  inline: |",
-        "    return { locator = locator, name = meta and meta.name }",
+        'configVersion: "1"',
+        'action: "pipeline"',
+        'filter: { inline: "return (meta and meta.enabled) == true" }',
+        'map:    { inline: "return { locator = locator, name = meta and meta.name }" }',
       ].join("\n") +
       "\n```",
   );

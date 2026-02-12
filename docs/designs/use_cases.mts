@@ -29,7 +29,7 @@ export const useCases: Record<string, UseCase> = {
   actionConfig: {
     name: "action.config",
     title: "Load action config file",
-    note: "Prefer YAML; allow JSON",
+    note: "Prefer CUE (.cue) with schema validation",
   },
   embeddedScripting: {
     name: "scripting.embed",
