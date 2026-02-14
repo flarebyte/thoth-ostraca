@@ -1,9 +1,5 @@
 import { calls } from './calls.mts';
-import {
-  type ComponentCall,
-  type FlowContext,
-  incrContext,
-} from './common.mts';
+import type { ComponentCall, FlowContext } from './common.mts';
 import { useCases } from './use_cases.mts';
 
 export const validateMetaOnly = (context: FlowContext) => {

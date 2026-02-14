@@ -488,7 +488,8 @@ export const generateFlowDesignReport = async () => {
   );
   await appendSection(
     'Action Script Scope',
-    '```\n' + actionRows.join('\n') + '\n```',
+    `\
+\`\`\`\n${actionRows.join('\n')}\n\`\`\``,
   );
 
   // Helper functions and remaining sections

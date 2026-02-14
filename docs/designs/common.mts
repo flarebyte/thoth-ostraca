@@ -102,7 +102,7 @@ export const resetReport = async () => {
  * Append a single line to the generated design report.
  */
 export const appendToReport = async (line: string) => {
-  await appendFile('docs/designs/FLOW_DESIGN.md', line + '\n', 'utf8');
+  await appendFile('docs/designs/FLOW_DESIGN.md', `${line}\n`, 'utf8');
 };
 
 /**
