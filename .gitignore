@@ -46,6 +46,7 @@ node_modules/
 
 # Go cache
 .gocache/
+.gomodcache/
 .cache/
 
 # Local GOPATH when sandboxed
