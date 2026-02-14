@@ -24,6 +24,18 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	out.Meta.Config = &ConfigMeta{ConfigVersion: min.ConfigVersion, Action: min.Action}
 	// Do not persist configPath in output
 	out.Meta.ConfigPath = ""
+	// Optionally expose discovery settings if present
+	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore {
+		if out.Meta.Discovery == nil {
+			out.Meta.Discovery = &DiscoveryMeta{}
+		}
+		if min.Discovery.HasRoot {
+			out.Meta.Discovery.Root = min.Discovery.Root
+		}
+		if min.Discovery.HasNoGitignore {
+			out.Meta.Discovery.NoGitignore = min.Discovery.NoGitignore
+		}
+	}
 	return out, nil
 }
 

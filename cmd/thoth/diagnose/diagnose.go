@@ -18,6 +18,8 @@ var (
 	flagDumpIn  string
 	flagDumpOut string
 	flagConfig  string
+	flagRoot    string
+	flagNoGit   bool
 )
 
 // Cmd implements `thoth diagnose`.
@@ -44,6 +46,18 @@ var Cmd = &cobra.Command{
 			inEnv = stage.Envelope{Records: []any{}}
 			if flagConfig != "" {
 				inEnv.Meta = &stage.Meta{ConfigPath: flagConfig}
+			}
+			if flagRoot != "" || flagNoGit {
+				if inEnv.Meta == nil {
+					inEnv.Meta = &stage.Meta{}
+				}
+				inEnv.Meta.Discovery = &stage.DiscoveryMeta{}
+				if flagRoot != "" {
+					inEnv.Meta.Discovery.Root = flagRoot
+				}
+				if flagNoGit {
+					inEnv.Meta.Discovery.NoGitignore = true
+				}
 			}
 		}
 
@@ -84,6 +98,8 @@ func init() {
 	Cmd.Flags().StringVar(&flagDumpIn, "dump-in", "", "Path to write resolved input envelope JSON")
 	Cmd.Flags().StringVar(&flagDumpOut, "dump-out", "", "Path to write output envelope JSON")
 	Cmd.Flags().StringVar(&flagConfig, "config", "", "Config path used when --in omitted")
+	Cmd.Flags().StringVar(&flagRoot, "root", "", "Discovery root used when --in omitted")
+	Cmd.Flags().BoolVar(&flagNoGit, "no-gitignore", false, "Disable .gitignore filtering (when --in omitted)")
 }
 
 func writeJSONFile(path string, v any) error {

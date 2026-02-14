@@ -25,11 +25,15 @@ var Cmd = &cobra.Command{
 			return fmt.Errorf("missing required flag: --config")
 		}
 		in := stage.Envelope{Records: []any{}, Meta: &stage.Meta{ConfigPath: cfgPath}}
-		out, err := stage.Run(context.Background(), "validate-config", in, stage.Deps{})
+		e1, err := stage.Run(context.Background(), "validate-config", in, stage.Deps{})
 		if err != nil {
 			return err
 		}
-		b, err := json.Marshal(out)
+		e2, err := stage.Run(context.Background(), "discover-meta-files", e1, stage.Deps{})
+		if err != nil {
+			return err
+		}
+		b, err := json.Marshal(e2)
 		if err != nil {
 			return err
 		}

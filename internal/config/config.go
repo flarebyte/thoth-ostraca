@@ -54,6 +54,7 @@ func requireStringField(v cue.Value, name string) error {
 type Minimal struct {
 	ConfigVersion string
 	Action        string
+	Discovery     Discovery
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -85,5 +86,29 @@ func ParseMinimal(path string) (Minimal, error) {
 	if err := av.Decode(&m.Action); err != nil {
 		return Minimal{}, fmt.Errorf("invalid value for action: %v", err)
 	}
+	// Optional discovery fields
+	dv := v.LookupPath(cue.ParsePath("discovery"))
+	if dv.Exists() {
+		rv := dv.LookupPath(cue.ParsePath("root"))
+		if rv.Exists() && rv.Kind() == cue.StringKind {
+			if err := rv.Decode(&m.Discovery.Root); err == nil {
+				m.Discovery.HasRoot = true
+			}
+		}
+		ngv := dv.LookupPath(cue.ParsePath("noGitignore"))
+		if ngv.Exists() && (ngv.Kind() == cue.BoolKind) {
+			if err := ngv.Decode(&m.Discovery.NoGitignore); err == nil {
+				m.Discovery.HasNoGitignore = true
+			}
+		}
+	}
 	return m, nil
+}
+
+// Discovery holds optional discovery config and presence flags.
+type Discovery struct {
+	Root           string
+	NoGitignore    bool
+	HasRoot        bool
+	HasNoGitignore bool
 }

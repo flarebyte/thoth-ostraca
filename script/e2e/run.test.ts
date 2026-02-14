@@ -32,14 +32,28 @@ test("thoth run with valid config prints envelope JSON", () => {
   const root = path.resolve(__dirname, "../..");
   const bin = buildBinary(root);
   const cfg = path.join(root, "testdata/configs/minimal.cue");
-  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/out.golden.json"), "utf8");
-  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
   const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
   // Save outputs for inspection; temp/ is git-ignored
   const tempDir = path.join(root, "temp");
   fs.mkdirSync(tempDir, { recursive: true });
   fs.writeFileSync(path.join(tempDir, "out.txt"), run.stdout);
   fs.writeFileSync(path.join(tempDir, "err.txt"), (run as any).stderr ?? "");
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  const parsed = JSON.parse(run.stdout);
+  expect(typeof parsed).toBe("object");
+  expect(Array.isArray(parsed.records)).toBe(true);
+  expect(typeof parsed.meta.config.configVersion).toBe("string");
+  expect(typeof parsed.meta.config.action).toBe("string");
+});
+
+test("thoth run executes discovery and respects gitignore by default", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/discovery1.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/discovery1_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
   expect(run.status).toBe(0);
   expect(run.stderr).toBe("");
   expect(run.stdout).toBe(expectedOut);

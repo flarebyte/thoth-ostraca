@@ -92,3 +92,32 @@ test("diagnose validate-config produces expected envelope when --config is provi
   expect(run.stderr).toBe("");
   expect(run.stdout).toBe(expectedOut);
 });
+
+test("diagnose discover-meta-files respects gitignore by default and can be disabled", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const repoRoot = path.join(root, "testdata/repos/discovery1");
+  const expectedAllRaw = fs.readFileSync(path.join(root, "testdata/diagnose/discover_all_out.golden.json"), "utf8");
+  const expectedAll = JSON.stringify(JSON.parse(expectedAllRaw)) + "\n";
+
+  // With no-gitignore: both files present
+  const runAll = spawnSync(
+    bin,
+    [
+      "diagnose",
+      "--stage",
+      "discover-meta-files",
+      "--root",
+      repoRoot,
+      "--no-gitignore",
+    ],
+    { encoding: "utf8", cwd: root }
+  );
+  expect(runAll.status).toBe(0);
+  expect(runAll.stderr).toBe("");
+  const parsed = JSON.parse(runAll.stdout);
+  const recs = parsed.records as Array<{ locator: string }>;
+  const locs = recs.map((r) => r.locator);
+  // Exact order expected
+  expect(JSON.stringify(locs)).toBe(JSON.stringify(["a.thoth.yaml", "ignored/x.thoth.yaml"]));
+});

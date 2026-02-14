@@ -6,6 +6,12 @@ type Error struct {
 	Message string `json:"message"`
 }
 
+// DiscoveryMeta holds discovery options.
+type DiscoveryMeta struct {
+	Root        string `json:"root,omitempty"`
+	NoGitignore bool   `json:"noGitignore,omitempty"`
+}
+
 // ConfigMeta holds validated config essentials.
 type ConfigMeta struct {
 	ConfigVersion string `json:"configVersion"`
@@ -14,9 +20,10 @@ type ConfigMeta struct {
 
 // Meta holds optional metadata with deterministic JSON field order.
 type Meta struct {
-	Stage      string      `json:"stage,omitempty"`
-	ConfigPath string      `json:"configPath,omitempty"`
-	Config     *ConfigMeta `json:"config,omitempty"`
+	Stage      string         `json:"stage,omitempty"`
+	ConfigPath string         `json:"configPath,omitempty"`
+	Config     *ConfigMeta    `json:"config,omitempty"`
+	Discovery  *DiscoveryMeta `json:"discovery,omitempty"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.
