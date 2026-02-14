@@ -41,6 +41,9 @@ scratch/
 # Node / general JS deps
 node_modules/
 
+# Dev-only binaries
+.e2e-bin/
+
 # Go cache
 .gocache/
 .cache/
