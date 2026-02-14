@@ -1,0 +1,13 @@
+name: design-decisions
+note: |2-
+    - Filter: Lua-only (v1)
+    - Map: free-form JSON (any)
+    - Reduce: plain JSON value
+    - Output: machine-oriented JSON by default (aggregate unless --lines)
+    - Gitignore: always on; --no-gitignore to opt out
+    - Workers: default = CPU count (overridable via --workers)
+    - YAML: error on missing required fields (locator, meta)
+    - Shells: bash, sh, zsh supported early
+    - Save filename: sha256 prefix length = 15 by default
+labels:
+  - design

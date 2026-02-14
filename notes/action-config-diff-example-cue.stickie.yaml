@@ -1,0 +1,15 @@
+name: action-config-diff-example-cue
+note: |-
+  ```cue
+  configVersion: "1"
+  action: "diff"
+  discovery: { root: ".", noGitignore: false }
+  workers: 8
+  errors: { mode: "keep-going", embedErrors: true }
+  filter: { inline: "return string.match(file.ext or "", "^%.json$") ~= nil" }
+  map:    { inline: "return { category = file.dir }" }
+  diff:   { includeSnapshots: false, output: "both" }
+  output: { lines: false, pretty: true, out: "-" }
+  ```
+labels:
+  - design

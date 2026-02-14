@@ -1,0 +1,9 @@
+name: config-schema-versioning
+note: >2-
+    - Format: CUE (.cue) preferred; schema lives at docs/schema/thoth.config.cue
+    - Validation: configs are evaluated and validated against CUE schema; unknown fields rejected by default
+    - Versioning: configVersion: '1'; breaking changes bump major (e.g., '2'); unknown version -> error
+    - Defaults: encoded directly in CUE schema; loader evaluates to a normalized config
+    - Inline Lua (CUE): use quoted strings for short code or triple-quoted strings for multi-line scripts
+labels:
+  - design

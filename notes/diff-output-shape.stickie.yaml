@@ -1,0 +1,11 @@
+name: diff-output-shape
+note: >2-
+    - Per-item result: { file, status, patch?, before?, after? }
+    - status ∈ { modified, unchanged, missing, orphan }
+    - missing: file exists but no meta found (previously 'created')
+    - orphan: meta exists but locator file is missing
+    - patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test) transforming before -> after
+    - before: existing meta object (if any); after: desired meta after applying patch
+    - Top-level summary: counts per status and totals
+labels:
+  - design

@@ -1,0 +1,14 @@
+name: diagnose-command
+note: >2-
+    - Subcommand: thoth diagnose
+    - Required flags: -c/--config <path> (CUE), --step <name>
+    - Input selection (mutually exclusive): --input-file <path> | --input-inline '<json>' | --input-stdin
+    - Default input mode: prepare upstream stages to boundary to generate realistic input
+    - Fixture capture: --dump-in [<path>|-], --dump-out [<path>|-] (JSON/NDJSON)
+    - Debug flags: --limit <N>, --seed <int>, --dry-shell (shell stage only)
+    - Semantics: execute only target step; upstream may run in prepare mode; no downstream
+    - Observability: emit header { action, executedStep, preparedStages, inputMode, limits } to stderr
+    - Streams: normal stage outputs -> stdout; diagnostics/logs/errors -> stderr; when dumping to '-', use it as stdout output
+    - Errors: non-zero on invalid config/step/json or stage failure; include action, step, input mode, item context
+labels:
+  - design

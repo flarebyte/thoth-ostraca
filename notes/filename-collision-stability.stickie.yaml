@@ -1,0 +1,11 @@
+name: filename-collision-stability
+note: >2-
+    - Sanitization: lowercase ASCII; replace non [a-z0-9._-] with '-', collapse
+  repeats; trim '-'
+    - Format: <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml (rootTag=hash of canonical root when root!='.')
+    - Hash input: canonical root (CWD-based) + POSIX relPath; stable across OS; renames change hash
+    - Collision: extremely unlikely; if computed path exists but locator differs -> error (do not overwrite)
+    - Root changes: recommended to keep root at '.'; if different, include rootTag and enforce hash match; otherwise error
+    - Orphans: renames create new meta file; detection handled by orphan scan in diff flow
+labels:
+  - design

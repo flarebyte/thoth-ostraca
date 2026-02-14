@@ -1,0 +1,10 @@
+name: diagnose-stage-boundary-types-examples
+note: >2-
+    - pipeline.filter/map input: { locator, meta }
+    - pipeline.shell input: <map output record>
+    - pipeline.post-map-shell input: { mapped, shell, locator? } (implementation-defined)
+    - create/update/diff discovery/enrich output: { file: { ... }, git?: { ... }, os?: { ... } }
+    - update/diff post-map input includes existing?: { locator, meta }
+    - Each stage declares input/output schema and stream type (items vs single value)
+labels:
+  - design

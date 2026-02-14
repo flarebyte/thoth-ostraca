@@ -1,0 +1,12 @@
+name: lua-data-contracts
+note: >2-
+    - Filter: fn({ locator, meta }) -> bool
+    - Map: fn({ locator, meta }) -> any
+    - Reduce: fn(acc, value) -> acc (single JSON value)
+    - Post-map (shell): fn({ locator, input, shell: { cmd, exitCode, stdout, stderr, durationMs } }) -> any
+    - Create Filter: fn({ file: { path, relPath, dir, base, name, ext } }) -> bool
+    - Create Map: fn({ file }) -> any
+    - Create Post-map: fn({ file, input }) -> { meta }
+    - Update Post-map: fn({ file, input, existing? }) -> { meta } | { patch } (RFC6902)
+labels:
+  - design

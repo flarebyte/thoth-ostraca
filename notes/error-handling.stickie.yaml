@@ -1,0 +1,10 @@
+name: error-handling
+note: >2-
+    - Modes: errors.mode = 'keep-going' (default) or 'fail-fast'
+    - Keep-going: continue other items; embed per-item errors when errors.embedErrors=true; exit non-zero if any error
+    - Fail-fast: stop processing on first error; still emit any already-produced results; exit non-zero
+    - Per-item error shape: { error: { stage, code, message, details? }, context: { locator?|file? } }
+    - Reduce receives only successful items; if all fail, reduce is skipped and an error is returned
+    - Config/load-level errors: abort immediately (no output beyond an error message)
+labels:
+  - design

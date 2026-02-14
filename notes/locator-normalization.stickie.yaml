@@ -1,0 +1,11 @@
+name: locator-normalization
+note: >2-
+    - File locators: canonical form is repo-relative POSIX-style path (no
+  leading './', '/' forbidden by default)
+    - Disallow '..' segments and absolute paths by default (config.locatorPolicy controls exceptions)
+    - Normalization: collapse '.', remove duplicate '/', convert OS separators to '/' for storage
+    - URL locators: lowercase scheme and host; strip default ports (http:80, https:443); preserve path/query; remove fragment
+    - locator.to_file_path: returns OS-native absolute path under 'root' after validation and clean join
+    - Security: reject traversal (..), absolute inputs, and non-http(s) URLs by default
+labels:
+  - design

@@ -1,0 +1,27 @@
+name: action-config-lua-limits-cue
+note: >-
+  ```cue
+
+  configVersion: "1"
+
+  action: "pipeline"
+
+  discovery: { root: ".", noGitignore: false, followSymlinks: false }
+
+  workers: 4
+
+  errors: { mode: "keep-going", embedErrors: true }
+
+  lua: { timeoutMs: 500, instructionLimit: 100000, memoryLimitBytes: 2097152,
+  libs: { base: true, table: true, string: true, math: true },
+  deterministicRandom: true, randomSeed: 1234 }
+
+  filter: { inline: "return true" }
+
+  map:    { inline: "return { locator = locator, ok = true }" }
+
+  output: { lines: false, pretty: true, out: "-" }
+
+  ```
+labels:
+  - design

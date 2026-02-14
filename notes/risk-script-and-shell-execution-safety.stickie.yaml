@@ -1,0 +1,15 @@
+name: risk-script-and-shell-execution-safety
+note: >-
+  Description:
+
+  - Inline scripting and optional shell execution may enable command injection,
+  unsafe environment access, or data exfiltration if misused.
+
+
+  Mitigation:
+
+  - Sandbox Lua (limited libs), default strict templating, prefer argv over
+  shell parsing, disable os/io by default, validate inputs, and provide secure
+  defaults.
+labels:
+  - design

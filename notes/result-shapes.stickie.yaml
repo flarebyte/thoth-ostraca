@@ -1,0 +1,9 @@
+name: result-shapes
+note: >2-
+    - Aggregated (array): list of items with consistent envelope for CI parsing
+    - Success item: { status: 'ok', context: { locator?|file? }, value: any, shell? }
+    - Error item: { status: 'error', context: { locator?|file? }, error: { stage, code, message, details? } }
+    - Lines (--lines): each line is a success or error item as above
+    - Diff action: uses Diff Output Shape for success items; errors follow the error item schema
+labels:
+  - design

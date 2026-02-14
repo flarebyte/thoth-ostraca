@@ -1,0 +1,13 @@
+name: shell-execution-spec
+note: >2-
+    - Templating: placeholders {name} with optional transforms {name|json} and
+  {name|sh}
+    - Placeholders: {value} (map result, string only), {json} (JSON of map result), {locator}, {index}, {file.path}, {file.relPath}, {file.dir}, {file.base}, {file.name}, {file.ext}
+    - Strict mode (default): unknown placeholders -> error; {value} must be string or use {value|json}
+    - Escaping: in commandTemplate (string), all placeholders are shell-escaped by default; {..|sh} forces quoting explicitly
+    - Security: prefer argsTemplate (argv form) to avoid shell parsing; each arg templated independently
+    - Timeout: on timeout, send SIGTERM to process group, wait termGraceMs, then SIGKILL; killProcessGroup=true by default
+    - Exit codes: non-zero → record error; if failFast=true, abort remaining work
+    - Env: explicit env entries merged with process env; no implicit interpolation in templates (use {env.VAR} not supported v1)
+labels:
+  - design
