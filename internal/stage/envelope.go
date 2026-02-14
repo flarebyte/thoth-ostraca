@@ -24,6 +24,7 @@ type Meta struct {
 	ConfigPath string         `json:"configPath,omitempty"`
 	Config     *ConfigMeta    `json:"config,omitempty"`
 	Discovery  *DiscoveryMeta `json:"discovery,omitempty"`
+	Lua        *LuaMeta       `json:"lua,omitempty"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.
@@ -32,4 +33,9 @@ type Envelope struct {
 	Records []any   `json:"records"`
 	Meta    *Meta   `json:"meta,omitempty"`
 	Errors  []Error `json:"errors,omitempty"`
+}
+
+// LuaMeta holds minimal Lua-related settings.
+type LuaMeta struct {
+	FilterInline string `json:"filterInline,omitempty"`
 }

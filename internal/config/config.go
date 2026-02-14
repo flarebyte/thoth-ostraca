@@ -55,6 +55,7 @@ type Minimal struct {
 	ConfigVersion string
 	Action        string
 	Discovery     Discovery
+	Filter        Filter
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -102,6 +103,16 @@ func ParseMinimal(path string) (Minimal, error) {
 			}
 		}
 	}
+	// Optional filter.inline
+	fv := v.LookupPath(cue.ParsePath("filter"))
+	if fv.Exists() {
+		iv := fv.LookupPath(cue.ParsePath("inline"))
+		if iv.Exists() && iv.Kind() == cue.StringKind {
+			if err := iv.Decode(&m.Filter.Inline); err == nil {
+				m.Filter.HasInline = true
+			}
+		}
+	}
 	return m, nil
 }
 
@@ -111,4 +122,10 @@ type Discovery struct {
 	NoGitignore    bool
 	HasRoot        bool
 	HasNoGitignore bool
+}
+
+// Filter holds optional filter config.
+type Filter struct {
+	Inline    string
+	HasInline bool
 }

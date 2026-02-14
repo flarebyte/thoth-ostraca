@@ -37,7 +37,11 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		b, err := json.Marshal(e3)
+		e4, err := stage.Run(context.Background(), "lua-filter", e3, stage.Deps{})
+		if err != nil {
+			return err
+		}
+		b, err := json.Marshal(e4)
 		if err != nil {
 			return err
 		}

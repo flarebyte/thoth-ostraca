@@ -11,11 +11,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type parsedRecord struct {
-	Locator string         `json:"locator"`
-	Meta    map[string]any `json:"meta"`
-}
-
 func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	// Determine root
 	root := "."
@@ -24,7 +19,11 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	}
 
 	// Collect output
-	outs := make([]parsedRecord, 0, len(in.Records))
+	type kv struct {
+		locator string
+		meta    map[string]any
+	}
+	outs := make([]kv, 0, len(in.Records))
 
 	for _, r := range in.Records {
 		// Expect each r to be map[...], with locator string
@@ -73,15 +72,18 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 			return Envelope{}, fmt.Errorf("invalid YAML %s: invalid type for field: meta", p)
 		}
 
-		outs = append(outs, parsedRecord{Locator: ylocStr, Meta: ymetaMap})
+		outs = append(outs, kv{locator: ylocStr, meta: ymetaMap})
 	}
 
-	sort.Slice(outs, func(i, j int) bool { return outs[i].Locator < outs[j].Locator })
+	sort.Slice(outs, func(i, j int) bool { return outs[i].locator < outs[j].locator })
 
 	out := in
 	out.Records = make([]any, 0, len(outs))
 	for _, pr := range outs {
-		out.Records = append(out.Records, pr)
+		out.Records = append(out.Records, map[string]any{
+			"locator": pr.locator,
+			"meta":    pr.meta,
+		})
 	}
 	return out, nil
 }

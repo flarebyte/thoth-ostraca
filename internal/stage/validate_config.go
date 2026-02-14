@@ -36,6 +36,13 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 			out.Meta.Discovery.NoGitignore = min.Discovery.NoGitignore
 		}
 	}
+	// Optionally expose filter.inline
+	if min.Filter.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.FilterInline = min.Filter.Inline
+	}
 	return out, nil
 }
 

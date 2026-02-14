@@ -1,2 +1,1 @@
-{"records":[{"locator":"a","meta":{"enabled":true,"name":"A"}}],"meta":{"config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/yaml1"}}}
-
+{"records":[{"locator":"a","meta":{"enabled":true,"name":"A"}},{"locator":"b","meta":{"enabled":false,"name":"B"}}],"meta":{"config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/yaml1"}}}
