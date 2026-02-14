@@ -25,9 +25,11 @@ var Cmd = &cobra.Command{
 		if err := config.LoadAndValidate(cfgPath); err != nil {
 			return err
 		}
-		// Success output must be a single JSON line.
-		fmt.Fprintln(os.Stdout, `{"ok":true}`)
-		return nil
+        // Success output must be a single JSON line.
+        if _, err := fmt.Fprintln(os.Stdout, `{"ok":true}`); err != nil {
+            return err
+        }
+        return nil
 	},
 }
 

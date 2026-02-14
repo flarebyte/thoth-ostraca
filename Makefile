@@ -8,10 +8,12 @@
 BIOME := npx @biomejs/biome
 BUN := bun
 GO := go
+GOLINT := golangci-lint
 
 lint:
 	$(BIOME) check
 	$(GO) vet ./...
+	$(GOLINT) run
 
 format:
 	gofmt -w .

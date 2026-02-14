@@ -19,15 +19,17 @@ var VersionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the CLI version",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if flagShort || !flagJSON {
-			// Keep Phase 1 stable output for E2E: exactly one line.
-			fmt.Fprintf(os.Stdout, "thoth %s\n", buildinfo.Summary())
-			return nil
-		}
+        if flagShort || !flagJSON {
+            // Keep Phase 1 stable output for E2E: exactly one line.
+            if _, err := fmt.Fprintf(os.Stdout, "thoth %s\n", buildinfo.Summary()); err != nil {
+                return err
+            }
+            return nil
+        }
 
 		// If JSON is requested explicitly, print a diagnostic object to stdout
 		// and a human friendly line to stderr.
-		fmt.Fprintf(os.Stderr, "thoth version: %s\n", buildinfo.Summary())
+        _, _ = fmt.Fprintf(os.Stderr, "thoth version: %s\n", buildinfo.Summary())
 		out := map[string]any{
 			"version":   buildinfo.Version,
 			"commit":    buildinfo.Commit,
