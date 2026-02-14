@@ -1,4 +1,3 @@
-import { ComponentCall } from "./common.mts";
+import type { ComponentCall } from './common.mts';
 
 export const calls: ComponentCall[] = [];
-

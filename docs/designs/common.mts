@@ -1,5 +1,5 @@
-import { appendFile, writeFile, mkdir } from "node:fs/promises";
-import { stringify as yamlStringify } from "bun:yaml";
+import { stringify as yamlStringify } from 'bun:yaml';
+import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 
 /**
  * Canonical description of a capability or behavior we want to support.
@@ -87,7 +87,7 @@ export const incrContext = (flowContext: FlowContext) => ({
 export const toUseCaseSet = (calls: ComponentCall[]) => {
   const allUseCases = calls
     .flatMap(({ useCases }) => useCases)
-    .filter((useCase) => typeof useCase === "string");
+    .filter((useCase) => typeof useCase === 'string');
   return new Set(allUseCases);
 };
 
@@ -95,14 +95,14 @@ export const toUseCaseSet = (calls: ComponentCall[]) => {
  * Reset the generated design report.
  */
 export const resetReport = async () => {
-  await writeFile("docs/designs/FLOW_DESIGN.md", "");
+  await writeFile('docs/designs/FLOW_DESIGN.md', '');
 };
 
 /**
  * Append a single line to the generated design report.
  */
 export const appendToReport = async (line: string) => {
-  await appendFile("docs/designs/FLOW_DESIGN.md", line + "\n", "utf8");
+  await appendFile('docs/designs/FLOW_DESIGN.md', line + '\n', 'utf8');
 };
 
 /**
@@ -110,7 +110,7 @@ export const appendToReport = async (line: string) => {
  */
 export const displayCallsAsText = async (calls: ComponentCall[]) => {
   for (const call of calls) {
-    const spaces = " ".repeat(call.level * 2);
+    const spaces = ' '.repeat(call.level * 2);
     await appendToReport(`${spaces}${call.title}`);
   }
 };
@@ -120,7 +120,7 @@ export const displayCallsAsText = async (calls: ComponentCall[]) => {
  */
 export const displayCallsDetailed = async (calls: ComponentCall[]) => {
   for (const call of calls) {
-    const base = " ".repeat(call.level * 2);
+    const base = ' '.repeat(call.level * 2);
     await appendToReport(`${base}${call.title} [${call.name}]`);
     if (call.note) {
       await appendToReport(`${base}  - note: ${call.note}`);
@@ -152,7 +152,7 @@ export const getSetDifference = (
  * Render bullet points suitable for markdown.
  */
 export const toBulletPoints = (lines: string[]) =>
-  lines.map((line) => `  - ${line}`).join("\n");
+  lines.map((line) => `  - ${line}`).join('\n');
 
 /**
  * Convert a free-form title/name into a dash-lower slug suitable for stickie names and filenames.
@@ -161,9 +161,9 @@ export const toBulletPoints = (lines: string[]) =>
 export const toStickieName = (s: string): string =>
   s
     .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 
 /**
  * Create a stickie YAML file for a section under `notes/`.
@@ -172,7 +172,7 @@ export const toStickieName = (s: string): string =>
 export const writeSectionStickie = async (
   title: string,
   lines: string[] | string,
-  outDir = "notes",
+  outDir = 'notes',
 ) => {
   try {
     await mkdir(outDir, { recursive: true });
@@ -181,10 +181,10 @@ export const writeSectionStickie = async (
     const stickie: Stickie = {
       name,
       note,
-      labels: ["design"],
+      labels: ['design'],
     };
     const yaml = yamlStringify(stickie, { indent: 2 });
-    await writeFile(`${outDir}/${name}.stickie.yaml`, yaml, "utf8");
+    await writeFile(`${outDir}/${name}.stickie.yaml`, yaml, 'utf8');
   } catch (_) {
     // Best-effort: ignore errors (e.g., sandboxed environments)
   }
@@ -233,7 +233,7 @@ export const appendUseCases = async (
   await appendToReport(
     toBulletPoints(toUseCaseLines(useCaseNames, catalogByName)),
   );
-  await appendToReport("\n");
+  await appendToReport('\n');
 };
 
 /**
@@ -245,7 +245,7 @@ export const appendKeyValueList = async (
 ) => {
   await appendToReport(`\n## ${title}`);
   const lines = entries.map(([k, v]) => {
-    const value = Array.isArray(v) ? v.join(", ") : v;
+    const value = Array.isArray(v) ? v.join(', ') : v;
     return `${k}: ${value}`;
   });
   await appendToReport(toBulletPoints(lines));

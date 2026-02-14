@@ -1,47 +1,49 @@
-import { FlowContext } from "./common.mts";
-import { incrContext } from "./common.mts";
-import { calls } from "./calls.mts";
-import { ComponentCall } from "./common.mts";
-import { useCases } from "./use_cases.mts";
+import { calls } from './calls.mts';
 import {
-  findMetaLocators,
-  parseYamlRecords,
-  filterMetaLocators,
-  mapMetaRecords,
-  execShellFromMap,
-  postMapShellResults,
-  reduceMetaRecords,
-  outputJsonResult,
-  findFilesForCreate,
-  enrichFilesWithOptionalInfo,
-  filterFilenames,
-  mapFilenames,
-  postMapFromFiles,
-  saveMetaFiles,
-  findFilesForUpdate,
-  loadExistingMeta,
-  postMapUpdateFromFiles,
-  updateMetaFiles,
+  type ComponentCall,
+  type FlowContext,
+  incrContext,
+} from './common.mts';
+import {
   computeMetaDiffs,
-  scanForOrphanMetas,
-  validateMetaOnly,
-  loadActionConfig,
-  diagnoseParseArgs,
-  diagnoseLoadConfig,
-  diagnoseResolveStep,
-  diagnoseResolveInput,
   diagnoseDumpInput,
+  diagnoseDumpOutput,
   diagnoseEmitHeader,
   diagnoseExecuteStage,
-  diagnoseDumpOutput,
-} from "./steps.mts";
+  diagnoseLoadConfig,
+  diagnoseParseArgs,
+  diagnoseResolveInput,
+  diagnoseResolveStep,
+  enrichFilesWithOptionalInfo,
+  execShellFromMap,
+  filterFilenames,
+  filterMetaLocators,
+  findFilesForCreate,
+  findFilesForUpdate,
+  findMetaLocators,
+  loadActionConfig,
+  loadExistingMeta,
+  mapFilenames,
+  mapMetaRecords,
+  outputJsonResult,
+  parseYamlRecords,
+  postMapFromFiles,
+  postMapShellResults,
+  postMapUpdateFromFiles,
+  reduceMetaRecords,
+  saveMetaFiles,
+  scanForOrphanMetas,
+  updateMetaFiles,
+  validateMetaOnly,
+} from './steps.mts';
+import { useCases } from './use_cases.mts';
 
 export const cliRoot = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "cli.root",
-    title: "thoth CLI root command",
-    directory: "cmd/thoth",
-    note: "cobra-based command tree",
+    name: 'cli.root',
+    title: 'thoth CLI root command',
+    directory: 'cmd/thoth',
+    note: 'cobra-based command tree',
     level: context.level,
     useCases: [useCases.cliUX.name],
   };
@@ -53,10 +55,10 @@ export const cliRoot = (context: FlowContext) => {
 
 export const cliArgsRun = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "cli.run",
-    title: "Parse args for run",
-    directory: "cmd/thoth",
-    note: "flags: --config (CUE .cue file). All other options belong in the action config.",
+    name: 'cli.run',
+    title: 'Parse args for run',
+    directory: 'cmd/thoth',
+    note: 'flags: --config (CUE .cue file). All other options belong in the action config.',
     level: context.level,
     useCases: [useCases.cliUX.name, useCases.outputJson.name],
   };
@@ -67,10 +69,10 @@ export const cliArgsRun = (context: FlowContext) => {
 
 export const cliArgsDiagnose = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "cli.diagnose",
-    title: "Parse args for diagnose",
-    directory: "cmd/thoth",
-    note: "diagnose subcommand: --config, --step, input selection flags, dump flags, debug flags",
+    name: 'cli.diagnose',
+    title: 'Parse args for diagnose',
+    directory: 'cmd/thoth',
+    note: 'diagnose subcommand: --config, --step, input selection flags, dump flags, debug flags',
     level: context.level,
     useCases: [useCases.cliDiagnose.name, useCases.cliUX.name],
   };
@@ -80,8 +82,8 @@ export const cliArgsDiagnose = (context: FlowContext) => {
 
 export const diagnoseFlow = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "flow.diagnose",
-    title: "Diagnose single stage",
+    name: 'flow.diagnose',
+    title: 'Diagnose single stage',
     level: context.level,
     useCases: [useCases.cliDiagnose.name, useCases.fixturesCapture.name],
   };
@@ -98,9 +100,9 @@ export const diagnoseFlow = (context: FlowContext) => {
 
 export const routeByActionType = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "action.route",
-    title: "Route by action type",
-    note: "action: pipeline | create | update | diff",
+    name: 'action.route',
+    title: 'Route by action type',
+    note: 'action: pipeline | create | update | diff',
     level: context.level,
   };
   calls.push(call);
@@ -118,8 +120,8 @@ export const routeByActionType = (context: FlowContext) => {
 
 export const pipelineFlow = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "flow.pipeline",
-    title: "Meta pipeline flow",
+    name: 'flow.pipeline',
+    title: 'Meta pipeline flow',
     level: context.level,
   };
   calls.push(call);
@@ -135,8 +137,8 @@ export const pipelineFlow = (context: FlowContext) => {
 
 export const createFlow = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "flow.create",
-    title: "Create meta files flow",
+    name: 'flow.create',
+    title: 'Create meta files flow',
     level: context.level,
     useCases: [useCases.batchCreate.name],
   };
@@ -152,8 +154,8 @@ export const createFlow = (context: FlowContext) => {
 
 export const updateFlow = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "flow.update",
-    title: "Update meta files flow",
+    name: 'flow.update',
+    title: 'Update meta files flow',
     level: context.level,
     useCases: [useCases.batchUpdate.name],
   };
@@ -170,8 +172,8 @@ export const updateFlow = (context: FlowContext) => {
 
 export const diffFlow = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "flow.diff",
-    title: "Diff meta files flow",
+    name: 'flow.diff',
+    title: 'Diff meta files flow',
     level: context.level,
     useCases: [useCases.batchDiff.name],
   };
@@ -189,8 +191,8 @@ export const diffFlow = (context: FlowContext) => {
 
 export const validateFlow = (context: FlowContext) => {
   const call: ComponentCall = {
-    name: "flow.validate",
-    title: "Validate meta files only",
+    name: 'flow.validate',
+    title: 'Validate meta files only',
     level: context.level,
     useCases: [useCases.metaValidateOnly.name, useCases.metaSchema.name],
   };

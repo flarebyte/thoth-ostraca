@@ -30,10 +30,14 @@ export type FilesInputOptions = {
 //     status (string: one of "unmodified","modified","added","deleted","renamed","copied","unmerged","untracked","ignored"),
 //     worktreeStatus (string: same enum), stagingStatus (string: same enum)
 //   } (populated via go-git when repository is detected)
-export type ShellCapture = { stdout?: boolean; stderr?: boolean; maxBytes?: number };
+export type ShellCapture = {
+  stdout?: boolean;
+  stderr?: boolean;
+  maxBytes?: number;
+};
 export type ShellOptions = {
   enabled?: boolean; // set true to run shell step
-  program?: "bash" | "sh" | "zsh";
+  program?: 'bash' | 'sh' | 'zsh';
   // Exactly one of commandTemplate or argsTemplate should be used.
   commandTemplate?: string; // single command string passed to shell, with placeholders
   argsTemplate?: string[]; // argv form: avoids shell parsing hazards; placeholders resolved per-arg
@@ -47,14 +51,14 @@ export type ShellOptions = {
   termGraceMs?: number; // default e.g. 2000ms before SIGKILL
 };
 export type ErrorPolicy = {
-  mode?: "keep-going" | "fail-fast"; // default keep-going
+  mode?: 'keep-going' | 'fail-fast'; // default keep-going
   embedErrors?: boolean; // default true: include per-item error objects in output
 };
 export type SaveOptions = {
   enabled?: boolean; // when true, write meta files to disk
-  onExists?: "ignore" | "error"; // behavior if target exists
+  onExists?: 'ignore' | 'error'; // behavior if target exists
   dir?: string; // optional output directory for meta files
-  hashAlgo?: "sha256"; // future extension; default sha256
+  hashAlgo?: 'sha256'; // future extension; default sha256
   hashLen?: number; // characters from hash prefix; default 15
 };
 export type ValidationOptions = {
@@ -67,10 +71,10 @@ export type LocatorPolicy = {
 };
 export type DiffOptions = {
   includeSnapshots?: boolean; // include before/after in per-item results
-  output?: "patch" | "summary" | "both"; // default: both
+  output?: 'patch' | 'summary' | 'both'; // default: both
 };
 export type UpdateOptions = {
-  merge?: "shallow" | "deep" | "jsonpatch"; // default shallow
+  merge?: 'shallow' | 'deep' | 'jsonpatch'; // default shallow
 };
 export type LuaOptions = {
   timeoutMs?: number; // per-script soft timeout (hook-driven)
@@ -94,7 +98,7 @@ export type LuaOptions = {
 };
 export type PipelineConfig = {
   configVersion?: string;
-  action?: "pipeline" | "create" | "update" | "diff" | "validate"; // which flow to run
+  action?: 'pipeline' | 'create' | 'update' | 'diff' | 'validate'; // which flow to run
   discovery?: DiscoveryOptions;
   files?: FilesInputOptions; // control available {file} fields for filtering/mapping
   workers?: number; // default: CPU count
@@ -114,15 +118,15 @@ export type PipelineConfig = {
 };
 
 export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
-  configVersion: "1",
-  action: "pipeline",
+  configVersion: '1',
+  action: 'pipeline',
   discovery: {
-    root: ".",
+    root: '.',
     noGitignore: false,
     followSymlinks: false,
   },
   workers: 8,
-  errors: { mode: "keep-going", embedErrors: true },
+  errors: { mode: 'keep-going', embedErrors: true },
   lua: {
     timeoutMs: 2000,
     instructionLimit: 1_000_000,
@@ -133,7 +137,11 @@ export const ACTION_CONFIG_EXAMPLE: PipelineConfig = {
     deterministicRandom: true,
   },
   validation: { allowUnknownTopLevel: false },
-  locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true },
+  locatorPolicy: {
+    allowAbsolute: false,
+    allowParentRefs: false,
+    posixStyle: true,
+  },
   // Lua inline scripts (concise and self-contained)
   filter: {
     inline: `-- keep records with meta.enabled == true
@@ -145,11 +153,11 @@ return { locator = locator, name = meta and meta.name }`,
   },
   shell: {
     enabled: true,
-    program: "bash",
+    program: 'bash',
     // Recommend argv form to avoid shell parsing hazards
-    argsTemplate: ["echo", "{json}"],
-    workingDir: ".",
-    env: { CI: "true" },
+    argsTemplate: ['echo', '{json}'],
+    workingDir: '.',
+    env: { CI: 'true' },
     timeoutMs: 60000,
     failFast: true,
     capture: { stdout: true, stderr: true, maxBytes: 1048576 },
@@ -165,14 +173,14 @@ return { locator = locator, exit = shell.exitCode }`,
     inline: `-- count items
 return (acc or 0) + 1`,
   },
-  output: { lines: false, pretty: false, out: "-" },
+  output: { lines: false, pretty: false, out: '-' },
 };
 
 export const ACTION_CONFIG_CREATE_EXAMPLE: PipelineConfig = {
-  configVersion: "1",
-  action: "create",
+  configVersion: '1',
+  action: 'create',
   discovery: {
-    root: ".",
+    root: '.',
     noGitignore: false,
   },
   // When true, expose os.FileInfo-derived fields and Git metadata on {file}
@@ -194,44 +202,48 @@ return { title = file.base, category = file.dir }`,
 return { meta = { title = (input.title or file.base) } }`,
   },
   // No reduce by default in create
-  output: { lines: false, pretty: false, out: "-" },
+  output: { lines: false, pretty: false, out: '-' },
   // Saving behavior
-  save: { enabled: false, onExists: "ignore" },
+  save: { enabled: false, onExists: 'ignore' },
 };
 
 export const ACTION_CONFIG_CREATE_MINIMAL: PipelineConfig = {
-  configVersion: "1",
-  action: "create",
-  discovery: { root: ".", noGitignore: false },
+  configVersion: '1',
+  action: 'create',
+  discovery: { root: '.', noGitignore: false },
   // Process all files (example); dry-run (no save)
   filter: { inline: `return true` },
   map: { inline: `return { meta = { created = true } }` },
-  output: { lines: false, pretty: true, out: "-" },
-  save: { enabled: false, onExists: "ignore", hashLen: 15 },
+  output: { lines: false, pretty: true, out: '-' },
+  save: { enabled: false, onExists: 'ignore', hashLen: 15 },
 };
 
 // Additional examples used in the generated docs
 export const ACTION_CONFIG_DIFF_EXAMPLE: PipelineConfig = {
-  configVersion: "1",
-  action: "diff",
-  discovery: { root: ".", noGitignore: false },
+  configVersion: '1',
+  action: 'diff',
+  discovery: { root: '.', noGitignore: false },
   workers: 8,
-  errors: { mode: "keep-going", embedErrors: true },
-  filter: { inline: `-- example: only .json files
-return string.match(file.ext or "", "^%.json$") ~= nil` },
-  map: { inline: `-- compute desired meta fields from filename
-return { category = file.dir }` },
-  diff: { includeSnapshots: false, output: "both" },
+  errors: { mode: 'keep-going', embedErrors: true },
+  filter: {
+    inline: `-- example: only .json files
+return string.match(file.ext or "", "^%.json$") ~= nil`,
+  },
+  map: {
+    inline: `-- compute desired meta fields from filename
+return { category = file.dir }`,
+  },
+  diff: { includeSnapshots: false, output: 'both' },
   // update-style post-map available as needed
-  output: { lines: false, pretty: true, out: "-" },
+  output: { lines: false, pretty: true, out: '-' },
 };
 
 export const ACTION_CONFIG_LUA_LIMITS_EXAMPLE: PipelineConfig = {
-  configVersion: "1",
-  action: "pipeline",
-  discovery: { root: ".", noGitignore: false, followSymlinks: false },
+  configVersion: '1',
+  action: 'pipeline',
+  discovery: { root: '.', noGitignore: false, followSymlinks: false },
   workers: 4,
-  errors: { mode: "keep-going", embedErrors: true },
+  errors: { mode: 'keep-going', embedErrors: true },
   lua: {
     timeoutMs: 500,
     instructionLimit: 100_000,
@@ -242,5 +254,5 @@ export const ACTION_CONFIG_LUA_LIMITS_EXAMPLE: PipelineConfig = {
   },
   filter: { inline: `return true` },
   map: { inline: `return { locator = locator, ok = true }` },
-  output: { lines: false, pretty: true, out: "-" },
+  output: { lines: false, pretty: true, out: '-' },
 };
