@@ -244,3 +244,92 @@ export const outputJsonResult = (context: FlowContext) => {
   };
   calls.push(call);
 };
+
+// Diagnose command steps
+export const diagnoseParseArgs = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.parse.args",
+    title: "Parse args for diagnose",
+    note: "flags: --config, --step, --input-file|--input-inline|--input-stdin (mutually exclusive), --dump-in, --dump-out, --limit, --seed, --dry-shell",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name, useCases.cliUX.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseLoadConfig = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.config.load",
+    title: "Load action config (CUE)",
+    note: "Use existing action config; validate with CUE schema",
+    level: context.level,
+    useCases: [useCases.actionConfig.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseResolveStep = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.step.resolve",
+    title: "Resolve target step",
+    note: "Map stable step name to internal implementation based on action",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseResolveInput = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.input.resolve",
+    title: "Resolve input mode",
+    note: "Use explicit JSON (file/inline/stdin) or prepare upstream to boundary; apply --limit/--seed",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseDumpInput = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.dump.in",
+    title: "Dump stage input (optional)",
+    note: "--dump-in [path|-]; emit boundary input as JSON/NDJSON; avoid mixing with normal stdout",
+    level: context.level,
+    useCases: [useCases.fixturesCapture.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseExecuteStage = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.stage.exec",
+    title: "Execute target stage",
+    note: "Run only the selected step; --dry-shell renders command/env without exec for shell stage",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseDumpOutput = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.dump.out",
+    title: "Dump stage output (optional)",
+    note: "--dump-out [path|-]; emit stage output boundary for reproducible debugging",
+    level: context.level,
+    useCases: [useCases.fixturesCapture.name],
+  };
+  calls.push(call);
+};
+
+export const diagnoseEmitHeader = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "diagnose.header.emit",
+    title: "Emit run header",
+    note: "Structured log: { action, executedStep, preparedStages, inputMode, limits }",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name],
+  };
+  calls.push(call);
+};

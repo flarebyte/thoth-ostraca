@@ -48,6 +48,16 @@ thoth CLI root command
         Parse and validate YAML records
         Collect validation results
         Write JSON result (array/value/lines)
+  Parse args for diagnose
+    Diagnose single stage
+      Parse args for diagnose
+      Load action config (CUE)
+      Resolve target step
+      Resolve input mode
+      Dump stage input (optional)
+      Emit run header
+      Execute target stage
+      Dump stage output (optional)
 ```
 
 Supported use cases:
@@ -71,6 +81,8 @@ Supported use cases:
   - Update many meta files
   - Diff meta files at scale
   - Validate meta files only — No transforms or shell; emit validation report
+  - Diagnose a single stage — Execute one pipeline stage in isolation with explicit or prepared input; capture fixtures
+  - Capture stage boundary fixtures — Dump input/output JSON/NDJSON for reproducible debugging
 
 
 Unsupported use cases (yet):
@@ -97,7 +109,7 @@ Unsupported use cases (yet):
   - Output: aggregated JSON by default; --lines to stream; --pretty for humans
   - Ordering: Aggregated (array): sort deterministically by locator (pipeline) or relPath (create/update/diff), Lines: nondeterministic (parallel), each line is independent JSON value
   - Errors: Policy: errors.mode keep-going|fail-fast (default keep-going), Embed: errors.embedErrors=true includes per-item error objects; final exit non-zero if any error, Parse/validation errors: reported per-item when possible; fatal config/load errors abort early
-  - Commands: thoth run (exec action config: pipeline/create/update/diff)
+  - Commands: thoth run (exec action config: pipeline/create/update/diff); thoth diagnose (execute one stage)
   - Flags: --config (.cue CUE file), --save (enable saving in create)
   - Tests: golden tests for I/O; fs testdata fixtures
   - Reduce: Lua fn(acc, value) -> acc; initial acc=nil (Lua sees nil), Applies in deterministic order (locator/relPath sort), Any JSON-serializable acc allowed (object/array/number/string/bool/null)
@@ -208,6 +220,14 @@ output: { lines: false, pretty: true, out: "-" }
   - Create Map: fn({ file }) -> any
   - Create Post-map: fn({ file, input }) -> { meta }
   - Update Post-map: fn({ file, input, existing? }) -> { meta } | { patch } (RFC6902)
+
+## Diagnose Stage Boundary Types (Examples)
+  - pipeline.filter/map input: { locator, meta }
+  - pipeline.shell input: <map output record>
+  - pipeline.post-map-shell input: { mapped, shell, locator? } (implementation-defined)
+  - create/update/diff discovery/enrich output: { file: { ... }, git?: { ... }, os?: { ... } }
+  - update/diff post-map input includes existing?: { locator, meta }
+  - Each stage declares input/output schema and stream type (items vs single value)
 
 ## Lua Input Examples
   - pipeline.filter/map: { locator = "path/or/url", meta = { ... } }
@@ -521,6 +541,55 @@ thoth CLI root command [cli.root]
           - pkg: internal/output
           - func: OutputJsonResult
           - file: internal/output/json_result.go
+  Parse args for diagnose [cli.diagnose]
+    - note: diagnose subcommand: --config, --step, input selection flags, dump flags, debug flags
+    - pkg: cmd/thoth
+    - func: CliDiagnose
+    - file: cmd/thoth/cli_diagnose.go
+    Diagnose single stage [flow.diagnose]
+      - pkg: internal/pipeline
+      - func: FlowDiagnose
+      - file: internal/pipeline/flow_diagnose.go
+      Parse args for diagnose [diagnose.parse.args]
+        - note: flags: --config, --step, --input-file|--input-inline|--input-stdin (mutually exclusive), --dump-in, --dump-out, --limit, --seed, --dry-shell
+        - pkg: internal
+        - func: DiagnoseParseArgs
+        - file: internal/parse_args.go
+      Load action config (CUE) [diagnose.config.load]
+        - note: Use existing action config; validate with CUE schema
+        - pkg: internal
+        - func: DiagnoseConfigLoad
+        - file: internal/config_load.go
+      Resolve target step [diagnose.step.resolve]
+        - note: Map stable step name to internal implementation based on action
+        - pkg: internal
+        - func: DiagnoseStepResolve
+        - file: internal/step_resolve.go
+      Resolve input mode [diagnose.input.resolve]
+        - note: Use explicit JSON (file/inline/stdin) or prepare upstream to boundary; apply --limit/--seed
+        - pkg: internal
+        - func: DiagnoseInputResolve
+        - file: internal/input_resolve.go
+      Dump stage input (optional) [diagnose.dump.in]
+        - note: --dump-in [path|-]; emit boundary input as JSON/NDJSON; avoid mixing with normal stdout
+        - pkg: internal
+        - func: DiagnoseDumpIn
+        - file: internal/dump_in.go
+      Emit run header [diagnose.header.emit]
+        - note: Structured log: { action, executedStep, preparedStages, inputMode, limits }
+        - pkg: internal
+        - func: DiagnoseHeaderEmit
+        - file: internal/header_emit.go
+      Execute target stage [diagnose.stage.exec]
+        - note: Run only the selected step; --dry-shell renders command/env without exec for shell stage
+        - pkg: internal
+        - func: DiagnoseStageExec
+        - file: internal/stage_exec.go
+      Dump stage output (optional) [diagnose.dump.out]
+        - note: --dump-out [path|-]; emit stage output boundary for reproducible debugging
+        - pkg: internal
+        - func: DiagnoseDumpOut
+        - file: internal/dump_out.go
 ```
 
 ## Action Script Scope
@@ -616,6 +685,18 @@ Validate top-level meta schema [validate.meta.top_level]
   - YAML: error on missing required fields (locator, meta)
   - Shells: bash, sh, zsh supported early
   - Save filename: sha256 prefix length = 15 by default
+
+## Diagnose Command
+  - Subcommand: thoth diagnose
+  - Required flags: -c/--config <path> (CUE), --step <name>
+  - Input selection (mutually exclusive): --input-file <path> | --input-inline '<json>' | --input-stdin
+  - Default input mode: prepare upstream stages to boundary to generate realistic input
+  - Fixture capture: --dump-in [<path>|-], --dump-out [<path>|-] (JSON/NDJSON)
+  - Debug flags: --limit <N>, --seed <int>, --dry-shell (shell stage only)
+  - Semantics: execute only target step; upstream may run in prepare mode; no downstream
+  - Observability: emit header { action, executedStep, preparedStages, inputMode, limits } to stderr
+  - Streams: normal stage outputs -> stdout; diagnostics/logs/errors -> stderr; when dumping to '-', use it as stdout output
+  - Errors: non-zero on invalid config/step/json or stage failure; include action, step, input mode, item context
 
 ## Filename Collision & Stability
   - Sanitization: lowercase ASCII; replace non [a-z0-9._-] with '-', collapse repeats; trim '-'

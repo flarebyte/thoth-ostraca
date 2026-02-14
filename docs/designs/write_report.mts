@@ -72,7 +72,7 @@ const SUGGESTED_GO_IMPLEMENTATION: Array<[string, string | string[]]> = [
     "Embed: errors.embedErrors=true includes per-item error objects; final exit non-zero if any error",
     "Parse/validation errors: reported per-item when possible; fatal config/load errors abort early",
   ]],
-  ["Commands", "thoth run (exec action config: pipeline/create/update/diff)"],
+  ["Commands", "thoth run (exec action config: pipeline/create/update/diff); thoth diagnose (execute one stage)"],
   ["Flags", "--config (.cue CUE file), --save (enable saving in create)"],
   ["Tests", "golden tests for I/O; fs testdata fixtures"],
   ["Reduce", [
@@ -240,6 +240,14 @@ export const generateFlowDesignReport = async () => {
     "Create Map: fn({ file }) -> any",
     "Create Post-map: fn({ file, input }) -> { meta }",
     "Update Post-map: fn({ file, input, existing? }) -> { meta } | { patch } (RFC6902)",
+  ]);
+  await appendSection("Diagnose Stage Boundary Types (Examples)", [
+    "pipeline.filter/map input: { locator, meta }",
+    "pipeline.shell input: <map output record>",
+    "pipeline.post-map-shell input: { mapped, shell, locator? } (implementation-defined)",
+    "create/update/diff discovery/enrich output: { file: { ... }, git?: { ... }, os?: { ... } }",
+    "update/diff post-map input includes existing?: { locator, meta }",
+    "Each stage declares input/output schema and stream type (items vs single value)",
   ]);
   await appendSection("Lua Input Examples", [
     "pipeline.filter/map: { locator = \"path/or/url\", meta = { ... } }",
@@ -487,6 +495,18 @@ export const generateFlowDesignReport = async () => {
 
   await appendSection("Go Package Outline", GO_PACKAGE_OUTLINE);
   await appendSection("Design Decisions", DESIGN_DECISIONS);
+  await appendSection("Diagnose Command", [
+    "Subcommand: thoth diagnose",
+    "Required flags: -c/--config <path> (CUE), --step <name>",
+    "Input selection (mutually exclusive): --input-file <path> | --input-inline '<json>' | --input-stdin",
+    "Default input mode: prepare upstream stages to boundary to generate realistic input",
+    "Fixture capture: --dump-in [<path>|-], --dump-out [<path>|-] (JSON/NDJSON)",
+    "Debug flags: --limit <N>, --seed <int>, --dry-shell (shell stage only)",
+    "Semantics: execute only target step; upstream may run in prepare mode; no downstream",
+    "Observability: emit header { action, executedStep, preparedStages, inputMode, limits } to stderr",
+    "Streams: normal stage outputs -> stdout; diagnostics/logs/errors -> stderr; when dumping to '-', use it as stdout output",
+    "Errors: non-zero on invalid config/step/json or stage failure; include action, step, input mode, item context",
+  ]);
   await appendSection("Filename Collision & Stability", [
     "Sanitization: lowercase ASCII; replace non [a-z0-9._-] with '-', collapse repeats; trim '-'",
     "Format: <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml (rootTag=hash of canonical root when root!='.')",

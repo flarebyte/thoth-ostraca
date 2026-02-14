@@ -71,6 +71,16 @@ export const useCases: Record<string, UseCase> = {
     name: "cli.ux",
     title: "Helpful, well-documented flags",
   },
+  cliDiagnose: {
+    name: "cli.diagnose",
+    title: "Diagnose a single stage",
+    note: "Execute one pipeline stage in isolation with explicit or prepared input; capture fixtures",
+  },
+  fixturesCapture: {
+    name: "fixtures.capture",
+    title: "Capture stage boundary fixtures",
+    note: "Dump input/output JSON/NDJSON for reproducible debugging",
+  },
   gitIgnore: {
     name: "fs.gitignore",
     title: "Respect .gitignore by default",

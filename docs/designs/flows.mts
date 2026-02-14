@@ -26,6 +26,14 @@ import {
   scanForOrphanMetas,
   validateMetaOnly,
   loadActionConfig,
+  diagnoseParseArgs,
+  diagnoseLoadConfig,
+  diagnoseResolveStep,
+  diagnoseResolveInput,
+  diagnoseDumpInput,
+  diagnoseEmitHeader,
+  diagnoseExecuteStage,
+  diagnoseDumpOutput,
 } from "./steps.mts";
 
 export const cliRoot = (context: FlowContext) => {
@@ -40,6 +48,7 @@ export const cliRoot = (context: FlowContext) => {
   calls.push(call);
   // Register commands under the root.
   cliArgsRun(incrContext(context));
+  cliArgsDiagnose(incrContext(context));
 };
 
 export const cliArgsRun = (context: FlowContext) => {
@@ -54,6 +63,37 @@ export const cliArgsRun = (context: FlowContext) => {
   calls.push(call);
   loadActionConfig(incrContext(context));
   routeByActionType(incrContext(context));
+};
+
+export const cliArgsDiagnose = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "cli.diagnose",
+    title: "Parse args for diagnose",
+    directory: "cmd/thoth",
+    note: "diagnose subcommand: --config, --step, input selection flags, dump flags, debug flags",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name, useCases.cliUX.name],
+  };
+  calls.push(call);
+  diagnoseFlow(incrContext(context));
+};
+
+export const diagnoseFlow = (context: FlowContext) => {
+  const call: ComponentCall = {
+    name: "flow.diagnose",
+    title: "Diagnose single stage",
+    level: context.level,
+    useCases: [useCases.cliDiagnose.name, useCases.fixturesCapture.name],
+  };
+  calls.push(call);
+  diagnoseParseArgs(incrContext(context));
+  diagnoseLoadConfig(incrContext(context));
+  diagnoseResolveStep(incrContext(context));
+  diagnoseResolveInput(incrContext(context));
+  diagnoseDumpInput(incrContext(context));
+  diagnoseEmitHeader(incrContext(context));
+  diagnoseExecuteStage(incrContext(context));
+  diagnoseDumpOutput(incrContext(context));
 };
 
 export const routeByActionType = (context: FlowContext) => {
