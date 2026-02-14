@@ -85,11 +85,6 @@ Supported use cases:
   - Capture stage boundary fixtures — Dump input/output JSON/NDJSON for reproducible debugging
 
 
-Unsupported use cases (yet):
-
-
-
-
 
 ## Suggested Go Implementation
   - Module: go 1.22; command name: thoth
@@ -128,7 +123,6 @@ Unsupported use cases (yet):
   - Diff output: RFC 6902 JSON Patch per item + summary (modified/unchanged/missing/orphan)
   - internal/diff: generate patches and optional before/after snapshots for debugging
   - Diff config: includeSnapshots (bool), output: patch|summary|both (default: both)
-  - Exit codes: 0: success (no errors), 1: fatal setup/validation error (no output), 2: partial failures (some per-item errors present), 3: script/reduce failure (pipeline aborted)
 
 ## Exit Codes
   - 0: success (no errors)
@@ -154,7 +148,7 @@ validation: { allowUnknownTopLevel: false }
 locatorPolicy: { allowAbsolute: false, allowParentRefs: false, posixStyle: true }
 filter: { inline: "return (meta and meta.enabled) == true" }
 map:    { inline: "return { locator = locator, name = meta and meta.name }" }
-shell:  { enabled: true, program: "bash", argsTemplate: ["echo", "{json}"], workingDir: ".", env: { CI: "true" }, timeoutMs: 60000, failFast: true, capture: { stdout: true, stderr: true, maxBytes: 1048576 }, strictTemplating: true, killProcessGroup: true, termGraceMs: 2000 }
+shell:  { enabled: true, program: "bash", argsTemplate: ["echo", "{json}"], workingDir: ".", env: { CI: "true" }, timeoutMs: 60000, capture: { stdout: true, stderr: true, maxBytes: 1048576 }, strictTemplating: true, killProcessGroup: true, termGraceMs: 2000 }
 postMap:{ inline: "return { locator = locator, exit = shell.exitCode }" }
 reduce: { inline: "return (acc or 0) + 1" }
 output: { lines: false, pretty: false, out: "-" }
@@ -224,7 +218,7 @@ output: { lines: false, pretty: true, out: "-" }
 ## Diagnose Stage Boundary Types (Examples)
   - pipeline.filter/map input: { locator, meta }
   - pipeline.shell input: <map output record>
-  - pipeline.post-map-shell input: { mapped, shell, locator? } (implementation-defined)
+  - pipeline.post-map-shell input: { input, shell, locator? } (implementation-defined)
   - create/update/diff discovery/enrich output: { file: { ... }, git?: { ... }, os?: { ... } }
   - update/diff post-map input includes existing?: { locator, meta }
   - Each stage declares input/output schema and stream type (items vs single value)
@@ -262,7 +256,7 @@ output: { lines: false, pretty: true, out: "-" }
 ## Diff Output Shape
   - Per-item result: { file, status, patch?, before?, after? }
   - status ∈ { modified, unchanged, missing, orphan }
-  - missing: file exists but no meta found (previously 'created')
+  - missing: file exists but no meta found
   - orphan: meta exists but locator file is missing
   - patch: RFC 6902 JSON Patch array (ops: add/remove/replace/move/copy/test) transforming before -> after
   - before: existing meta object (if any); after: desired meta after applying patch
@@ -315,7 +309,7 @@ output: { lines: false, pretty: true, out: "-" }
   - Escaping: in commandTemplate (string), all placeholders are shell-escaped by default; {..|sh} forces quoting explicitly
   - Security: prefer argsTemplate (argv form) to avoid shell parsing; each arg templated independently
   - Timeout: on timeout, send SIGTERM to process group, wait termGraceMs, then SIGKILL; killProcessGroup=true by default
-  - Exit codes: non-zero → record error; if failFast=true, abort remaining work
+  - Exit codes: non-zero → record error; with errors.mode='fail-fast' the action aborts remaining work
   - Env: explicit env entries merged with process env; no implicit interpolation in templates (use {env.VAR} not supported v1)
 
 ## Function calls details
@@ -557,9 +551,9 @@ thoth CLI root command [cli.root]
         - file: internal/parse_args.go
       Load action config (CUE) [diagnose.config.load]
         - note: Use existing action config; validate with CUE schema
-        - pkg: internal
+        - pkg: internal/config
         - func: DiagnoseConfigLoad
-        - file: internal/config_load.go
+        - file: internal/config/config_load.go
       Resolve target step [diagnose.step.resolve]
         - note: Map stable step name to internal implementation based on action
         - pkg: internal
@@ -672,7 +666,7 @@ Validate top-level meta schema [validate.meta.top_level]
   - internal/lua: gopher-lua helpers to run inline scripts with typed inputs
   - internal/pipeline: stages (filter/map/shell/post-map/reduce), worker pool
   - internal/shell: exec with capture, timeouts, env, sh/bash/zsh
-  - internal/save: filename builder (<sha256[:12]>-<lastdir>-<filename>.thoth.yaml), onExists policy
+  - internal/save: filename builder (<sha256[:15]>-<lastdir>-<filename>.thoth.yaml), onExists policy
   - internal/diff: RFC6902 patch generation + item summary
 
 ## Design Decisions

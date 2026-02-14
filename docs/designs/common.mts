@@ -1,4 +1,4 @@
-import { stringify as yamlStringify } from 'bun:yaml';
+import { stringify as yamlStringify } from 'bun';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 
 /**

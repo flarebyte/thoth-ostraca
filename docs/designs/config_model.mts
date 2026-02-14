@@ -44,7 +44,6 @@ export type ShellOptions = {
   workingDir?: string;
   env?: Record<string, string>;
   timeoutMs?: number;
-  failFast?: boolean;
   capture?: ShellCapture;
   strictTemplating?: boolean; // default true: enforce transforms/escaping; unknown placeholders -> error
   killProcessGroup?: boolean; // default true: signal entire group on timeout/error
@@ -159,7 +158,6 @@ return { locator = locator, name = meta and meta.name }`,
     workingDir: '.',
     env: { CI: 'true' },
     timeoutMs: 60000,
-    failFast: true,
     capture: { stdout: true, stderr: true, maxBytes: 1048576 },
     strictTemplating: true,
     killProcessGroup: true,

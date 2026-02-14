@@ -11,6 +11,7 @@ export const guessPkg = (call: ComponentCall) => {
   const n = call.name;
   if (n.startsWith('cli.')) return 'cmd/thoth';
   if (n.startsWith('fs.')) return 'internal/fs';
+  if (n.startsWith('diagnose.config')) return 'internal/config';
   if (n.startsWith('meta.parse')) return 'internal/meta';
   if (n.startsWith('meta.load')) return 'internal/meta';
   if (n.startsWith('meta.save')) return 'internal/save';
