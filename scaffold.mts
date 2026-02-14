@@ -15,8 +15,8 @@
  * - Generic files like .gitignore or build scripts are intentionally NOT created here.
  */
 
-import { promises as fs } from "fs";
-import { dirname, join } from "path";
+import { promises as fs } from 'node:fs';
+import { dirname, join } from 'node:path';
 
 async function ensureDir(p: string) {
   await fs.mkdir(p, { recursive: true });
@@ -29,8 +29,8 @@ async function writeIfMissing(relPath: string, content: string) {
     return false;
   } catch {
     const dir = dirname(relPath);
-    if (dir && dir !== ".") await ensureDir(dir);
-    await fs.writeFile(relPath, content, { encoding: "utf8", flag: "wx" });
+    if (dir && dir !== '.') await ensureDir(dir);
+    await fs.writeFile(relPath, content, { encoding: 'utf8', flag: 'wx' });
     console.log(`created: ${relPath}`);
     return true;
   }
@@ -75,19 +75,22 @@ func RunHello() {
 
 async function main() {
   const created: string[] = [];
-  if (await writeIfMissing("main.go", mainGo)) created.push("main.go");
-  if (await writeIfMissing(join("internal", "app", "app.go"), appGo)) created.push("internal/app/app.go");
+  if (await writeIfMissing('main.go', mainGo)) created.push('main.go');
+  if (await writeIfMissing(join('internal', 'app', 'app.go'), appGo))
+    created.push('internal/app/app.go');
 
   if (created.length === 0) {
     console.log("No files created (all present). You're good to go.");
   } else {
-    console.log("\nNext steps:");
-    console.log("- go run .          # prints Hello World");
-    console.log("- go run . hello    # prints Hello World (explicit subcommand)");
-    console.log("\nTODOs:");
-    console.log("- Wire flags/subcommands (in main.go) as needed.");
-    console.log("- Move logic into internal/app and call it from main.");
-    console.log("- Add your own build/test scripts as needed.");
+    console.log('\nNext steps:');
+    console.log('- go run .          # prints Hello World');
+    console.log(
+      '- go run . hello    # prints Hello World (explicit subcommand)',
+    );
+    console.log('\nTODOs:');
+    console.log('- Wire flags/subcommands (in main.go) as needed.');
+    console.log('- Move logic into internal/app and call it from main.');
+    console.log('- Add your own build/test scripts as needed.');
   }
 }
 
@@ -95,4 +98,3 @@ main().catch((err) => {
   console.error(err);
   process.exitCode = 1;
 });
-

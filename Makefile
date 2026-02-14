@@ -10,7 +10,7 @@
 ZX := npx zx
 # Generic lint (abstract across languages): delegate to project script
 lint:
-	bash script/biome-check.sh
+	npx @biomejs/biome check
 
 # Generic format: keep it simple and fast
 format:
