@@ -26,19 +26,25 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	out.Records = out.Records[:0]
 
 	for _, r := range in.Records {
-		m, ok := r.(map[string]any)
-		if !ok {
+		var locator string
+		var meta map[string]any
+		if rec, ok := r.(Record); ok {
+			locator = rec.Locator
+			meta = rec.Meta
+		} else if m, ok := r.(map[string]any); ok {
+			locVal, ok := m["locator"]
+			if !ok {
+				return Envelope{}, errors.New("lua-filter: missing locator")
+			}
+			s, ok := locVal.(string)
+			if !ok {
+				return Envelope{}, errors.New("lua-filter: invalid locator type")
+			}
+			locator = s
+			meta, _ = m["meta"].(map[string]any)
+		} else {
 			return Envelope{}, errors.New("lua-filter: invalid record type")
 		}
-		locVal, ok := m["locator"]
-		if !ok {
-			return Envelope{}, errors.New("lua-filter: missing locator")
-		}
-		locator, ok := locVal.(string)
-		if !ok {
-			return Envelope{}, errors.New("lua-filter: invalid locator type")
-		}
-		meta, _ := m["meta"].(map[string]any)
 
 		L := lua.NewState(lua.Options{SkipOpenLibs: true})
 		defer L.Close()
@@ -84,7 +90,7 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 		L.Pop(1)
 		keep := lua.LVAsBool(ret)
 		if keep {
-			out.Records = append(out.Records, r)
+			out.Records = append(out.Records, Record{Locator: locator, Meta: meta})
 		}
 	}
 	return out, nil

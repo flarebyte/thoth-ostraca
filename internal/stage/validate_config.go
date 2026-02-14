@@ -43,6 +43,13 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 		}
 		out.Meta.Lua.FilterInline = min.Filter.Inline
 	}
+	// Optionally expose map.inline
+	if min.Map.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.MapInline = min.Map.Inline
+	}
 	return out, nil
 }
 

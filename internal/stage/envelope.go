@@ -38,4 +38,5 @@ type Envelope struct {
 // LuaMeta holds minimal Lua-related settings.
 type LuaMeta struct {
 	FilterInline string `json:"filterInline,omitempty"`
+	MapInline    string `json:"mapInline,omitempty"`
 }

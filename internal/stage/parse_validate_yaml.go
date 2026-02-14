@@ -26,18 +26,22 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	outs := make([]kv, 0, len(in.Records))
 
 	for _, r := range in.Records {
-		// Expect each r to be map[...], with locator string
-		m, ok := r.(map[string]any)
-		if !ok {
+		// Accept either a Record or a generic map with locator
+		var locator string
+		if rec, ok := r.(Record); ok {
+			locator = rec.Locator
+		} else if m, ok := r.(map[string]any); ok {
+			locVal, ok := m["locator"]
+			if !ok {
+				return Envelope{}, errors.New("invalid input record: missing locator")
+			}
+			s, ok := locVal.(string)
+			if !ok || s == "" {
+				return Envelope{}, errors.New("invalid input record: locator must be string")
+			}
+			locator = s
+		} else {
 			return Envelope{}, errors.New("invalid input record: expected object")
-		}
-		locVal, ok := m["locator"]
-		if !ok {
-			return Envelope{}, errors.New("invalid input record: missing locator")
-		}
-		locator, ok := locVal.(string)
-		if !ok || locator == "" {
-			return Envelope{}, errors.New("invalid input record: locator must be string")
 		}
 
 		// Read + parse YAML
@@ -80,10 +84,7 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	out := in
 	out.Records = make([]any, 0, len(outs))
 	for _, pr := range outs {
-		out.Records = append(out.Records, map[string]any{
-			"locator": pr.locator,
-			"meta":    pr.meta,
-		})
+		out.Records = append(out.Records, Record{Locator: pr.locator, Meta: pr.meta})
 	}
 	return out, nil
 }
