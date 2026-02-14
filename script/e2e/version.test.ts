@@ -31,6 +31,11 @@ test("thoth version prints dev", () => {
   }
 
   const run = spawnSync(bin, ["version"], { encoding: "utf8" });
+  // Save outputs for inspection; temp/ is git-ignored
+  const tempDir = path.join(root, "temp");
+  fs.mkdirSync(tempDir, { recursive: true });
+  fs.writeFileSync(path.join(tempDir, "out.txt"), run.stdout);
+  fs.writeFileSync(path.join(tempDir, "err.txt"), (run as any).stderr ?? "");
   expect(run.status).toBe(0);
   expect(run.stdout).toBe("thoth dev\n");
 });
