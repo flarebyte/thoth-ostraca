@@ -69,3 +69,26 @@ test("diagnose echo prints expected JSON and writes dumps", () => {
   expect(fs.readFileSync(dumpIn, "utf8")).toBe(expectedDumpIn);
   expect(fs.readFileSync(dumpOut, "utf8")).toBe(expectedDumpOut);
 });
+
+test("diagnose validate-config produces expected envelope when --config is provided", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/minimal.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/diagnose/validate_config_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+
+  const run = spawnSync(
+    bin,
+    [
+      "diagnose",
+      "--stage",
+      "validate-config",
+      "--config",
+      cfg,
+    ],
+    { encoding: "utf8", cwd: root }
+  );
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});

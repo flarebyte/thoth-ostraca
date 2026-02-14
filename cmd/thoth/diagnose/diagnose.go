@@ -1,6 +1,7 @@
 package diagnose
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -16,6 +17,7 @@ var (
 	flagIn      string
 	flagDumpIn  string
 	flagDumpOut string
+	flagConfig  string
 )
 
 // Cmd implements `thoth diagnose`.
@@ -40,6 +42,9 @@ var Cmd = &cobra.Command{
 			}
 		} else {
 			inEnv = stage.Envelope{Records: []any{}}
+			if flagConfig != "" {
+				inEnv.Meta = &stage.Meta{ConfigPath: flagConfig}
+			}
 		}
 
 		// dump-in if requested
@@ -49,12 +54,9 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		var outEnv stage.Envelope
-		switch flagStage {
-		case "echo":
-			outEnv = stage.Echo(inEnv)
-		default:
-			return fmt.Errorf("unknown stage: %s", flagStage)
+		outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
+		if err != nil {
+			return err
 		}
 
 		// dump-out if requested
@@ -81,6 +83,7 @@ func init() {
 	Cmd.Flags().StringVar(&flagIn, "in", "", "Path to input envelope JSON")
 	Cmd.Flags().StringVar(&flagDumpIn, "dump-in", "", "Path to write resolved input envelope JSON")
 	Cmd.Flags().StringVar(&flagDumpOut, "dump-out", "", "Path to write output envelope JSON")
+	Cmd.Flags().StringVar(&flagConfig, "config", "", "Config path used when --in omitted")
 }
 
 func writeJSONFile(path string, v any) error {

@@ -49,3 +49,41 @@ func requireStringField(v cue.Value, name string) error {
 	}
 	return nil
 }
+
+// Minimal holds the small subset of config we validate in Phase 1.
+type Minimal struct {
+	ConfigVersion string
+	Action        string
+}
+
+// ParseMinimal validates and extracts minimal values from the CUE config.
+func ParseMinimal(path string) (Minimal, error) {
+	if filepath.Ext(path) != ".cue" {
+		return Minimal{}, errors.New("unsupported config format: expected .cue")
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Minimal{}, fmt.Errorf("failed to read config: %w", err)
+	}
+	ctx := cuecontext.New()
+	v := ctx.CompileBytes(data)
+	if err := v.Err(); err != nil {
+		return Minimal{}, fmt.Errorf("invalid config: %v", err)
+	}
+	if err := requireStringField(v, "configVersion"); err != nil {
+		return Minimal{}, err
+	}
+	if err := requireStringField(v, "action"); err != nil {
+		return Minimal{}, err
+	}
+	mv := v.LookupPath(cue.ParsePath("configVersion"))
+	av := v.LookupPath(cue.ParsePath("action"))
+	var m Minimal
+	if err := mv.Decode(&m.ConfigVersion); err != nil {
+		return Minimal{}, fmt.Errorf("invalid value for configVersion: %v", err)
+	}
+	if err := av.Decode(&m.Action); err != nil {
+		return Minimal{}, fmt.Errorf("invalid value for action: %v", err)
+	}
+	return m, nil
+}

@@ -1,10 +1,12 @@
 package run
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 
-	"github.com/flarebyte/thoth-ostraca/internal/config"
+	"github.com/flarebyte/thoth-ostraca/internal/stage"
 	"github.com/spf13/cobra"
 )
 
@@ -22,11 +24,16 @@ var Cmd = &cobra.Command{
 		if cfgPath == "" {
 			return fmt.Errorf("missing required flag: --config")
 		}
-		if err := config.LoadAndValidate(cfgPath); err != nil {
+		in := stage.Envelope{Records: []any{}, Meta: &stage.Meta{ConfigPath: cfgPath}}
+		out, err := stage.Run(context.Background(), "validate-config", in, stage.Deps{})
+		if err != nil {
 			return err
 		}
-		// Success output must be a single JSON line.
-		if _, err := fmt.Fprintln(os.Stdout, `{"ok":true}`); err != nil {
+		b, err := json.Marshal(out)
+		if err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintln(os.Stdout, string(b)); err != nil {
 			return err
 		}
 		return nil

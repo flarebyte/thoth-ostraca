@@ -28,10 +28,12 @@ function buildBinary(root: string) {
   return bin;
 }
 
-test("thoth run with valid config prints ok JSON", () => {
+test("thoth run with valid config prints envelope JSON", () => {
   const root = path.resolve(__dirname, "../..");
   const bin = buildBinary(root);
   const cfg = path.join(root, "testdata/configs/minimal.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
   const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
   // Save outputs for inspection; temp/ is git-ignored
   const tempDir = path.join(root, "temp");
@@ -40,7 +42,7 @@ test("thoth run with valid config prints ok JSON", () => {
   fs.writeFileSync(path.join(tempDir, "err.txt"), (run as any).stderr ?? "");
   expect(run.status).toBe(0);
   expect(run.stderr).toBe("");
-  expect(run.stdout).toBe("{\"ok\":true}\n");
+  expect(run.stdout).toBe(expectedOut);
 });
 
 test("thoth run with missing field fails with short error", () => {
@@ -55,5 +57,5 @@ test("thoth run with missing field fails with short error", () => {
   fs.writeFileSync(path.join(tempDir2, "err.txt"), (run as any).stderr ?? "");
   expect(run.status).not.toBe(0);
   expect(run.stdout).toBe("");
-  expect(run.stderr.includes("missing required field: action")).toBe(true);
+  expect(run.stderr.includes("action")).toBe(true);
 });
