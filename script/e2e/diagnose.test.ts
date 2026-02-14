@@ -56,6 +56,11 @@ test("diagnose echo prints expected JSON and writes dumps", () => {
     ],
     { encoding: "utf8", cwd: root }
   );
+  // Save outputs for inspection; temp/ is git-ignored
+  const tempDir = path.join(root, "temp");
+  fs.mkdirSync(tempDir, { recursive: true });
+  fs.writeFileSync(path.join(tempDir, "diagnose-echo-out.txt"), run.stdout);
+  fs.writeFileSync(path.join(tempDir, "diagnose-echo-err.txt"), (run as any).stderr ?? "");
   expect(run.status).toBe(0);
   expect(run.stderr).toBe("");
   expect(run.stdout).toBe(expectedOut);
@@ -88,6 +93,11 @@ test("diagnose validate-config produces expected envelope when --config is provi
     ],
     { encoding: "utf8", cwd: root }
   );
+  // Save outputs for inspection; temp/ is git-ignored
+  const tempDir2 = path.join(root, "temp");
+  fs.mkdirSync(tempDir2, { recursive: true });
+  fs.writeFileSync(path.join(tempDir2, "diagnose-validate-out.txt"), run.stdout);
+  fs.writeFileSync(path.join(tempDir2, "diagnose-validate-err.txt"), (run as any).stderr ?? "");
   expect(run.status).toBe(0);
   expect(run.stderr).toBe("");
   expect(run.stdout).toBe(expectedOut);
@@ -113,6 +123,11 @@ test("diagnose discover-meta-files respects gitignore by default and can be disa
     ],
     { encoding: "utf8", cwd: root }
   );
+  // Save outputs for inspection; temp/ is git-ignored
+  const tempDir3 = path.join(root, "temp");
+  fs.mkdirSync(tempDir3, { recursive: true });
+  fs.writeFileSync(path.join(tempDir3, "diagnose-discover-out.txt"), runAll.stdout);
+  fs.writeFileSync(path.join(tempDir3, "diagnose-discover-err.txt"), (runAll as any).stderr ?? "");
   expect(runAll.status).toBe(0);
   expect(runAll.stderr).toBe("");
   const parsed = JSON.parse(runAll.stdout);

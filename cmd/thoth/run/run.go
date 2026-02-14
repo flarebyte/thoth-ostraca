@@ -33,7 +33,11 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		b, err := json.Marshal(e2)
+		e3, err := stage.Run(context.Background(), "parse-validate-yaml", e2, stage.Deps{})
+		if err != nil {
+			return err
+		}
+		b, err := json.Marshal(e3)
 		if err != nil {
 			return err
 		}

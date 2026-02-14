@@ -11,10 +11,6 @@ import (
 	gitgitignore "github.com/go-git/go-git/v5/plumbing/format/gitignore"
 )
 
-type fileRecord struct {
-	Locator string `json:"locator"`
-}
-
 func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	// Defaults
 	root := "."
@@ -69,7 +65,7 @@ func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	out := in
 	out.Records = make([]any, 0, len(locators))
 	for _, l := range locators {
-		out.Records = append(out.Records, fileRecord{Locator: l})
+		out.Records = append(out.Records, map[string]any{"locator": l})
 	}
 	return out, nil
 }

@@ -1,1 +1,3 @@
-
+locator: "d1"
+meta:
+  kind: "discovery1"

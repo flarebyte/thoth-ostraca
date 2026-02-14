@@ -59,6 +59,28 @@ test("thoth run executes discovery and respects gitignore by default", () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test("thoth run parses YAML records into {locator,meta}", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/yaml1.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/yaml1_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test("thoth run fails on invalid YAML (missing meta)", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/yaml1_nogit.cue");
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe("");
+  expect(run.stderr.includes("missing required field: meta")).toBe(true);
+});
+
 test("thoth run with missing field fails with short error", () => {
   const root = path.resolve(__dirname, "../..");
   const bin = buildBinary(root);
