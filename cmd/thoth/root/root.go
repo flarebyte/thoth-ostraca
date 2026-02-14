@@ -1,6 +1,7 @@
 package root
 
 import (
+	"github.com/flarebyte/thoth-ostraca/cmd/thoth/diagnose"
 	"github.com/flarebyte/thoth-ostraca/cmd/thoth/run"
 	"github.com/flarebyte/thoth-ostraca/cmd/thoth/version"
 	"github.com/spf13/cobra"
@@ -22,6 +23,7 @@ func NewRootCmd() *cobra.Command {
 	// Subcommands
 	cmd.AddCommand(version.VersionCmd)
 	cmd.AddCommand(run.Cmd)
+	cmd.AddCommand(diagnose.Cmd)
 
 	return cmd
 }
