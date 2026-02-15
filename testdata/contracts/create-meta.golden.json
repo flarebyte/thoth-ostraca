@@ -1,0 +1,11 @@
+{
+  "records": [
+    { "locator": "a.txt", "post": { "metaPath": "a.txt.thoth.yaml" } },
+    { "locator": "dir/b.txt", "post": { "metaPath": "dir/b.txt.thoth.yaml" } }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "create-meta" },
+    "discovery": { "root": "temp/create1_repo_contract" }
+  }
+}
