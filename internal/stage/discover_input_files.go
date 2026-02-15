@@ -63,6 +63,9 @@ func discoverInputFilesRunner(ctx context.Context, in Envelope, deps Deps) (Enve
 	for _, l := range locators {
 		out.Records = append(out.Records, Record{Locator: l})
 	}
+	if out.Meta != nil && out.Meta.Config != nil && out.Meta.Config.Action == "diff-meta" {
+		out.Meta.Inputs = append([]string(nil), locators...)
+	}
 	return out, nil
 }
 

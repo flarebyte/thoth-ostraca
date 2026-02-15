@@ -29,12 +29,22 @@ type Meta struct {
 	Config          *ConfigMeta    `json:"config,omitempty"`
 	Discovery       *DiscoveryMeta `json:"discovery,omitempty"`
 	LocatorPolicy   *LocatorPolicy `json:"locatorPolicy,omitempty"`
+	Inputs          []string       `json:"inputs,omitempty"`
+	MetaFiles       []string       `json:"metaFiles,omitempty"`
+	Diff            *DiffReport    `json:"diff,omitempty"`
 	Lua             *LuaMeta       `json:"lua,omitempty"`
 	Shell           *ShellMeta     `json:"shell,omitempty"`
 	Output          *OutputMeta    `json:"output,omitempty"`
 	Reduced         any            `json:"reduced,omitempty"`
 	Errors          *ErrorsMeta    `json:"errors,omitempty"`
 	Workers         int            `json:"workers,omitempty"`
+}
+
+// DiffReport holds a minimal diff summary for meta files.
+type DiffReport struct {
+	Orphans      []string `json:"orphans"`
+	PresentCount int      `json:"presentCount"`
+	OrphanCount  int      `json:"orphanCount"`
 }
 
 // LocatorPolicy mirrors policy flags for locator validation in meta.

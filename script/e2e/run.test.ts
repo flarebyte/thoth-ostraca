@@ -483,3 +483,19 @@ test('update-meta: invalid existing meta fails fast', () => {
   expect(run.status).not.toBe(0);
   expect(run.stdout).toBe('');
 });
+
+test('diff-meta: computes orphans and counts deterministically', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/diff1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const out = JSON.parse(run.stdout);
+  expect(out.meta.diff.presentCount).toBe(2);
+  expect(out.meta.diff.orphanCount).toBe(1);
+  expect(JSON.stringify(out.meta.diff.orphans)).toBe(
+    JSON.stringify(['orphan.txt.thoth.yaml']),
+  );
+});
