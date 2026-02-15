@@ -312,3 +312,41 @@ test('write-output: file output writes to disk and stdout is empty', () => {
     '{"records":[],"meta":{"contractVersion":"1","config":{"configVersion":"v0","action":"nop"},"output":{"out":"temp/out.json"},"reduced":0}}\n';
   expect(fs.readFileSync(outPath, 'utf8')).toBe(expected);
 });
+
+test('validate-only: ok repo yields compact JSON with records', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/validate_only_ok.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/validate_only_ok_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('validate-only: mixed repo embeds record and envelope errors (keep-going)', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/validate_only_mixed.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/validate_only_mixed_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('invalid action yields a short error mentioning allowed actions', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/action_unknown.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes("allowed 'pipeline' or 'validate'")).toBe(true);
+});
