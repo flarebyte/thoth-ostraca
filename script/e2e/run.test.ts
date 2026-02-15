@@ -1,8 +1,7 @@
 import { expect, test } from 'bun:test';
-import { spawnSync } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import {
   buildBinary,
   expectedJSONFromGolden,
@@ -247,7 +246,7 @@ test('determinism: workers=2 matches single-worker golden', () => {
   expect(run.stderr).toBe('');
   const actual = JSON.parse(run.stdout);
   if (actual.meta) delete actual.meta.workers;
-  const normalized = JSON.stringify(actual) + '\n';
+  const normalized = `${JSON.stringify(actual)}\n`;
   expect(normalized).toBe(expectedOut);
 });
 
@@ -264,7 +263,7 @@ test('determinism: workers=1 equals workers=2 golden', () => {
   expect(run.stderr).toBe('');
   const actual = JSON.parse(run.stdout);
   if (actual.meta) delete actual.meta.workers;
-  const normalized = JSON.stringify(actual) + '\n';
+  const normalized = `${JSON.stringify(actual)}\n`;
   expect(normalized).toBe(expectedOut);
 });
 

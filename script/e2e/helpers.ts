@@ -1,6 +1,6 @@
-import { type SpawnSyncReturns, spawnSync } from 'child_process';
-import * as fs from 'fs';
-import * as path from 'path';
+import { type SpawnSyncReturns, spawnSync } from 'node:child_process';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 export function projectRoot(): string {
   // helpers.ts lives in script/e2e; project root is two levels up
@@ -43,7 +43,7 @@ export function runThoth(
 
 export function expectedJSONFromGolden(root: string, relPath: string): string {
   const raw = fs.readFileSync(path.join(root, relPath), 'utf8');
-  return JSON.stringify(JSON.parse(raw)) + '\n';
+  return `${JSON.stringify(JSON.parse(raw))}\n`;
 }
 
 export function saveOutputs(
@@ -54,8 +54,5 @@ export function saveOutputs(
   const tempDir = path.join(root, 'temp');
   fs.mkdirSync(tempDir, { recursive: true });
   fs.writeFileSync(path.join(tempDir, `${base}.out.txt`), run.stdout);
-  fs.writeFileSync(
-    path.join(tempDir, `${base}.err.txt`),
-    (run as any).stderr ?? '',
-  );
+  fs.writeFileSync(path.join(tempDir, `${base}.err.txt`), run.stderr ?? '');
 }

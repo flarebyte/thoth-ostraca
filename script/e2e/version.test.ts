@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+import * as path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { buildBinary, projectRoot, runThoth, saveOutputs } from './helpers';
 
 const __filename = fileURLToPath(import.meta.url);

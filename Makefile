@@ -18,7 +18,7 @@ lint:
 format:
 	gofmt -w .
 	$(BIOME) format --write .
-	$(BIOME) check --write
+	$(BIOME) check --unsafe --write
 
 test: gen
 	$(GO) test ./...
