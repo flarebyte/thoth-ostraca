@@ -9,17 +9,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// runDiagnoseWithIn handles the mode where --in is provided.
-func runDiagnoseWithIn() error {
-	inEnv, err := prepareDiagnoseInput(flagIn, flagConfig, "", false)
-	if err != nil {
-		return err
+// maybeDumpIn writes the provided envelope to --dump-in if set.
+func maybeDumpIn(env stage.Envelope) error {
+	if flagDumpIn == "" {
+		return nil
 	}
-	if flagDumpIn != "" {
-		if err := writeJSONFile(flagDumpIn, inEnv); err != nil {
-			return err
-		}
-	}
+	return writeJSONFile(flagDumpIn, env)
+}
+
+// runStageAndRender executes the target stage on the input envelope, handles
+// --dump-out, sets contract version, and prints to stdout.
+func runStageAndRender(inEnv stage.Envelope) error {
 	outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
 	if err != nil {
 		return err
@@ -34,6 +34,18 @@ func runDiagnoseWithIn() error {
 		}
 	}
 	return printEnvelopeOneLine(os.Stdout, outEnv)
+}
+
+// runDiagnoseWithIn handles the mode where --in is provided.
+func runDiagnoseWithIn() error {
+	inEnv, err := prepareDiagnoseInput(flagIn, flagConfig, "", false)
+	if err != nil {
+		return err
+	}
+	if err := maybeDumpIn(inEnv); err != nil {
+		return err
+	}
+	return runStageAndRender(inEnv)
 }
 
 // runDiagnoseWithPrepare handles the mode where --prepare is set (and --in omitted).
@@ -59,26 +71,10 @@ func runDiagnoseWithPrepare() error {
 	if err != nil {
 		return err
 	}
-	if flagDumpIn != "" {
-		if err := writeJSONFile(flagDumpIn, prepOut); err != nil {
-			return err
-		}
-	}
-
-	outEnv, err := stage.Run(context.Background(), flagStage, prepOut, stage.Deps{})
-	if err != nil {
+	if err := maybeDumpIn(prepOut); err != nil {
 		return err
 	}
-	if outEnv.Meta == nil {
-		outEnv.Meta = &stage.Meta{}
-	}
-	outEnv.Meta.ContractVersion = "1"
-	if flagDumpOut != "" {
-		if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-			return err
-		}
-	}
-	return printEnvelopeOneLine(os.Stdout, outEnv)
+	return runStageAndRender(prepOut)
 }
 
 // runDiagnoseDefault handles the default mode: neither --in nor --prepare.
@@ -98,24 +94,8 @@ func runDiagnoseDefault(cmd *cobra.Command) error {
 	if err != nil {
 		return err
 	}
-	if flagDumpIn != "" {
-		if err := writeJSONFile(flagDumpIn, inEnv); err != nil {
-			return err
-		}
-	}
-
-	outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
-	if err != nil {
+	if err := maybeDumpIn(inEnv); err != nil {
 		return err
 	}
-	if outEnv.Meta == nil {
-		outEnv.Meta = &stage.Meta{}
-	}
-	outEnv.Meta.ContractVersion = "1"
-	if flagDumpOut != "" {
-		if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-			return err
-		}
-	}
-	return printEnvelopeOneLine(os.Stdout, outEnv)
+	return runStageAndRender(inEnv)
 }

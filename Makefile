@@ -46,6 +46,9 @@ complexity:
 	scc --sort complexity --by-file -i go . | head -n 15
 	scc --sort complexity --by-file -i ts . | head -n 15
 
+dup:
+	npx jscpd --format go,typescript --min-lines 20 --gitignore .
+
 help:
 	@printf "Targets:\n"
 	@printf "  lint     Run linters (Biome + go vet).\n"
