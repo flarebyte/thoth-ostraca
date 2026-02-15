@@ -350,3 +350,52 @@ test('invalid action yields a short error mentioning allowed actions', () => {
   expect(run.stdout).toBe('');
   expect(run.stderr.includes("allowed 'pipeline' or 'validate'")).toBe(true);
 });
+
+test('create-meta: creates .thoth.yaml files and prints expected envelope', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/create1');
+  const tempRepo = path.join(root, 'temp', 'create1_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'create1_tmp.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "create-meta"
+  discovery: { root: "${path.join('temp', 'create1_repo').replaceAll('\\', '\\\\')}" }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-create-meta', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
+  const metaB = path.join(tempRepo, 'dir', 'b.txt.thoth.yaml');
+  expect(fs.existsSync(metaA)).toBe(true);
+  expect(fs.existsSync(metaB)).toBe(true);
+  const metaIgnored = path.join(tempRepo, 'ignored.txt.thoth.yaml');
+  const metaC = path.join(tempRepo, 'skipdir', 'c.txt.thoth.yaml');
+  expect(fs.existsSync(metaIgnored)).toBe(false);
+  expect(fs.existsSync(metaC)).toBe(false);
+  const expectA = `locator: a.txt\nmeta: {}\n`;
+  const expectB = `locator: dir/b.txt\nmeta: {}\n`;
+  expect(fs.readFileSync(metaA, 'utf8')).toBe(expectA);
+  expect(fs.readFileSync(metaB, 'utf8')).toBe(expectB);
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/create1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('create-meta: second run fails-fast when meta exists', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(root, 'temp', 'create1_tmp.cue');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-create-meta-second', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('a.txt.thoth.yaml')).toBe(true);
+});

@@ -41,6 +41,13 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 			"write-output",
 		}
 		return runStages(ctx, out, stages)
+	case "create-meta":
+		stages := []string{
+			"discover-input-files",
+			"write-meta-files",
+			"write-output",
+		}
+		return runStages(ctx, out, stages)
 	default:
 		// Should not happen; validate-config already enforced
 		return stage.Envelope{}, fmt.Errorf("invalid action")
