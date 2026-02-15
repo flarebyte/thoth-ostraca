@@ -53,7 +53,24 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-		b, err := json.Marshal(e7)
+		e8, err := stage.Run(context.Background(), "lua-reduce", e7, stage.Deps{})
+		if err != nil {
+			return err
+		}
+		// Output modes
+		if e8.Meta != nil && e8.Meta.Output != nil && e8.Meta.Output.Lines {
+			for _, r := range e8.Records {
+				b, err := json.Marshal(r)
+				if err != nil {
+					return err
+				}
+				if _, err := fmt.Fprintln(os.Stdout, string(b)); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+		b, err := json.Marshal(e8)
 		if err != nil {
 			return err
 		}

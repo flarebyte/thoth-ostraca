@@ -1,1 +1,1 @@
-{"records":[{"locator":"d1","meta":{"kind":"discovery1"},"mapped":{"locator":"d1","meta":{"kind":"discovery1"}},"post":{"locator":"d1"}}],"meta":{"config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/discovery1"}}}
+{"records":[{"locator":"d1","meta":{"kind":"discovery1"},"mapped":{"locator":"d1","meta":{"kind":"discovery1"}},"post":{"locator":"d1"}}],"meta":{"config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/discovery1"},"reduced":1}}

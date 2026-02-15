@@ -59,6 +59,8 @@ type Minimal struct {
 	Map           Map
 	Shell         Shell
 	PostMap       PostMap
+	Reduce        Reduce
+	Output        Output
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -162,6 +164,25 @@ func ParseMinimal(path string) (Minimal, error) {
 			}
 		}
 	}
+	// Optional reduce.inline
+	rv := v.LookupPath(cue.ParsePath("reduce"))
+	if rv.Exists() {
+		iv := rv.LookupPath(cue.ParsePath("inline"))
+		if iv.Exists() && iv.Kind() == cue.StringKind {
+			if err := iv.Decode(&m.Reduce.Inline); err == nil {
+				m.Reduce.HasInline = true
+			}
+		}
+	}
+	// Optional output.lines
+	ov := v.LookupPath(cue.ParsePath("output"))
+	if ov.Exists() {
+		lv := ov.LookupPath(cue.ParsePath("lines"))
+		if lv.Exists() && lv.Kind() == cue.BoolKind {
+			_ = lv.Decode(&m.Output.Lines)
+			m.Output.HasLines = true
+		}
+	}
 	return m, nil
 }
 
@@ -201,4 +222,16 @@ type Shell struct {
 type PostMap struct {
 	Inline    string
 	HasInline bool
+}
+
+// Reduce holds optional reduce config.
+type Reduce struct {
+	Inline    string
+	HasInline bool
+}
+
+// Output holds optional output config.
+type Output struct {
+	Lines    bool
+	HasLines bool
 }

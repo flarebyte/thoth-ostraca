@@ -147,6 +147,39 @@ test("thoth run fails when shell program is missing", () => {
   expect(run.stderr.includes("shell-exec")).toBe(true);
 });
 
+test("thoth run reduces to count and prints full envelope", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/reduce1.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/reduce1_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test("thoth run prints NDJSON lines when output.lines is true", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/lines1.cue");
+  const expectedLines = fs.readFileSync(path.join(root, "testdata/run/lines1_out.golden.ndjson"), "utf8");
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedLines);
+});
+
+test("thoth run fails on invalid reduce Lua", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/reduce_bad.cue");
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe("");
+  expect(run.stderr.includes("lua-reduce")).toBe(true);
+});
+
 test("thoth run with missing field fails with short error", () => {
   const root = path.resolve(__dirname, "../..");
   const bin = buildBinary(root);

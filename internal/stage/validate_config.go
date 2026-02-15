@@ -75,6 +75,20 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 		}
 		out.Meta.Lua.PostMapInline = min.PostMap.Inline
 	}
+	// Reduce inline
+	if min.Reduce.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.ReduceInline = min.Reduce.Inline
+	}
+	// Output lines
+	if min.Output.HasLines {
+		if out.Meta.Output == nil {
+			out.Meta.Output = &OutputMeta{}
+		}
+		out.Meta.Output.Lines = min.Output.Lines
+	}
 	return out, nil
 }
 
