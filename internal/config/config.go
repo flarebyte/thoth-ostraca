@@ -134,8 +134,12 @@ type Reduce struct {
 
 // Output holds optional output config.
 type Output struct {
-	Lines    bool
-	HasLines bool
+	Out       string
+	Pretty    bool
+	Lines     bool
+	HasOut    bool
+	HasPretty bool
+	HasLines  bool
 }
 
 // Errors holds error handling mode config.

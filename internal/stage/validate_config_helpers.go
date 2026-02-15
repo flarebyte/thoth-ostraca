@@ -78,11 +78,19 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	}
 
 	// Output
-	if min.Output.HasLines {
+	if min.Output.HasOut || min.Output.HasPretty || min.Output.HasLines {
 		if out.Meta.Output == nil {
 			out.Meta.Output = &OutputMeta{}
 		}
-		out.Meta.Output.Lines = min.Output.Lines
+		if min.Output.HasOut {
+			out.Meta.Output.Out = min.Output.Out
+		}
+		if min.Output.HasPretty {
+			out.Meta.Output.Pretty = min.Output.Pretty
+		}
+		if min.Output.HasLines {
+			out.Meta.Output.Lines = min.Output.Lines
+		}
 	}
 
 	// Errors

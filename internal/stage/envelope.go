@@ -96,7 +96,9 @@ type ShellMeta struct {
 
 // OutputMeta holds minimal output settings.
 type OutputMeta struct {
-	Lines bool `json:"lines,omitempty"`
+	Out    string `json:"out,omitempty"`
+	Pretty bool   `json:"pretty,omitempty"`
+	Lines  bool   `json:"lines,omitempty"`
 }
 
 // ErrorsMeta holds error handling behavior.

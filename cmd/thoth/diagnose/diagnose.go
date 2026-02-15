@@ -21,6 +21,9 @@ var (
 	flagConfig  string
 	flagRoot    string
 	flagNoGit   bool
+	flagOut     string
+	flagPretty  bool
+	flagLines   bool
 )
 
 // Cmd implements `thoth diagnose`.
@@ -70,6 +73,9 @@ func init() {
 	Cmd.Flags().StringVar(&flagConfig, "config", "", "Config path used when --in omitted")
 	Cmd.Flags().StringVar(&flagRoot, "root", "", "Discovery root used when --in omitted")
 	Cmd.Flags().BoolVar(&flagNoGit, "no-gitignore", false, "Disable .gitignore filtering (when --in omitted)")
+	Cmd.Flags().StringVar(&flagOut, "out", "-", "Output path for write-output (diagnose --in omitted)")
+	Cmd.Flags().BoolVar(&flagPretty, "pretty", false, "Pretty JSON (diagnose --in omitted)")
+	Cmd.Flags().BoolVar(&flagLines, "lines", false, "Lines mode (diagnose --in omitted)")
 }
 
 func writeJSONFile(path string, v any) error {
@@ -110,6 +116,13 @@ func prepareDiagnoseInput(inPath, cfg, root string, noGit bool) (stage.Envelope,
 		if noGit {
 			env.Meta.Discovery.NoGitignore = true
 		}
+	}
+	// Optional output when diagnosing without --in; only if flags deviate from defaults
+	if flagOut != "-" || flagPretty || flagLines {
+		if env.Meta == nil {
+			env.Meta = &stage.Meta{}
+		}
+		env.Meta.Output = &stage.OutputMeta{Out: flagOut, Pretty: flagPretty, Lines: flagLines}
 	}
 	return env, nil
 }

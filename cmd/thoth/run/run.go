@@ -3,7 +3,6 @@ package run
 import (
 	"context"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -22,11 +21,8 @@ var Cmd = &cobra.Command{
 		if cfgPath == "" {
 			return fmt.Errorf("missing required flag: --config")
 		}
-		out, err := executePipeline(context.Background(), cfgPath)
-		if err != nil {
-			return err
-		}
-		return renderRunOutput(out, os.Stdout)
+		_, err := executePipeline(context.Background(), cfgPath)
+		return err
 	},
 }
 

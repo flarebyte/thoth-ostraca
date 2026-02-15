@@ -188,6 +188,16 @@ func parseOutputSection(v cue.Value) Output {
 	if !ov.Exists() {
 		return o
 	}
+	ovOut := ov.LookupPath(cue.ParsePath("out"))
+	if ovOut.Exists() && ovOut.Kind() == cue.StringKind {
+		_ = ovOut.Decode(&o.Out)
+		o.HasOut = true
+	}
+	ovPretty := ov.LookupPath(cue.ParsePath("pretty"))
+	if ovPretty.Exists() && ovPretty.Kind() == cue.BoolKind {
+		_ = ovPretty.Decode(&o.Pretty)
+		o.HasPretty = true
+	}
 	lv := ov.LookupPath(cue.ParsePath("lines"))
 	if lv.Exists() && lv.Kind() == cue.BoolKind {
 		_ = lv.Decode(&o.Lines)
