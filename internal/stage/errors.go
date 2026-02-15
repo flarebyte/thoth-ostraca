@@ -16,7 +16,3 @@ func errorMode(meta *Meta) (mode string, embed bool) {
 	}
 	return
 }
-
-func appendEnvelopeError(env *Envelope, stage, locator, msg string) {
-	env.Errors = append(env.Errors, Error{Stage: stage, Locator: locator, Message: msg})
-}

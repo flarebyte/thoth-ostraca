@@ -81,6 +81,8 @@ var Cmd = &cobra.Command{
 		}
 
 		// Print single-line JSON to stdout
+		// Ensure deterministic error ordering
+		stage.SortEnvelopeErrors(&outEnv)
 		b, err := json.Marshal(outEnv)
 		if err != nil {
 			return err

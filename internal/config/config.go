@@ -62,6 +62,7 @@ type Minimal struct {
 	Reduce        Reduce
 	Output        Output
 	Errors        Errors
+	Workers       Workers
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -198,6 +199,13 @@ func ParseMinimal(path string) (Minimal, error) {
 			m.Errors.HasEmbed = true
 		}
 	}
+
+	// Optional workers
+	wv := v.LookupPath(cue.ParsePath("workers"))
+	if wv.Exists() && wv.Kind() == cue.IntKind {
+		_ = wv.Decode(&m.Workers.Count)
+		m.Workers.HasCount = true
+	}
 	return m, nil
 }
 
@@ -257,4 +265,10 @@ type Errors struct {
 	EmbedErrors bool
 	HasMode     bool
 	HasEmbed    bool
+}
+
+// Workers holds optional worker count.
+type Workers struct {
+	Count    int
+	HasCount bool
 }

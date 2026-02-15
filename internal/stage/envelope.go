@@ -30,6 +30,7 @@ type Meta struct {
 	Output     *OutputMeta    `json:"output,omitempty"`
 	Reduced    any            `json:"reduced,omitempty"`
 	Errors     *ErrorsMeta    `json:"errors,omitempty"`
+	Workers    int            `json:"workers,omitempty"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.

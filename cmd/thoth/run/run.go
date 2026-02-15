@@ -106,6 +106,8 @@ var Cmd = &cobra.Command{
 				}
 			}
 		}
+		// Ensure deterministic error ordering
+		stage.SortEnvelopeErrors(&e8)
 		var buf bytes.Buffer
 		enc := json.NewEncoder(&buf)
 		enc.SetEscapeHTML(false)

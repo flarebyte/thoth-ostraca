@@ -101,6 +101,14 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 			out.Meta.Errors.EmbedErrors = min.Errors.EmbedErrors
 		}
 	}
+	// Workers exposure: only include when present in CUE; default used internally elsewhere
+	if min.Workers.HasCount {
+		workers := min.Workers.Count
+		if workers < 1 {
+			workers = 1
+		}
+		out.Meta.Workers = workers
+	}
 	return out, nil
 }
 

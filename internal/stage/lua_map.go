@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	lua "github.com/yuin/gopher-lua"
@@ -24,105 +25,156 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 
 	out := in
 	mode, _ := errorMode(in.Meta)
-	for i, r := range in.Records {
-		var locator string
-		var meta map[string]any
-		if rec, ok := r.(Record); ok {
-			if rec.Error != nil {
-				out.Records[i] = r
-				continue
-			}
-			locator = rec.Locator
-			meta = rec.Meta
-		} else if m, ok := r.(map[string]any); ok {
-			locVal, ok := m["locator"]
-			if !ok {
-				if mode == "keep-going" {
-					appendEnvelopeError(&out, "lua-map", "", "missing locator")
-					out.Records[i] = r
+	n := len(in.Records)
+	type res struct {
+		idx   int
+		rec   any
+		envE  *Error
+		fatal error
+	}
+	workers := getWorkers(in.Meta)
+	jobs := make(chan int)
+	results := make(chan res)
+	var wg sync.WaitGroup
+	var envErrs []Error
+	var mu sync.Mutex
+	worker := func() {
+		defer wg.Done()
+		for idx := range jobs {
+			r := in.Records[idx]
+			var locator string
+			var meta map[string]any
+			if rec, ok := r.(Record); ok {
+				if rec.Error != nil {
+					results <- res{idx: idx, rec: r}
 					continue
 				}
-				return Envelope{}, errors.New("lua-map: missing locator")
-			}
-			s, ok := locVal.(string)
-			if !ok {
-				if mode == "keep-going" {
-					appendEnvelopeError(&out, "lua-map", "", "invalid locator type")
-					out.Records[i] = r
+				locator = rec.Locator
+				meta = rec.Meta
+			} else if m, ok := r.(map[string]any); ok {
+				locVal, ok := m["locator"]
+				if !ok {
+					if mode == "keep-going" {
+						results <- res{idx: idx, rec: r, envE: &Error{Stage: "lua-map", Message: "missing locator"}}
+						continue
+					}
+					results <- res{idx: idx, fatal: errors.New("lua-map: missing locator")}
 					continue
 				}
-				return Envelope{}, errors.New("lua-map: invalid locator type")
-			}
-			locator = s
-			meta, _ = m["meta"].(map[string]any)
-		} else {
-			if mode == "keep-going" {
-				appendEnvelopeError(&out, "lua-map", "", "invalid record type")
-				out.Records[i] = r
-				continue
-			}
-			return Envelope{}, errors.New("lua-map: invalid record type")
-		}
-
-		L := lua.NewState(lua.Options{SkipOpenLibs: true})
-		defer L.Close()
-		// Minimal libs
-		L.Push(L.NewFunction(lua.OpenBase))
-		L.Push(lua.LString("base"))
-		L.Call(1, 0)
-		L.Push(L.NewFunction(lua.OpenString))
-		L.Push(lua.LString("string"))
-		L.Call(1, 0)
-		L.Push(L.NewFunction(lua.OpenTable))
-		L.Push(lua.LString("table"))
-		L.Call(1, 0)
-		L.Push(L.NewFunction(lua.OpenMath))
-		L.Push(lua.LString("math"))
-		L.Call(1, 0)
-
-		L.SetGlobal("locator", lua.LString(locator))
-		L.SetGlobal("meta", toLValue(L, meta))
-
-		fn, err := L.LoadString(code)
-		if err != nil {
-			if mode == "keep-going" {
-				appendEnvelopeError(&out, "lua-map", locator, err.Error())
-				out.Records[i] = Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: err.Error()}}
-				continue
-			}
-			return Envelope{}, fmt.Errorf("lua-map: %v", err)
-		}
-		L.Push(fn)
-		done := make(chan struct{})
-		var callErr error
-		go func() {
-			callErr = L.PCall(0, 1, nil)
-			close(done)
-		}()
-		select {
-		case <-done:
-			if callErr != nil {
-				if mode == "keep-going" {
-					appendEnvelopeError(&out, "lua-map", locator, callErr.Error())
-					out.Records[i] = Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: callErr.Error()}}
+				s, ok := locVal.(string)
+				if !ok {
+					if mode == "keep-going" {
+						results <- res{idx: idx, rec: r, envE: &Error{Stage: "lua-map", Message: "invalid locator type"}}
+						continue
+					}
+					results <- res{idx: idx, fatal: errors.New("lua-map: invalid locator type")}
 					continue
 				}
-				return Envelope{}, fmt.Errorf("lua-map: %v", callErr)
-			}
-		case <-time.After(200 * time.Millisecond):
-			if mode == "keep-going" {
-				appendEnvelopeError(&out, "lua-map", locator, "timeout")
-				out.Records[i] = Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: "timeout"}}
+				locator = s
+				meta, _ = m["meta"].(map[string]any)
+			} else {
+				if mode == "keep-going" {
+					results <- res{idx: idx, rec: r, envE: &Error{Stage: "lua-map", Message: "invalid record type"}}
+					continue
+				}
+				results <- res{idx: idx, fatal: errors.New("lua-map: invalid record type")}
 				continue
 			}
-			return Envelope{}, fmt.Errorf("lua-map: timeout")
-		}
-		ret := L.Get(-1)
-		L.Pop(1)
-		mapped := fromLValue(ret)
 
-		// Build new record retaining original fields
-		out.Records[i] = Record{Locator: locator, Meta: meta, Mapped: mapped}
+			L := lua.NewState(lua.Options{SkipOpenLibs: true})
+			// Minimal libs
+			L.Push(L.NewFunction(lua.OpenBase))
+			L.Push(lua.LString("base"))
+			L.Call(1, 0)
+			L.Push(L.NewFunction(lua.OpenString))
+			L.Push(lua.LString("string"))
+			L.Call(1, 0)
+			L.Push(L.NewFunction(lua.OpenTable))
+			L.Push(lua.LString("table"))
+			L.Call(1, 0)
+			L.Push(L.NewFunction(lua.OpenMath))
+			L.Push(lua.LString("math"))
+			L.Call(1, 0)
+
+			L.SetGlobal("locator", lua.LString(locator))
+			L.SetGlobal("meta", toLValue(L, meta))
+
+			fn, err := L.LoadString(code)
+			if err != nil {
+				if mode == "keep-going" {
+					results <- res{idx: idx, rec: Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: err.Error()}}, envE: &Error{Stage: "lua-map", Locator: locator, Message: err.Error()}}
+					L.Close()
+					continue
+				}
+				results <- res{idx: idx, fatal: fmt.Errorf("lua-map: %v", err)}
+				L.Close()
+				continue
+			}
+			L.Push(fn)
+			done := make(chan struct{})
+			var callErr error
+			go func() {
+				callErr = L.PCall(0, 1, nil)
+				close(done)
+			}()
+			select {
+			case <-done:
+				if callErr != nil {
+					if mode == "keep-going" {
+						results <- res{idx: idx, rec: Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: callErr.Error()}}, envE: &Error{Stage: "lua-map", Locator: locator, Message: callErr.Error()}}
+						L.Close()
+						continue
+					}
+					results <- res{idx: idx, fatal: fmt.Errorf("lua-map: %v", callErr)}
+					L.Close()
+					continue
+				}
+			case <-time.After(200 * time.Millisecond):
+				if mode == "keep-going" {
+					results <- res{idx: idx, rec: Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: "timeout"}}, envE: &Error{Stage: "lua-map", Locator: locator, Message: "timeout"}}
+					L.Close()
+					continue
+				}
+				results <- res{idx: idx, fatal: fmt.Errorf("lua-map: timeout")}
+				L.Close()
+				continue
+			}
+			ret := L.Get(-1)
+			L.Pop(1)
+			mapped := fromLValue(ret)
+			L.Close()
+			results <- res{idx: idx, rec: Record{Locator: locator, Meta: meta, Mapped: mapped}}
+		}
+	}
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go worker()
+	}
+	go func() {
+		for i := range in.Records {
+			jobs <- i
+		}
+		close(jobs)
+	}()
+	var firstErr error
+	for i := 0; i < n; i++ {
+		rr := <-results
+		if rr.envE != nil {
+			mu.Lock()
+			envErrs = append(envErrs, *rr.envE)
+			mu.Unlock()
+		}
+		if rr.fatal != nil && firstErr == nil {
+			firstErr = rr.fatal
+		}
+		out.Records[rr.idx] = rr.rec
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return Envelope{}, firstErr
+	}
+	if len(envErrs) > 0 {
+		out.Errors = append(out.Errors, envErrs...)
 	}
 	return out, nil
 }

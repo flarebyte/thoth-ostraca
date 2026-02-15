@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"sync"
 	"time"
 )
 
@@ -34,65 +35,108 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 
 	out := in
 	mode, _ := errorMode(in.Meta)
-	for i, r := range in.Records {
-		rec, ok := r.(Record)
-		if !ok {
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "shell-exec", "", "invalid record type")
-				out.Records[i] = r
-				continue
-			}
-			return Envelope{}, errors.New("shell-exec: invalid record type")
-		}
-		if rec.Error != nil {
-			out.Records[i] = rec
-			continue
-		}
-		// Render args
-		mappedJSON, _ := json.Marshal(rec.Mapped)
-		rendered := make([]string, len(argsT))
-		for i := range argsT {
-			rendered[i] = replaceJSON(argsT[i], string(mappedJSON))
-		}
-
-		// Execute with timeout
-		cctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
-		defer cancel()
-		cmd := exec.CommandContext(cctx, program, rendered...)
-		var outBuf, errBuf bytes.Buffer
-		cmd.Stdout = &outBuf
-		cmd.Stderr = &errBuf
-		runErr := cmd.Run()
-
-		if cctx.Err() == context.DeadlineExceeded {
-			if mode == "keep-going" {
-				appendEnvelopeError(&out, "shell-exec", rec.Locator, "timeout")
-				rec.Error = &RecError{Stage: "shell-exec", Message: "timeout"}
-				out.Records[i] = rec
-				continue
-			}
-			return Envelope{}, fmt.Errorf("shell-exec: timeout")
-		}
-
-		sr := &ShellResult{Stdout: outBuf.String(), Stderr: errBuf.String()}
-		if runErr != nil {
-			var ee *exec.ExitError
-			if errors.As(runErr, &ee) {
-				sr.ExitCode = ee.ExitCode()
-			} else {
+	n := len(in.Records)
+	type res struct {
+		idx   int
+		rec   any
+		envE  *Error
+		fatal error
+	}
+	workers := getWorkers(in.Meta)
+	jobs := make(chan int)
+	results := make(chan res)
+	var wg sync.WaitGroup
+	var envErrs []Error
+	var mu sync.Mutex
+	worker := func() {
+		defer wg.Done()
+		for idx := range jobs {
+			r := in.Records[idx]
+			rec, ok := r.(Record)
+			if !ok {
 				if mode == "keep-going" {
-					appendEnvelopeError(&out, "shell-exec", rec.Locator, runErr.Error())
-					rec.Error = &RecError{Stage: "shell-exec", Message: runErr.Error()}
-					out.Records[i] = rec
+					results <- res{idx: idx, rec: r, envE: &Error{Stage: "shell-exec", Message: "invalid record type"}}
 					continue
 				}
-				return Envelope{}, fmt.Errorf("shell-exec: %v", runErr)
+				results <- res{idx: idx, fatal: errors.New("shell-exec: invalid record type")}
+				continue
 			}
-		} else {
-			sr.ExitCode = 0
+			if rec.Error != nil {
+				results <- res{idx: idx, rec: rec}
+				continue
+			}
+			mappedJSON, _ := json.Marshal(rec.Mapped)
+			rendered := make([]string, len(argsT))
+			for i := range argsT {
+				rendered[i] = replaceJSON(argsT[i], string(mappedJSON))
+			}
+			cctx, cancel := context.WithTimeout(ctx, time.Duration(timeout)*time.Millisecond)
+			cmd := exec.CommandContext(cctx, program, rendered...)
+			var outBuf, errBuf bytes.Buffer
+			cmd.Stdout = &outBuf
+			cmd.Stderr = &errBuf
+			runErr := cmd.Run()
+			cancel()
+
+			if cctx.Err() == context.DeadlineExceeded {
+				if mode == "keep-going" {
+					rec.Error = &RecError{Stage: "shell-exec", Message: "timeout"}
+					results <- res{idx: idx, rec: rec, envE: &Error{Stage: "shell-exec", Locator: rec.Locator, Message: "timeout"}}
+					continue
+				}
+				results <- res{idx: idx, fatal: fmt.Errorf("shell-exec: timeout")}
+				continue
+			}
+			sr := &ShellResult{Stdout: outBuf.String(), Stderr: errBuf.String()}
+			if runErr != nil {
+				var ee *exec.ExitError
+				if errors.As(runErr, &ee) {
+					sr.ExitCode = ee.ExitCode()
+				} else {
+					if mode == "keep-going" {
+						rec.Error = &RecError{Stage: "shell-exec", Message: runErr.Error()}
+						results <- res{idx: idx, rec: rec, envE: &Error{Stage: "shell-exec", Locator: rec.Locator, Message: runErr.Error()}}
+						continue
+					}
+					results <- res{idx: idx, fatal: fmt.Errorf("shell-exec: %v", runErr)}
+					continue
+				}
+			} else {
+				sr.ExitCode = 0
+			}
+			rec.Shell = sr
+			results <- res{idx: idx, rec: rec}
 		}
-		rec.Shell = sr
-		out.Records[i] = rec
+	}
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go worker()
+	}
+	go func() {
+		for i := range in.Records {
+			jobs <- i
+		}
+		close(jobs)
+	}()
+	var firstErr error
+	for i := 0; i < n; i++ {
+		rr := <-results
+		if rr.envE != nil {
+			mu.Lock()
+			envErrs = append(envErrs, *rr.envE)
+			mu.Unlock()
+		}
+		if rr.fatal != nil && firstErr == nil {
+			firstErr = rr.fatal
+		}
+		out.Records[rr.idx] = rr.rec
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return Envelope{}, firstErr
+	}
+	if len(envErrs) > 0 {
+		out.Errors = append(out.Errors, envErrs...)
 	}
 	return out, nil
 }

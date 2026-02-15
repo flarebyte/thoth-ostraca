@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 
 	"gopkg.in/yaml.v3"
 )
@@ -24,102 +25,141 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 		meta    map[string]any
 	}
 	outs := make([]kv, 0, len(in.Records))
-
-	for _, r := range in.Records {
-		// Accept either a Record or a generic map with locator
-		var locator string
-		if rec, ok := r.(Record); ok {
-			locator = rec.Locator
-		} else if m, ok := r.(map[string]any); ok {
-			locVal, ok := m["locator"]
+	mode, _ := errorMode(in.Meta)
+	type res struct {
+		kv    kv
+		envE  *Error
+		fatal error
+	}
+	workers := getWorkers(in.Meta)
+	jobs := make(chan any)
+	results := make(chan res)
+	var wg sync.WaitGroup
+	worker := func() {
+		defer wg.Done()
+		for item := range jobs {
+			r := item
+			var locator string
+			switch rec := r.(type) {
+			case Record:
+				locator = rec.Locator
+			case map[string]any:
+				locVal, ok := rec["locator"]
+				if !ok {
+					results <- res{fatal: errors.New("invalid input record: missing locator")}
+					continue
+				}
+				s, ok := locVal.(string)
+				if !ok || s == "" {
+					results <- res{fatal: errors.New("invalid input record: locator must be string")}
+					continue
+				}
+				locator = s
+			default:
+				results <- res{fatal: errors.New("invalid input record: expected object")}
+				continue
+			}
+			p := filepath.Join(root, filepath.FromSlash(locator))
+			b, err := os.ReadFile(p)
+			if err != nil {
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: fmt.Sprintf("read error: %v", err)}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("read error %s: %w", p, err)}
+				continue
+			}
+			var y any
+			if err := yaml.Unmarshal(b, &y); err != nil {
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: fmt.Sprintf("invalid YAML: %v", err)}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("invalid YAML %s: %v", p, err)}
+				continue
+			}
+			ym, ok := y.(map[string]any)
 			if !ok {
-				return Envelope{}, errors.New("invalid input record: missing locator")
-			}
-			s, ok := locVal.(string)
-			if !ok || s == "" {
-				return Envelope{}, errors.New("invalid input record: locator must be string")
-			}
-			locator = s
-		} else {
-			return Envelope{}, errors.New("invalid input record: expected object")
-		}
-
-		// Read + parse YAML
-		p := filepath.Join(root, filepath.FromSlash(locator))
-		b, err := os.ReadFile(p)
-		if err != nil {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				// Append error and pass through input record unchanged
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, fmt.Sprintf("read error: %v", err))
-				outs = append(outs, kv{locator: locator, meta: nil})
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "top-level must be mapping"}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("invalid YAML %s: top-level must be mapping", p)}
 				continue
 			}
-			return Envelope{}, fmt.Errorf("read error %s: %w", p, err)
-		}
-		var y any
-		if err := yaml.Unmarshal(b, &y); err != nil {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, fmt.Sprintf("invalid YAML: %v", err))
-				outs = append(outs, kv{locator: locator, meta: nil})
+			yloc, ok := ym["locator"]
+			if !ok {
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "missing required field: locator"}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("invalid YAML %s: missing required field: locator", p)}
 				continue
 			}
-			return Envelope{}, fmt.Errorf("invalid YAML %s: %v", p, err)
-		}
-		ym, ok := y.(map[string]any)
-		if !ok {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, "top-level must be mapping")
-				outs = append(outs, kv{locator: locator, meta: nil})
+			ylocStr, ok := yloc.(string)
+			if !ok || ylocStr == "" {
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "invalid type for field: locator"}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("invalid YAML %s: invalid type for field: locator", p)}
 				continue
 			}
-			return Envelope{}, fmt.Errorf("invalid YAML %s: top-level must be mapping", p)
-		}
-		// Validate required fields
-		yloc, ok := ym["locator"]
-		if !ok {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, "missing required field: locator")
-				outs = append(outs, kv{locator: locator, meta: nil})
+			ymeta, ok := ym["meta"]
+			if !ok {
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "missing required field: meta"}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("invalid YAML %s: missing required field: meta", p)}
 				continue
 			}
-			return Envelope{}, fmt.Errorf("invalid YAML %s: missing required field: locator", p)
-		}
-		ylocStr, ok := yloc.(string)
-		if !ok || ylocStr == "" {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, "invalid type for field: locator")
-				outs = append(outs, kv{locator: locator, meta: nil})
+			ymetaMap, ok := ymeta.(map[string]any)
+			if !ok {
+				if mode == "keep-going" {
+					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "invalid type for field: meta"}}
+					continue
+				}
+				results <- res{fatal: fmt.Errorf("invalid YAML %s: invalid type for field: meta", p)}
 				continue
 			}
-			return Envelope{}, fmt.Errorf("invalid YAML %s: invalid type for field: locator", p)
+			results <- res{kv: kv{locator: ylocStr, meta: ymetaMap}}
 		}
-		ymeta, ok := ym["meta"]
-		if !ok {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, "missing required field: meta")
-				outs = append(outs, kv{locator: locator, meta: nil})
-				continue
-			}
-			return Envelope{}, fmt.Errorf("invalid YAML %s: missing required field: meta", p)
+	}
+	// start workers
+	for w := 0; w < workers; w++ {
+		wg.Add(1)
+		go worker()
+	}
+	go func() {
+		for _, r := range in.Records {
+			jobs <- r
 		}
-		ymetaMap, ok := ymeta.(map[string]any)
-		if !ok {
-			mode, _ := errorMode(in.Meta)
-			if mode == "keep-going" {
-				appendEnvelopeError(&in, "parse-validate-yaml", locator, "invalid type for field: meta")
-				outs = append(outs, kv{locator: locator, meta: nil})
-				continue
-			}
-			return Envelope{}, fmt.Errorf("invalid YAML %s: invalid type for field: meta", p)
+		close(jobs)
+	}()
+	var firstErr error
+	var envErrs []Error
+	for i := 0; i < len(in.Records); i++ {
+		rr := <-results
+		if rr.envE != nil {
+			envErrs = append(envErrs, *rr.envE)
 		}
-
-		outs = append(outs, kv{locator: ylocStr, meta: ymetaMap})
+		if rr.kv.locator != "" || rr.kv.meta != nil {
+			outs = append(outs, rr.kv)
+		}
+		if firstErr == nil && rr.fatal != nil {
+			firstErr = rr.fatal
+		}
+	}
+	wg.Wait()
+	if firstErr != nil {
+		return Envelope{}, firstErr
+	}
+	// Append collected errors
+	if len(envErrs) > 0 {
+		outE := in
+		outE.Errors = append(outE.Errors, envErrs...)
+		in = outE
 	}
 
 	sort.Slice(outs, func(i, j int) bool { return outs[i].locator < outs[j].locator })
