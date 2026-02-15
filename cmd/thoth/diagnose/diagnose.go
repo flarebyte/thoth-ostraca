@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -33,35 +34,10 @@ var Cmd = &cobra.Command{
 			return errors.New("missing required flag: --stage")
 		}
 
-		var inEnv stage.Envelope
-		if flagIn != "" {
-			b, err := os.ReadFile(flagIn)
-			if err != nil {
-				return fmt.Errorf("failed to read input: %w", err)
-			}
-			if err := json.Unmarshal(b, &inEnv); err != nil {
-				return fmt.Errorf("invalid input JSON: %v", err)
-			}
-		} else {
-			inEnv = stage.Envelope{Records: []any{}}
-			if flagConfig != "" {
-				inEnv.Meta = &stage.Meta{ConfigPath: flagConfig}
-			}
-			if flagRoot != "" || flagNoGit {
-				if inEnv.Meta == nil {
-					inEnv.Meta = &stage.Meta{}
-				}
-				inEnv.Meta.Discovery = &stage.DiscoveryMeta{}
-				if flagRoot != "" {
-					inEnv.Meta.Discovery.Root = flagRoot
-				}
-				if flagNoGit {
-					inEnv.Meta.Discovery.NoGitignore = true
-				}
-			}
+		inEnv, err := prepareDiagnoseInput(flagIn, flagConfig, flagRoot, flagNoGit)
+		if err != nil {
+			return err
 		}
-
-		// dump-in if requested
 		if flagDumpIn != "" {
 			if err := writeJSONFile(flagDumpIn, inEnv); err != nil {
 				return err
@@ -72,25 +48,12 @@ var Cmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
-
-		// dump-out if requested
 		if flagDumpOut != "" {
 			if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
 				return err
 			}
 		}
-
-		// Print single-line JSON to stdout
-		// Ensure deterministic error ordering
-		stage.SortEnvelopeErrors(&outEnv)
-		b, err := json.Marshal(outEnv)
-		if err != nil {
-			return err
-		}
-		if _, err := fmt.Fprintln(os.Stdout, string(b)); err != nil {
-			return err
-		}
-		return nil
+		return printEnvelopeOneLine(os.Stdout, outEnv)
 	},
 }
 
@@ -113,4 +76,47 @@ func writeJSONFile(path string, v any) error {
 		return err
 	}
 	return os.WriteFile(path, b, 0o644)
+}
+
+func prepareDiagnoseInput(inPath, cfg, root string, noGit bool) (stage.Envelope, error) {
+	if inPath != "" {
+		b, err := os.ReadFile(inPath)
+		if err != nil {
+			return stage.Envelope{}, fmt.Errorf("failed to read input: %w", err)
+		}
+		var env stage.Envelope
+		if err := json.Unmarshal(b, &env); err != nil {
+			return stage.Envelope{}, fmt.Errorf("invalid input JSON: %v", err)
+		}
+		return env, nil
+	}
+	env := stage.Envelope{Records: []any{}}
+	if cfg != "" {
+		env.Meta = &stage.Meta{ConfigPath: cfg}
+	}
+	if root != "" || noGit {
+		if env.Meta == nil {
+			env.Meta = &stage.Meta{}
+		}
+		env.Meta.Discovery = &stage.DiscoveryMeta{}
+		if root != "" {
+			env.Meta.Discovery.Root = root
+		}
+		if noGit {
+			env.Meta.Discovery.NoGitignore = true
+		}
+	}
+	return env, nil
+}
+
+func printEnvelopeOneLine(w io.Writer, env stage.Envelope) error {
+	stage.SortEnvelopeErrors(&env)
+	b, err := json.Marshal(env)
+	if err != nil {
+		return err
+	}
+	if _, err := fmt.Fprintln(w, string(b)); err != nil {
+		return err
+	}
+	return nil
 }
