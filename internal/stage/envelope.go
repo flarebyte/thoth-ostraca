@@ -29,6 +29,7 @@ type Meta struct {
 	Config          *ConfigMeta    `json:"config,omitempty"`
 	Discovery       *DiscoveryMeta `json:"discovery,omitempty"`
 	LocatorPolicy   *LocatorPolicy `json:"locatorPolicy,omitempty"`
+	FileInfo        *FileInfoMeta  `json:"fileInfo,omitempty"`
 	Inputs          []string       `json:"inputs,omitempty"`
 	MetaFiles       []string       `json:"metaFiles,omitempty"`
 	Diff            *DiffReport    `json:"diff,omitempty"`
@@ -115,4 +116,9 @@ type OutputMeta struct {
 type ErrorsMeta struct {
 	Mode        string `json:"mode,omitempty"`
 	EmbedErrors bool   `json:"embedErrors,omitempty"`
+}
+
+// FileInfoMeta controls file info enrichment behavior.
+type FileInfoMeta struct {
+	Enabled bool `json:"enabled"`
 }

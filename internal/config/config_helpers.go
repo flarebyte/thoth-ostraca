@@ -236,3 +236,18 @@ func parseWorkersSection(v cue.Value) Workers {
 	}
 	return w
 }
+
+// parseFileInfoSection extracts optional fileInfo.enabled.
+func parseFileInfoSection(v cue.Value) FileInfo {
+	var fi FileInfo
+	fiv := v.LookupPath(cue.ParsePath("fileInfo"))
+	if !fiv.Exists() {
+		return fi
+	}
+	ev := fiv.LookupPath(cue.ParsePath("enabled"))
+	if ev.Exists() && ev.Kind() == cue.BoolKind {
+		_ = ev.Decode(&fi.Enabled)
+		fi.HasEnabled = true
+	}
+	return fi
+}

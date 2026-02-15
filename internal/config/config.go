@@ -43,6 +43,7 @@ type Minimal struct {
 	Action        string
 	Discovery     Discovery
 	LocatorPolicy LocatorPolicy
+	FileInfo      FileInfo
 	Filter        Filter
 	Map           Map
 	Shell         Shell
@@ -77,6 +78,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	// Optional sections
 	m.Discovery = parseDiscoverySection(v)
 	m.LocatorPolicy = parseLocatorPolicySection(v)
+	m.FileInfo = parseFileInfoSection(v)
 	m.Filter = parseFilterSection(v)
 	m.Map = parseMapSection(v)
 	m.Shell = parseShellSection(v)
@@ -154,4 +156,10 @@ type Errors struct {
 type Workers struct {
 	Count    int
 	HasCount bool
+}
+
+// FileInfo holds optional fileInfo config.
+type FileInfo struct {
+	Enabled    bool
+	HasEnabled bool
 }

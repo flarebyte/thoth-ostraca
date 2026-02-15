@@ -106,6 +106,14 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 	}
 
+	// FileInfo
+	if min.FileInfo.HasEnabled {
+		if out.Meta.FileInfo == nil {
+			out.Meta.FileInfo = &FileInfoMeta{}
+		}
+		out.Meta.FileInfo.Enabled = min.FileInfo.Enabled
+	}
+
 	// Workers (only when present in CUE)
 	if min.Workers.HasCount {
 		out.Meta.Workers = sanitizeWorkers(min.Workers.Count)
