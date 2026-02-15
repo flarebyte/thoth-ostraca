@@ -251,3 +251,18 @@ func parseFileInfoSection(v cue.Value) FileInfo {
 	}
 	return fi
 }
+
+// parseGitSection extracts optional git.enabled.
+func parseGitSection(v cue.Value) Git {
+	var g Git
+	gv := v.LookupPath(cue.ParsePath("git"))
+	if !gv.Exists() {
+		return g
+	}
+	ev := gv.LookupPath(cue.ParsePath("enabled"))
+	if ev.Exists() && ev.Kind() == cue.BoolKind {
+		_ = ev.Decode(&g.Enabled)
+		g.HasEnabled = true
+	}
+	return g
+}

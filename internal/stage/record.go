@@ -9,6 +9,7 @@ type Record struct {
 	Shell    *ShellResult   `json:"shell,omitempty"`
 	Post     any            `json:"post,omitempty"`
 	FileInfo *RecFileInfo   `json:"fileInfo,omitempty"`
+	Git      *RecGit        `json:"git,omitempty"`
 	Error    *RecError      `json:"error,omitempty"`
 }
 
@@ -25,4 +26,18 @@ type RecFileInfo struct {
 	Mode    string `json:"mode"`
 	ModTime string `json:"modTime"`
 	IsDir   bool   `json:"isDir"`
+}
+
+// RecGit holds minimal git metadata for a locator.
+type RecGit struct {
+	Tracked    bool          `json:"tracked"`
+	Ignored    bool          `json:"ignored"`
+	Status     string        `json:"status"`
+	LastCommit *RecGitCommit `json:"lastCommit"`
+}
+
+type RecGitCommit struct {
+	Hash   string `json:"hash"`
+	Author string `json:"author"`
+	Time   string `json:"time"`
 }

@@ -45,6 +45,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 		stages := []string{
 			"discover-input-files",
 			"enrich-fileinfo",
+			"enrich-git",
 			"write-meta-files",
 			"write-output",
 		}
@@ -53,6 +54,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 		stages := []string{
 			"discover-input-files",
 			"enrich-fileinfo",
+			"enrich-git",
 			"load-existing-meta",
 			"merge-meta",
 			"write-updated-meta-files",
@@ -63,6 +65,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 		stages := []string{
 			"discover-input-files",
 			"enrich-fileinfo",
+			"enrich-git",
 			"discover-meta-files",
 			"compute-meta-diff",
 			"write-output",

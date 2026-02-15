@@ -30,6 +30,7 @@ type Meta struct {
 	Discovery       *DiscoveryMeta `json:"discovery,omitempty"`
 	LocatorPolicy   *LocatorPolicy `json:"locatorPolicy,omitempty"`
 	FileInfo        *FileInfoMeta  `json:"fileInfo,omitempty"`
+	Git             *GitMeta       `json:"git,omitempty"`
 	Inputs          []string       `json:"inputs,omitempty"`
 	MetaFiles       []string       `json:"metaFiles,omitempty"`
 	Diff            *DiffReport    `json:"diff,omitempty"`
@@ -120,5 +121,10 @@ type ErrorsMeta struct {
 
 // FileInfoMeta controls file info enrichment behavior.
 type FileInfoMeta struct {
+	Enabled bool `json:"enabled"`
+}
+
+// GitMeta controls git enrichment behavior.
+type GitMeta struct {
 	Enabled bool `json:"enabled"`
 }
