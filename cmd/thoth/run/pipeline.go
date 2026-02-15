@@ -14,6 +14,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 		"validate-config",
 		"discover-meta-files",
 		"parse-validate-yaml",
+		"validate-locators",
 		"lua-filter",
 		"lua-map",
 		"shell-exec",

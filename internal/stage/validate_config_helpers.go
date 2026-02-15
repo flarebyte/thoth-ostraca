@@ -102,4 +102,20 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	if min.Workers.HasCount {
 		out.Meta.Workers = sanitizeWorkers(min.Workers.Count)
 	}
+
+	// LocatorPolicy
+	if (min.LocatorPolicy.HasAllowAbs || min.LocatorPolicy.HasAllowParent || min.LocatorPolicy.HasPosix) || out.Meta.LocatorPolicy != nil {
+		if out.Meta.LocatorPolicy == nil {
+			out.Meta.LocatorPolicy = &LocatorPolicy{}
+		}
+		if min.LocatorPolicy.HasAllowAbs {
+			out.Meta.LocatorPolicy.AllowAbsolute = min.LocatorPolicy.AllowAbsolute
+		}
+		if min.LocatorPolicy.HasAllowParent {
+			out.Meta.LocatorPolicy.AllowParentRefs = min.LocatorPolicy.AllowParentRefs
+		}
+		if min.LocatorPolicy.HasPosix {
+			out.Meta.LocatorPolicy.PosixStyle = min.LocatorPolicy.PosixStyle
+		}
+	}
 }

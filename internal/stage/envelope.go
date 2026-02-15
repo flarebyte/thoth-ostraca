@@ -28,12 +28,20 @@ type Meta struct {
 	ConfigPath      string         `json:"configPath,omitempty"`
 	Config          *ConfigMeta    `json:"config,omitempty"`
 	Discovery       *DiscoveryMeta `json:"discovery,omitempty"`
+	LocatorPolicy   *LocatorPolicy `json:"locatorPolicy,omitempty"`
 	Lua             *LuaMeta       `json:"lua,omitempty"`
 	Shell           *ShellMeta     `json:"shell,omitempty"`
 	Output          *OutputMeta    `json:"output,omitempty"`
 	Reduced         any            `json:"reduced,omitempty"`
 	Errors          *ErrorsMeta    `json:"errors,omitempty"`
 	Workers         int            `json:"workers,omitempty"`
+}
+
+// LocatorPolicy mirrors policy flags for locator validation in meta.
+type LocatorPolicy struct {
+	AllowAbsolute   bool `json:"allowAbsolute"`
+	AllowParentRefs bool `json:"allowParentRefs"`
+	PosixStyle      bool `json:"posixStyle"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.

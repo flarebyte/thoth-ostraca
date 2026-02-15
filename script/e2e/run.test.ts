@@ -151,6 +151,28 @@ test("thoth run fails on invalid reduce Lua", () => {
   expect(run.stderr.includes("lua-reduce")).toBe(true);
 });
 
+test("validate-locators: default policy flags invalid parent refs and backslashes", () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/locator_policy_default.cue");
+  const expectedOut = expectedJSONFromGolden(root, "testdata/run/locator_policy_default_out.golden.json");
+  const run = runThoth(bin, ["run", "--config", cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test("validate-locators: relaxed policy allows parent refs and backslashes", () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/locator_policy_relaxed.cue");
+  const expectedOut = expectedJSONFromGolden(root, "testdata/run/locator_policy_relaxed_out.golden.json");
+  const run = runThoth(bin, ["run", "--config", cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test("keep-going with embedErrors=true embeds record errors and lists envelope errors", () => {
   const root = projectRoot();
   const bin = buildBinary(root);

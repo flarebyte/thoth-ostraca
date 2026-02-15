@@ -42,6 +42,7 @@ type Minimal struct {
 	ConfigVersion string
 	Action        string
 	Discovery     Discovery
+	LocatorPolicy LocatorPolicy
 	Filter        Filter
 	Map           Map
 	Shell         Shell
@@ -75,6 +76,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	}
 	// Optional sections
 	m.Discovery = parseDiscoverySection(v)
+	m.LocatorPolicy = parseLocatorPolicySection(v)
 	m.Filter = parseFilterSection(v)
 	m.Map = parseMapSection(v)
 	m.Shell = parseShellSection(v)

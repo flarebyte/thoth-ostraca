@@ -44,20 +44,20 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-        outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
-        if err != nil {
-            return err
-        }
-        // Attach contract version for final outputs (stdout and dump-out)
-        if outEnv.Meta == nil {
-            outEnv.Meta = &stage.Meta{}
-        }
-        outEnv.Meta.ContractVersion = "1"
-        if flagDumpOut != "" {
-            if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-                return err
-            }
-        }
+		outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
+		if err != nil {
+			return err
+		}
+		// Attach contract version for final outputs (stdout and dump-out)
+		if outEnv.Meta == nil {
+			outEnv.Meta = &stage.Meta{}
+		}
+		outEnv.Meta.ContractVersion = "1"
+		if flagDumpOut != "" {
+			if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
+				return err
+			}
+		}
 		return printEnvelopeOneLine(os.Stdout, outEnv)
 	},
 }
