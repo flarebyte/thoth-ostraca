@@ -1,0 +1,26 @@
+{
+  "records": [
+    {
+      "locator": "a.txt",
+      "post": {
+        "existingMeta": { "x": 1 },
+        "existingMetaPath": "a.txt.thoth.yaml",
+        "metaPath": "a.txt.thoth.yaml",
+        "nextMeta": { "x": 1 }
+      }
+    },
+    {
+      "locator": "b.txt",
+      "post": {
+        "existingMetaPath": "b.txt.thoth.yaml",
+        "metaPath": "b.txt.thoth.yaml",
+        "nextMeta": {}
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "update-meta" },
+    "discovery": { "root": "temp/update1_repo" }
+  }
+}

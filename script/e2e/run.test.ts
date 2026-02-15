@@ -399,3 +399,87 @@ test('create-meta: second run fails-fast when meta exists', () => {
   expect(run.stdout).toBe('');
   expect(run.stderr.includes('a.txt.thoth.yaml')).toBe(true);
 });
+
+test('update-meta: preserves existing meta and creates missing', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/update1');
+  const tempRepo = path.join(root, 'temp', 'update1_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'update1_tmp.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update1_repo').replaceAll('\\', '\\\\')}" }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  // a.txt meta preserved
+  const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
+  const metaB = path.join(tempRepo, 'b.txt.thoth.yaml');
+  expect(fs.readFileSync(metaA, 'utf8')).toBe(
+    'locator: a.txt\nmeta: { x: 1 }\n',
+  );
+  expect(fs.readFileSync(metaB, 'utf8')).toBe('locator: b.txt\nmeta: {}\n');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/update1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('update-meta: invalid existing meta embeds errors in keep-going and still creates others', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const tempRepo = path.join(root, 'temp', 'update1_repo');
+  // write invalid meta for a.txt
+  fs.writeFileSync(
+    path.join(tempRepo, 'a.txt.thoth.yaml'),
+    'locator: a.txt\n# missing meta\n',
+    'utf8',
+  );
+  const cfgPath = path.join(root, 'temp', 'update1_tmp_keep.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update1_repo').replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta-keep', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  // b.txt still created
+  expect(fs.readFileSync(path.join(tempRepo, 'b.txt.thoth.yaml'), 'utf8')).toBe(
+    'locator: b.txt\nmeta: {}\n',
+  );
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; error?: unknown }>;
+    errors: Array<unknown>;
+  };
+  const recA = out.records.find((r) => r.locator === 'a.txt');
+  expect(recA.error).toBeTruthy();
+  expect(out.errors.length).toBeGreaterThan(0);
+});
+
+test('update-meta: invalid existing meta fails fast', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(root, 'temp', 'update1_tmp_fail.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update1_repo').replaceAll('\\', '\\\\')}" }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta-fail', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+});

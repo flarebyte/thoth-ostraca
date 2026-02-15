@@ -20,8 +20,8 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	}
 	out := in
 	applyMinimalToMeta(&out, min)
-	// Allowed actions (Phase 2): pipeline, validate, create-meta (accept "nop" as alias for pipeline for existing tests)
-	if min.Action != "pipeline" && min.Action != "validate" && min.Action != "create-meta" && min.Action != "nop" {
+	// Allowed actions (Phase 2): pipeline, validate, create-meta, update-meta (accept "nop" as alias for pipeline for existing tests)
+	if min.Action != "pipeline" && min.Action != "validate" && min.Action != "create-meta" && min.Action != "update-meta" && min.Action != "nop" {
 		return Envelope{}, fmt.Errorf("invalid action: allowed 'pipeline' or 'validate'")
 	}
 	return out, nil
