@@ -1,0 +1,13 @@
+{
+  "records": [{ "locator": "a.txt" }, { "locator": "dir/b.txt" }],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "diff-meta" },
+    "discovery": { "root": "testdata/repos/diff1" },
+    "diff": {
+      "orphans": ["orphan.txt.thoth.yaml"],
+      "presentCount": 2,
+      "orphanCount": 1
+    }
+  }
+}

@@ -1,7 +1,6 @@
 package diagnose
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,9 +17,13 @@ var (
 	flagIn      string
 	flagDumpIn  string
 	flagDumpOut string
+	flagPrepare string
 	flagConfig  string
 	flagRoot    string
 	flagNoGit   bool
+	flagOut     string
+	flagPretty  bool
+	flagLines   bool
 )
 
 // Cmd implements `thoth diagnose`.
@@ -33,28 +36,38 @@ var Cmd = &cobra.Command{
 		if flagStage == "" {
 			return errors.New("missing required flag: --stage")
 		}
-
-		inEnv, err := prepareDiagnoseInput(flagIn, flagConfig, flagRoot, flagNoGit)
-		if err != nil {
-			return err
+		if flagIn != "" {
+			return runDiagnoseWithIn()
 		}
-		if flagDumpIn != "" {
-			if err := writeJSONFile(flagDumpIn, inEnv); err != nil {
-				return err
-			}
+		if flagPrepare != "" {
+			return runDiagnoseWithPrepare()
 		}
-
-		outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
-		if err != nil {
-			return err
-		}
-		if flagDumpOut != "" {
-			if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-				return err
-			}
-		}
-		return printEnvelopeOneLine(os.Stdout, outEnv)
+		return runDiagnoseDefault(cmd)
 	},
+}
+
+// relativizeRoot converts an absolute root under the current working directory
+// to a relative path for deterministic output; otherwise returns the input.
+func relativizeRoot(root string) string {
+	if root == "" || root == "." {
+		return root
+	}
+	if !filepath.IsAbs(root) {
+		// Normalize separators for JSON stability
+		return filepath.ToSlash(root)
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return root
+	}
+	rel, err := filepath.Rel(cwd, root)
+	if err != nil {
+		return root
+	}
+	if len(rel) == 0 || rel == "." || rel == root || rel[:2] == ".." {
+		return root
+	}
+	return filepath.ToSlash(rel)
 }
 
 func init() {
@@ -62,9 +75,13 @@ func init() {
 	Cmd.Flags().StringVar(&flagIn, "in", "", "Path to input envelope JSON")
 	Cmd.Flags().StringVar(&flagDumpIn, "dump-in", "", "Path to write resolved input envelope JSON")
 	Cmd.Flags().StringVar(&flagDumpOut, "dump-out", "", "Path to write output envelope JSON")
+	Cmd.Flags().StringVar(&flagPrepare, "prepare", "", "Prepare input via discovery: meta-files|input-files")
 	Cmd.Flags().StringVar(&flagConfig, "config", "", "Config path used when --in omitted")
-	Cmd.Flags().StringVar(&flagRoot, "root", "", "Discovery root used when --in omitted")
-	Cmd.Flags().BoolVar(&flagNoGit, "no-gitignore", false, "Disable .gitignore filtering (when --in omitted)")
+	Cmd.Flags().StringVar(&flagRoot, "root", ".", "Discovery root (prepare mode)")
+	Cmd.Flags().BoolVar(&flagNoGit, "no-gitignore", false, "Disable .gitignore (prepare mode)")
+	Cmd.Flags().StringVar(&flagOut, "out", "-", "Output path for write-output (diagnose --in omitted)")
+	Cmd.Flags().BoolVar(&flagPretty, "pretty", false, "Pretty JSON (diagnose --in omitted)")
+	Cmd.Flags().BoolVar(&flagLines, "lines", false, "Lines mode (diagnose --in omitted)")
 }
 
 func writeJSONFile(path string, v any) error {
@@ -90,7 +107,7 @@ func prepareDiagnoseInput(inPath, cfg, root string, noGit bool) (stage.Envelope,
 		}
 		return env, nil
 	}
-	env := stage.Envelope{Records: []any{}}
+	env := stage.Envelope{Records: []stage.Record{}}
 	if cfg != "" {
 		env.Meta = &stage.Meta{ConfigPath: cfg}
 	}
@@ -106,10 +123,21 @@ func prepareDiagnoseInput(inPath, cfg, root string, noGit bool) (stage.Envelope,
 			env.Meta.Discovery.NoGitignore = true
 		}
 	}
+	// Optional output when diagnosing without --in; only if flags deviate from defaults
+	if flagOut != "-" || flagPretty || flagLines {
+		if env.Meta == nil {
+			env.Meta = &stage.Meta{}
+		}
+		env.Meta.Output = &stage.OutputMeta{Out: flagOut, Pretty: flagPretty, Lines: flagLines}
+	}
 	return env, nil
 }
 
 func printEnvelopeOneLine(w io.Writer, env stage.Envelope) error {
+	if env.Meta == nil {
+		env.Meta = &stage.Meta{}
+	}
+	env.Meta.ContractVersion = "1"
 	stage.SortEnvelopeErrors(&env)
 	b, err := json.Marshal(env)
 	if err != nil {

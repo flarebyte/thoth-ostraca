@@ -42,6 +42,9 @@ type Minimal struct {
 	ConfigVersion string
 	Action        string
 	Discovery     Discovery
+	LocatorPolicy LocatorPolicy
+	FileInfo      FileInfo
+	Git           Git
 	Filter        Filter
 	Map           Map
 	Shell         Shell
@@ -75,6 +78,9 @@ func ParseMinimal(path string) (Minimal, error) {
 	}
 	// Optional sections
 	m.Discovery = parseDiscoverySection(v)
+	m.LocatorPolicy = parseLocatorPolicySection(v)
+	m.FileInfo = parseFileInfoSection(v)
+	m.Git = parseGitSection(v)
 	m.Filter = parseFilterSection(v)
 	m.Map = parseMapSection(v)
 	m.Shell = parseShellSection(v)
@@ -132,8 +138,12 @@ type Reduce struct {
 
 // Output holds optional output config.
 type Output struct {
-	Lines    bool
-	HasLines bool
+	Out       string
+	Pretty    bool
+	Lines     bool
+	HasOut    bool
+	HasPretty bool
+	HasLines  bool
 }
 
 // Errors holds error handling mode config.
@@ -148,4 +158,16 @@ type Errors struct {
 type Workers struct {
 	Count    int
 	HasCount bool
+}
+
+// FileInfo holds optional fileInfo config.
+type FileInfo struct {
+	Enabled    bool
+	HasEnabled bool
+}
+
+// Git holds optional git config.
+type Git struct {
+	Enabled    bool
+	HasEnabled bool
 }

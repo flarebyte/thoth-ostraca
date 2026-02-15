@@ -1,0 +1,16 @@
+{
+  "records": [
+    {
+      "locator": "a",
+      "meta": { "k": "v" },
+      "mapped": { "x": 1 },
+      "shell": { "exitCode": 0, "stdout": "ok\n", "stderr": "" },
+      "post": { "locator": "a" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "stage": "echo",
+    "config": { "configVersion": "v0", "action": "nop" }
+  }
+}

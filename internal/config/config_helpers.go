@@ -50,6 +50,41 @@ func parseDiscoverySection(v cue.Value) Discovery {
 	return d
 }
 
+// LocatorPolicy holds optional locator policy booleans and presence flags.
+type LocatorPolicy struct {
+	AllowAbsolute   bool
+	AllowParentRefs bool
+	PosixStyle      bool
+	HasAllowAbs     bool
+	HasAllowParent  bool
+	HasPosix        bool
+}
+
+// parseLocatorPolicySection extracts optional locatorPolicy.* fields.
+func parseLocatorPolicySection(v cue.Value) LocatorPolicy {
+	var lp LocatorPolicy
+	pv := v.LookupPath(cue.ParsePath("locatorPolicy"))
+	if !pv.Exists() {
+		return lp
+	}
+	aav := pv.LookupPath(cue.ParsePath("allowAbsolute"))
+	if aav.Exists() && aav.Kind() == cue.BoolKind {
+		_ = aav.Decode(&lp.AllowAbsolute)
+		lp.HasAllowAbs = true
+	}
+	apv := pv.LookupPath(cue.ParsePath("allowParentRefs"))
+	if apv.Exists() && apv.Kind() == cue.BoolKind {
+		_ = apv.Decode(&lp.AllowParentRefs)
+		lp.HasAllowParent = true
+	}
+	psv := pv.LookupPath(cue.ParsePath("posixStyle"))
+	if psv.Exists() && psv.Kind() == cue.BoolKind {
+		_ = psv.Decode(&lp.PosixStyle)
+		lp.HasPosix = true
+	}
+	return lp
+}
+
 // parseFilterSection extracts optional filter.inline.
 func parseFilterSection(v cue.Value) Filter {
 	var f Filter
@@ -153,6 +188,16 @@ func parseOutputSection(v cue.Value) Output {
 	if !ov.Exists() {
 		return o
 	}
+	ovOut := ov.LookupPath(cue.ParsePath("out"))
+	if ovOut.Exists() && ovOut.Kind() == cue.StringKind {
+		_ = ovOut.Decode(&o.Out)
+		o.HasOut = true
+	}
+	ovPretty := ov.LookupPath(cue.ParsePath("pretty"))
+	if ovPretty.Exists() && ovPretty.Kind() == cue.BoolKind {
+		_ = ovPretty.Decode(&o.Pretty)
+		o.HasPretty = true
+	}
 	lv := ov.LookupPath(cue.ParsePath("lines"))
 	if lv.Exists() && lv.Kind() == cue.BoolKind {
 		_ = lv.Decode(&o.Lines)
@@ -190,4 +235,34 @@ func parseWorkersSection(v cue.Value) Workers {
 		w.HasCount = true
 	}
 	return w
+}
+
+// parseFileInfoSection extracts optional fileInfo.enabled.
+func parseFileInfoSection(v cue.Value) FileInfo {
+	var fi FileInfo
+	fiv := v.LookupPath(cue.ParsePath("fileInfo"))
+	if !fiv.Exists() {
+		return fi
+	}
+	ev := fiv.LookupPath(cue.ParsePath("enabled"))
+	if ev.Exists() && ev.Kind() == cue.BoolKind {
+		_ = ev.Decode(&fi.Enabled)
+		fi.HasEnabled = true
+	}
+	return fi
+}
+
+// parseGitSection extracts optional git.enabled.
+func parseGitSection(v cue.Value) Git {
+	var g Git
+	gv := v.LookupPath(cue.ParsePath("git"))
+	if !gv.Exists() {
+		return g
+	}
+	ev := gv.LookupPath(cue.ParsePath("enabled"))
+	if ev.Exists() && ev.Kind() == cue.BoolKind {
+		_ = ev.Decode(&g.Enabled)
+		g.HasEnabled = true
+	}
+	return g
 }

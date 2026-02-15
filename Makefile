@@ -18,7 +18,7 @@ lint:
 format:
 	gofmt -w .
 	$(BIOME) format --write .
-	$(BIOME) check --write
+	$(BIOME) check --unsafe --write
 
 test: gen
 	$(GO) test ./...
@@ -41,6 +41,13 @@ release: build
 
 clean:
 	rm -rf build
+
+complexity:
+	scc --sort complexity --by-file -i go . | head -n 15
+	scc --sort complexity --by-file -i ts . | head -n 15
+
+dup:
+	npx jscpd --format go,typescript --min-lines 20 --gitignore .
 
 help:
 	@printf "Targets:\n"

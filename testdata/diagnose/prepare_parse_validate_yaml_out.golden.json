@@ -1,0 +1,7 @@
+{
+  "records": [{ "locator": "d1", "meta": { "kind": "discovery1" } }],
+  "meta": {
+    "contractVersion": "1",
+    "discovery": { "root": "testdata/repos/discovery1" }
+  }
+}

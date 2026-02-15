@@ -19,13 +19,14 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 		fatal error
 	}
 	workers := getWorkers(in.Meta)
-	jobs := make(chan any)
+	jobs := make(chan int)
 	results := make(chan res)
 	var wg sync.WaitGroup
 	worker := func() {
 		defer wg.Done()
 		for item := range jobs {
-			kv, envE, fatal := processYAMLRecord(item, root, mode)
+			rec := in.Records[item]
+			kv, envE, fatal := processYAMLRecord(rec, root, mode)
 			results <- res{kv: kv, envE: envE, fatal: fatal}
 		}
 	}
@@ -35,8 +36,8 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 		go worker()
 	}
 	go func() {
-		for _, r := range in.Records {
-			jobs <- r
+		for i := range in.Records {
+			jobs <- i
 		}
 		close(jobs)
 	}()
@@ -68,7 +69,7 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	sort.Slice(outs, func(i, j int) bool { return outs[i].locator < outs[j].locator })
 
 	out := in
-	out.Records = make([]any, 0, len(outs))
+	out.Records = make([]Record, 0, len(outs))
 	for _, pr := range outs {
 		rec := Record{Locator: pr.locator}
 		if pr.meta != nil {

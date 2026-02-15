@@ -78,11 +78,19 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	}
 
 	// Output
-	if min.Output.HasLines {
+	if min.Output.HasOut || min.Output.HasPretty || min.Output.HasLines {
 		if out.Meta.Output == nil {
 			out.Meta.Output = &OutputMeta{}
 		}
-		out.Meta.Output.Lines = min.Output.Lines
+		if min.Output.HasOut {
+			out.Meta.Output.Out = min.Output.Out
+		}
+		if min.Output.HasPretty {
+			out.Meta.Output.Pretty = min.Output.Pretty
+		}
+		if min.Output.HasLines {
+			out.Meta.Output.Lines = min.Output.Lines
+		}
 	}
 
 	// Errors
@@ -98,8 +106,40 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 	}
 
+	// FileInfo
+	if min.FileInfo.HasEnabled {
+		if out.Meta.FileInfo == nil {
+			out.Meta.FileInfo = &FileInfoMeta{}
+		}
+		out.Meta.FileInfo.Enabled = min.FileInfo.Enabled
+	}
+
+	// Git
+	if min.Git.HasEnabled {
+		if out.Meta.Git == nil {
+			out.Meta.Git = &GitMeta{}
+		}
+		out.Meta.Git.Enabled = min.Git.Enabled
+	}
+
 	// Workers (only when present in CUE)
 	if min.Workers.HasCount {
 		out.Meta.Workers = sanitizeWorkers(min.Workers.Count)
+	}
+
+	// LocatorPolicy
+	if (min.LocatorPolicy.HasAllowAbs || min.LocatorPolicy.HasAllowParent || min.LocatorPolicy.HasPosix) || out.Meta.LocatorPolicy != nil {
+		if out.Meta.LocatorPolicy == nil {
+			out.Meta.LocatorPolicy = &LocatorPolicy{}
+		}
+		if min.LocatorPolicy.HasAllowAbs {
+			out.Meta.LocatorPolicy.AllowAbsolute = min.LocatorPolicy.AllowAbsolute
+		}
+		if min.LocatorPolicy.HasAllowParent {
+			out.Meta.LocatorPolicy.AllowParentRefs = min.LocatorPolicy.AllowParentRefs
+		}
+		if min.LocatorPolicy.HasPosix {
+			out.Meta.LocatorPolicy.PosixStyle = min.LocatorPolicy.PosixStyle
+		}
 	}
 }

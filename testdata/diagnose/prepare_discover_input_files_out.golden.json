@@ -1,0 +1,7 @@
+{
+  "records": [{ "locator": "a.txt" }, { "locator": "dir/b.txt" }],
+  "meta": {
+    "contractVersion": "1",
+    "discovery": { "root": "testdata/repos/create1" }
+  }
+}

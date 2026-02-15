@@ -14,7 +14,7 @@ const shellExecStage = "shell-exec"
 
 type shellExecRes struct {
 	idx   int
-	rec   any
+	rec   Record
 	envE  *Error
 	fatal error
 }
@@ -80,14 +80,7 @@ func runCommand(ctx context.Context, program string, args []string, timeoutMs in
 }
 
 // processShellRecord validates, renders, executes and returns updated record or errors.
-func processShellRecord(ctx context.Context, r any, opts shellOptions, mode string) (any, *Error, error) {
-	rec, ok := r.(Record)
-	if !ok {
-		if mode == "keep-going" {
-			return r, &Error{Stage: shellExecStage, Message: "invalid record type"}, nil
-		}
-		return nil, nil, errors.New("shell-exec: invalid record type")
-	}
+func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode string) (Record, *Error, error) {
 	if rec.Error != nil {
 		return rec, nil, nil
 	}
@@ -98,14 +91,14 @@ func processShellRecord(ctx context.Context, r any, opts shellOptions, mode stri
 			rec.Error = &RecError{Stage: shellExecStage, Message: "timeout"}
 			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: "timeout"}, nil
 		}
-		return nil, nil, fmt.Errorf("shell-exec: timeout")
+		return Record{}, nil, fmt.Errorf("shell-exec: timeout")
 	}
 	if err != nil {
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: shellExecStage, Message: err.Error()}
 			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: err.Error()}, nil
 		}
-		return nil, nil, fmt.Errorf("shell-exec: %v", err)
+		return Record{}, nil, fmt.Errorf("shell-exec: %v", err)
 	}
 	sr := &ShellResult{Stdout: stdout, Stderr: stderr, ExitCode: exitCode}
 	rec.Shell = sr

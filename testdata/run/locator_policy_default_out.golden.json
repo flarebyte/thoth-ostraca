@@ -1,0 +1,45 @@
+{
+  "records": [
+    {
+      "locator": "../bad",
+      "meta": { "kind": "locator1" },
+      "error": {
+        "stage": "validate-locators",
+        "message": "parent references ('..') are not allowed"
+      }
+    },
+    {
+      "locator": "ok/path",
+      "meta": { "kind": "locator1" },
+      "mapped": { "locator": "ok/path", "meta": { "kind": "locator1" } },
+      "post": { "locator": "ok/path" }
+    },
+    {
+      "locator": "win\\\\path",
+      "meta": { "kind": "locator1" },
+      "error": {
+        "stage": "validate-locators",
+        "message": "backslashes are not allowed in POSIX style"
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "nop" },
+    "discovery": { "root": "testdata/repos/locator1" },
+    "reduced": 3,
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  },
+  "errors": [
+    {
+      "stage": "validate-locators",
+      "locator": "../bad",
+      "message": "parent references ('..') are not allowed"
+    },
+    {
+      "stage": "validate-locators",
+      "locator": "win\\\\path",
+      "message": "backslashes are not allowed in POSIX style"
+    }
+  ]
+}
