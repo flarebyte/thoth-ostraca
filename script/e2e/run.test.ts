@@ -13,6 +13,15 @@ import {
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+type EnvelopeOut = Record<string, unknown> & { meta?: { workers?: unknown } };
+function normalizeWorkersOut(stdout: string): string {
+  const actual = JSON.parse(stdout) as EnvelopeOut;
+  if (actual.meta && 'workers' in actual.meta) {
+    delete actual.meta.workers;
+  }
+  return `${JSON.stringify(actual)}\n`;
+}
+
 test('thoth run with valid config prints envelope JSON', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -244,9 +253,7 @@ test('determinism: workers=2 matches single-worker golden', () => {
   const run = runThoth(bin, ['run', '--config', cfg], root);
   expect(run.status).toBe(0);
   expect(run.stderr).toBe('');
-  const actual = JSON.parse(run.stdout);
-  if (actual.meta) delete actual.meta.workers;
-  const normalized = `${JSON.stringify(actual)}\n`;
+  const normalized = normalizeWorkersOut(run.stdout);
   expect(normalized).toBe(expectedOut);
 });
 
@@ -261,9 +268,7 @@ test('determinism: workers=1 equals workers=2 golden', () => {
   const run = runThoth(bin, ['run', '--config', cfg], root);
   expect(run.status).toBe(0);
   expect(run.stderr).toBe('');
-  const actual = JSON.parse(run.stdout);
-  if (actual.meta) delete actual.meta.workers;
-  const normalized = `${JSON.stringify(actual)}\n`;
+  const normalized = normalizeWorkersOut(run.stdout);
   expect(normalized).toBe(expectedOut);
 });
 
