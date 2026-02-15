@@ -8,6 +8,7 @@ type Record struct {
 	Mapped  any            `json:"mapped,omitempty"`
 	Shell   *ShellResult   `json:"shell,omitempty"`
 	Post    any            `json:"post,omitempty"`
+	Error   *RecError      `json:"error,omitempty"`
 }
 
 // ShellResult captures deterministic outputs of a shell execution.

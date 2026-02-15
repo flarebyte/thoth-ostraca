@@ -23,24 +23,44 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 	}
 
 	out := in
+	mode, _ := errorMode(in.Meta)
 	for i, r := range in.Records {
 		var locator string
 		var meta map[string]any
 		if rec, ok := r.(Record); ok {
+			if rec.Error != nil {
+				out.Records[i] = r
+				continue
+			}
 			locator = rec.Locator
 			meta = rec.Meta
 		} else if m, ok := r.(map[string]any); ok {
 			locVal, ok := m["locator"]
 			if !ok {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-map", "", "missing locator")
+					out.Records[i] = r
+					continue
+				}
 				return Envelope{}, errors.New("lua-map: missing locator")
 			}
 			s, ok := locVal.(string)
 			if !ok {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-map", "", "invalid locator type")
+					out.Records[i] = r
+					continue
+				}
 				return Envelope{}, errors.New("lua-map: invalid locator type")
 			}
 			locator = s
 			meta, _ = m["meta"].(map[string]any)
 		} else {
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-map", "", "invalid record type")
+				out.Records[i] = r
+				continue
+			}
 			return Envelope{}, errors.New("lua-map: invalid record type")
 		}
 
@@ -65,6 +85,11 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 
 		fn, err := L.LoadString(code)
 		if err != nil {
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-map", locator, err.Error())
+				out.Records[i] = Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: err.Error()}}
+				continue
+			}
 			return Envelope{}, fmt.Errorf("lua-map: %v", err)
 		}
 		L.Push(fn)
@@ -77,9 +102,19 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 		select {
 		case <-done:
 			if callErr != nil {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-map", locator, callErr.Error())
+					out.Records[i] = Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: callErr.Error()}}
+					continue
+				}
 				return Envelope{}, fmt.Errorf("lua-map: %v", callErr)
 			}
 		case <-time.After(200 * time.Millisecond):
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-map", locator, "timeout")
+				out.Records[i] = Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-map", Message: "timeout"}}
+				continue
+			}
 			return Envelope{}, fmt.Errorf("lua-map: timeout")
 		}
 		ret := L.Get(-1)

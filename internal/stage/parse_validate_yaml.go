@@ -48,31 +48,74 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 		p := filepath.Join(root, filepath.FromSlash(locator))
 		b, err := os.ReadFile(p)
 		if err != nil {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				// Append error and pass through input record unchanged
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, fmt.Sprintf("read error: %v", err))
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("read error %s: %w", p, err)
 		}
 		var y any
 		if err := yaml.Unmarshal(b, &y); err != nil {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, fmt.Sprintf("invalid YAML: %v", err))
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("invalid YAML %s: %v", p, err)
 		}
 		ym, ok := y.(map[string]any)
 		if !ok {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, "top-level must be mapping")
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("invalid YAML %s: top-level must be mapping", p)
 		}
 		// Validate required fields
 		yloc, ok := ym["locator"]
 		if !ok {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, "missing required field: locator")
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("invalid YAML %s: missing required field: locator", p)
 		}
 		ylocStr, ok := yloc.(string)
 		if !ok || ylocStr == "" {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, "invalid type for field: locator")
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("invalid YAML %s: invalid type for field: locator", p)
 		}
 		ymeta, ok := ym["meta"]
 		if !ok {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, "missing required field: meta")
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("invalid YAML %s: missing required field: meta", p)
 		}
 		ymetaMap, ok := ymeta.(map[string]any)
 		if !ok {
+			mode, _ := errorMode(in.Meta)
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "parse-validate-yaml", locator, "invalid type for field: meta")
+				outs = append(outs, kv{locator: locator, meta: nil})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("invalid YAML %s: invalid type for field: meta", p)
 		}
 
@@ -84,7 +127,14 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	out := in
 	out.Records = make([]any, 0, len(outs))
 	for _, pr := range outs {
-		out.Records = append(out.Records, Record{Locator: pr.locator, Meta: pr.meta})
+		rec := Record{Locator: pr.locator}
+		if pr.meta != nil {
+			rec.Meta = pr.meta
+		} else {
+			// In keep-going with error, embed if requested
+			rec.Error = &RecError{Stage: "parse-validate-yaml", Message: "failed"}
+		}
+		out.Records = append(out.Records, rec)
 	}
 	return out, nil
 }

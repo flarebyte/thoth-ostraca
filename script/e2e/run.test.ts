@@ -180,6 +180,30 @@ test("thoth run fails on invalid reduce Lua", () => {
   expect(run.stderr.includes("lua-reduce")).toBe(true);
 });
 
+test("keep-going with embedErrors=true embeds record errors and lists envelope errors", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/keep1_embed_true.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/keep1_embed_true_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test("keep-going with embedErrors=false only lists envelope errors", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/keep1_embed_false.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/keep1_embed_false_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test("thoth run with missing field fails with short error", () => {
   const root = path.resolve(__dirname, "../..");
   const bin = buildBinary(root);

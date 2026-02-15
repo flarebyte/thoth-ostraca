@@ -89,6 +89,18 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 		}
 		out.Meta.Output.Lines = min.Output.Lines
 	}
+	// Errors handling
+	if min.Errors.HasMode || min.Errors.HasEmbed {
+		if out.Meta.Errors == nil {
+			out.Meta.Errors = &ErrorsMeta{}
+		}
+		if min.Errors.HasMode {
+			out.Meta.Errors.Mode = min.Errors.Mode
+		}
+		if min.Errors.HasEmbed {
+			out.Meta.Errors.EmbedErrors = min.Errors.EmbedErrors
+		}
+	}
 	return out, nil
 }
 

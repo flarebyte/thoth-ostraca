@@ -61,6 +61,7 @@ type Minimal struct {
 	PostMap       PostMap
 	Reduce        Reduce
 	Output        Output
+	Errors        Errors
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -183,6 +184,20 @@ func ParseMinimal(path string) (Minimal, error) {
 			m.Output.HasLines = true
 		}
 	}
+	// Optional errors settings
+	ev2 := v.LookupPath(cue.ParsePath("errors"))
+	if ev2.Exists() {
+		mv := ev2.LookupPath(cue.ParsePath("mode"))
+		if mv.Exists() && mv.Kind() == cue.StringKind {
+			_ = mv.Decode(&m.Errors.Mode)
+			m.Errors.HasMode = true
+		}
+		emb := ev2.LookupPath(cue.ParsePath("embedErrors"))
+		if emb.Exists() && emb.Kind() == cue.BoolKind {
+			_ = emb.Decode(&m.Errors.EmbedErrors)
+			m.Errors.HasEmbed = true
+		}
+	}
 	return m, nil
 }
 
@@ -234,4 +249,12 @@ type Reduce struct {
 type Output struct {
 	Lines    bool
 	HasLines bool
+}
+
+// Errors holds error handling mode config.
+type Errors struct {
+	Mode        string
+	EmbedErrors bool
+	HasMode     bool
+	HasEmbed    bool
 }

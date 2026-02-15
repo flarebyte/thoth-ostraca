@@ -25,25 +25,48 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	out := in
 	out.Records = out.Records[:0]
 
+	mode, _ := errorMode(in.Meta)
 	for _, r := range in.Records {
 		var locator string
 		var meta map[string]any
+		var recErr *RecError
 		if rec, ok := r.(Record); ok {
 			locator = rec.Locator
 			meta = rec.Meta
+			recErr = rec.Error
 		} else if m, ok := r.(map[string]any); ok {
 			locVal, ok := m["locator"]
 			if !ok {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-filter", "", "missing locator")
+					out.Records = append(out.Records, r)
+					continue
+				}
 				return Envelope{}, errors.New("lua-filter: missing locator")
 			}
 			s, ok := locVal.(string)
 			if !ok {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-filter", "", "invalid locator type")
+					out.Records = append(out.Records, r)
+					continue
+				}
 				return Envelope{}, errors.New("lua-filter: invalid locator type")
 			}
 			locator = s
 			meta, _ = m["meta"].(map[string]any)
 		} else {
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-filter", "", "invalid record type")
+				out.Records = append(out.Records, r)
+				continue
+			}
 			return Envelope{}, errors.New("lua-filter: invalid record type")
+		}
+
+		if recErr != nil {
+			out.Records = append(out.Records, r)
+			continue
 		}
 
 		L := lua.NewState(lua.Options{SkipOpenLibs: true})
@@ -68,6 +91,11 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 
 		fn, err := L.LoadString(pred)
 		if err != nil {
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-filter", locator, err.Error())
+				out.Records = append(out.Records, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-filter", Message: err.Error()}})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("lua-filter: %v", err)
 		}
 		L.Push(fn)
@@ -81,9 +109,19 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 		select {
 		case <-done:
 			if callErr != nil {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-filter", locator, callErr.Error())
+					out.Records = append(out.Records, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-filter", Message: callErr.Error()}})
+					continue
+				}
 				return Envelope{}, fmt.Errorf("lua-filter: %v", callErr)
 			}
 		case <-time.After(200 * time.Millisecond):
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-filter", locator, "timeout")
+				out.Records = append(out.Records, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: "lua-filter", Message: "timeout"}})
+				continue
+			}
 			return Envelope{}, fmt.Errorf("lua-filter: timeout")
 		}
 		ret := L.Get(-1)

@@ -1,6 +1,7 @@
 package run
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -59,23 +60,74 @@ var Cmd = &cobra.Command{
 		}
 		// Output modes
 		if e8.Meta != nil && e8.Meta.Output != nil && e8.Meta.Output.Lines {
+			// Optionally strip embedded errors
+			stripErrors := e8.Meta != nil && e8.Meta.Errors != nil && !e8.Meta.Errors.EmbedErrors
 			for _, r := range e8.Records {
-				b, err := json.Marshal(r)
-				if err != nil {
+				rec := r
+				if stripErrors {
+					if rr, ok := r.(stage.Record); ok {
+						rr.Error = nil
+						rec = rr
+					}
+				}
+				var buf bytes.Buffer
+				enc := json.NewEncoder(&buf)
+				enc.SetEscapeHTML(false)
+				if err := enc.Encode(rec); err != nil {
 					return err
 				}
-				if _, err := fmt.Fprintln(os.Stdout, string(b)); err != nil {
+				if _, err := fmt.Fprint(os.Stdout, buf.String()); err != nil {
 					return err
+				}
+			}
+			// In keep-going, determine exit code based on success presence
+			if e8.Meta != nil && e8.Meta.Errors != nil && e8.Meta.Errors.Mode == "keep-going" {
+				anyOK := false
+				for _, r := range e8.Records {
+					if rec, ok := r.(stage.Record); ok {
+						if rec.Error == nil {
+							anyOK = true
+							break
+						}
+					}
+				}
+				if !anyOK {
+					return fmt.Errorf("keep-going: no successful records")
 				}
 			}
 			return nil
 		}
-		b, err := json.Marshal(e8)
-		if err != nil {
+		// Optionally strip embedded errors in full envelope mode
+		if e8.Meta != nil && e8.Meta.Errors != nil && !e8.Meta.Errors.EmbedErrors {
+			for i, r := range e8.Records {
+				if rr, ok := r.(stage.Record); ok {
+					rr.Error = nil
+					e8.Records[i] = rr
+				}
+			}
+		}
+		var buf bytes.Buffer
+		enc := json.NewEncoder(&buf)
+		enc.SetEscapeHTML(false)
+		if err := enc.Encode(e8); err != nil {
 			return err
 		}
-		if _, err := fmt.Fprintln(os.Stdout, string(b)); err != nil {
+		if _, err := fmt.Fprint(os.Stdout, buf.String()); err != nil {
 			return err
+		}
+		if e8.Meta != nil && e8.Meta.Errors != nil && e8.Meta.Errors.Mode == "keep-going" {
+			anyOK := false
+			for _, r := range e8.Records {
+				if rec, ok := r.(stage.Record); ok {
+					if rec.Error == nil {
+						anyOK = true
+						break
+					}
+				}
+			}
+			if !anyOK && len(e8.Errors) > 0 {
+				return fmt.Errorf("keep-going: no successful records")
+			}
 		}
 		return nil
 	},

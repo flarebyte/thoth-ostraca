@@ -33,10 +33,20 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	}
 
 	out := in
+	mode, _ := errorMode(in.Meta)
 	for i, r := range in.Records {
 		rec, ok := r.(Record)
 		if !ok {
+			if mode == "keep-going" {
+				appendEnvelopeError(&in, "shell-exec", "", "invalid record type")
+				out.Records[i] = r
+				continue
+			}
 			return Envelope{}, errors.New("shell-exec: invalid record type")
+		}
+		if rec.Error != nil {
+			out.Records[i] = rec
+			continue
 		}
 		// Render args
 		mappedJSON, _ := json.Marshal(rec.Mapped)
@@ -55,6 +65,12 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 		runErr := cmd.Run()
 
 		if cctx.Err() == context.DeadlineExceeded {
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "shell-exec", rec.Locator, "timeout")
+				rec.Error = &RecError{Stage: "shell-exec", Message: "timeout"}
+				out.Records[i] = rec
+				continue
+			}
 			return Envelope{}, fmt.Errorf("shell-exec: timeout")
 		}
 
@@ -64,6 +80,12 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 			if errors.As(runErr, &ee) {
 				sr.ExitCode = ee.ExitCode()
 			} else {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "shell-exec", rec.Locator, runErr.Error())
+					rec.Error = &RecError{Stage: "shell-exec", Message: runErr.Error()}
+					out.Records[i] = rec
+					continue
+				}
 				return Envelope{}, fmt.Errorf("shell-exec: %v", runErr)
 			}
 		} else {

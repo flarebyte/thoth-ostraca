@@ -3,6 +3,7 @@ package stage
 // Error represents a minimal stage error.
 type Error struct {
 	Stage   string `json:"stage"`
+	Locator string `json:"locator,omitempty"`
 	Message string `json:"message"`
 }
 
@@ -28,6 +29,7 @@ type Meta struct {
 	Shell      *ShellMeta     `json:"shell,omitempty"`
 	Output     *OutputMeta    `json:"output,omitempty"`
 	Reduced    any            `json:"reduced,omitempty"`
+	Errors     *ErrorsMeta    `json:"errors,omitempty"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.
@@ -57,4 +59,10 @@ type ShellMeta struct {
 // OutputMeta holds minimal output settings.
 type OutputMeta struct {
 	Lines bool `json:"lines,omitempty"`
+}
+
+// ErrorsMeta holds error handling behavior.
+type ErrorsMeta struct {
+	Mode        string `json:"mode,omitempty"`
+	EmbedErrors bool   `json:"embedErrors,omitempty"`
 }

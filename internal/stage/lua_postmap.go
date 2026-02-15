@@ -10,13 +10,23 @@ import (
 )
 
 func luaPostMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
+	mode, _ := errorMode(in.Meta)
 	// If no inline, apply deterministic default without Lua to keep ordering stable
 	if in.Meta == nil || in.Meta.Lua == nil || in.Meta.Lua.PostMapInline == "" {
 		out := in
 		for i, r := range in.Records {
 			rec, ok := r.(Record)
 			if !ok {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-postmap", "", "invalid record type")
+					out.Records[i] = r
+					continue
+				}
 				return Envelope{}, errors.New("lua-postmap: invalid record type")
+			}
+			if rec.Error != nil {
+				out.Records[i] = rec
+				continue
 			}
 			type postResult struct {
 				Locator string `json:"locator"`
@@ -77,6 +87,12 @@ func luaPostMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, er
 
 		fn, err := L.LoadString(code)
 		if err != nil {
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-postmap", rec.Locator, err.Error())
+				rec.Error = &RecError{Stage: "lua-postmap", Message: err.Error()}
+				out.Records[i] = rec
+				continue
+			}
 			return Envelope{}, fmt.Errorf("lua-postmap: %v", err)
 		}
 		L.Push(fn)
@@ -89,9 +105,21 @@ func luaPostMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, er
 		select {
 		case <-done:
 			if callErr != nil {
+				if mode == "keep-going" {
+					appendEnvelopeError(&out, "lua-postmap", rec.Locator, callErr.Error())
+					rec.Error = &RecError{Stage: "lua-postmap", Message: callErr.Error()}
+					out.Records[i] = rec
+					continue
+				}
 				return Envelope{}, fmt.Errorf("lua-postmap: %v", callErr)
 			}
 		case <-time.After(200 * time.Millisecond):
+			if mode == "keep-going" {
+				appendEnvelopeError(&out, "lua-postmap", rec.Locator, "timeout")
+				rec.Error = &RecError{Stage: "lua-postmap", Message: "timeout"}
+				out.Records[i] = rec
+				continue
+			}
 			return Envelope{}, fmt.Errorf("lua-postmap: timeout")
 		}
 		ret := L.Get(-1)

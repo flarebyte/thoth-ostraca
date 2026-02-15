@@ -12,15 +12,12 @@ import (
 )
 
 func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
-	// Defaults
-	root := "."
-	noGitignore := false
-	if in.Meta != nil && in.Meta.Discovery != nil {
-		if in.Meta.Discovery.Root != "" {
-			root = in.Meta.Discovery.Root
-		}
-		noGitignore = in.Meta.Discovery.NoGitignore
+	// If no discovery root configured, passthrough
+	if in.Meta == nil || in.Meta.Discovery == nil || in.Meta.Discovery.Root == "" {
+		return in, nil
 	}
+	root := in.Meta.Discovery.Root
+	noGitignore := in.Meta.Discovery.NoGitignore
 
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
