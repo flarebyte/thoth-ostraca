@@ -44,15 +44,20 @@ var Cmd = &cobra.Command{
 			}
 		}
 
-		outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
-		if err != nil {
-			return err
-		}
-		if flagDumpOut != "" {
-			if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-				return err
-			}
-		}
+        outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
+        if err != nil {
+            return err
+        }
+        // Attach contract version for final outputs (stdout and dump-out)
+        if outEnv.Meta == nil {
+            outEnv.Meta = &stage.Meta{}
+        }
+        outEnv.Meta.ContractVersion = "1"
+        if flagDumpOut != "" {
+            if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
+                return err
+            }
+        }
 		return printEnvelopeOneLine(os.Stdout, outEnv)
 	},
 }
@@ -90,7 +95,7 @@ func prepareDiagnoseInput(inPath, cfg, root string, noGit bool) (stage.Envelope,
 		}
 		return env, nil
 	}
-	env := stage.Envelope{Records: []any{}}
+	env := stage.Envelope{Records: []stage.Record{}}
 	if cfg != "" {
 		env.Meta = &stage.Meta{ConfigPath: cfg}
 	}
@@ -110,6 +115,10 @@ func prepareDiagnoseInput(inPath, cfg, root string, noGit bool) (stage.Envelope,
 }
 
 func printEnvelopeOneLine(w io.Writer, env stage.Envelope) error {
+	if env.Meta == nil {
+		env.Meta = &stage.Meta{}
+	}
+	env.Meta.ContractVersion = "1"
 	stage.SortEnvelopeErrors(&env)
 	b, err := json.Marshal(env)
 	if err != nil {

@@ -9,7 +9,7 @@ import (
 
 // executePipeline runs the fixed Phase 1 pipeline for `thoth run`.
 func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error) {
-	in := stage.Envelope{Records: []any{}, Meta: &stage.Meta{ConfigPath: cfgPath}}
+	in := stage.Envelope{Records: []stage.Record{}, Meta: &stage.Meta{ConfigPath: cfgPath}}
 	stages := []string{
 		"validate-config",
 		"discover-meta-files",
@@ -26,6 +26,11 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 // renderRunOutput prints final output to the provided writer while preserving
 // existing behavior and exit conditions.
 func renderRunOutput(out stage.Envelope, w io.Writer) error {
+	// Attach contract version to final outputs
+	if out.Meta == nil {
+		out.Meta = &stage.Meta{}
+	}
+	out.Meta.ContractVersion = "1"
 	if isLinesMode(out) {
 		return renderLines(out, w)
 	}

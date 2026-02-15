@@ -1,7 +1,6 @@
 package stage
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,7 +11,7 @@ const luaPostMapStage = "lua-postmap"
 
 type luaPostMapRes struct {
 	idx   int
-	rec   any
+	rec   Record
 	envE  *Error
 	fatal error
 }
@@ -28,14 +27,7 @@ func buildLuaPostMapCode(in Envelope) string {
 }
 
 // processDefaultPostMapRecord applies the deterministic default postmap when no inline code is provided.
-func processDefaultPostMapRecord(r any, mode string) (any, *Error, error) {
-	rec, ok := r.(Record)
-	if !ok {
-		if mode == "keep-going" {
-			return r, &Error{Stage: luaPostMapStage, Message: "invalid record type"}, nil
-		}
-		return nil, nil, errors.New("lua-postmap: invalid record type")
-	}
+func processDefaultPostMapRecord(rec Record, mode string) (Record, *Error, error) {
 	if rec.Error != nil {
 		return rec, nil, nil
 	}
@@ -52,14 +44,7 @@ func processDefaultPostMapRecord(r any, mode string) (any, *Error, error) {
 }
 
 // processLuaPostMapRecord runs the Lua postmap code against a record.
-func processLuaPostMapRecord(r any, code string, mode string) (any, *Error, error) {
-	rec, ok := r.(Record)
-	if !ok {
-		if mode == "keep-going" {
-			return r, &Error{Stage: luaPostMapStage, Message: "invalid record type"}, nil
-		}
-		return nil, nil, errors.New("lua-postmap: invalid record type")
-	}
+func processLuaPostMapRecord(rec Record, code string, mode string) (Record, *Error, error) {
 	L := newMinimalLua()
 	// Globals
 	L.SetGlobal("locator", lua.LString(rec.Locator))
@@ -83,7 +68,7 @@ func processLuaPostMapRecord(r any, code string, mode string) (any, *Error, erro
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: err.Error()}, nil
 		}
 		L.Close()
-		return nil, nil, fmt.Errorf("lua-postmap: %v", err)
+		return Record{}, nil, fmt.Errorf("lua-postmap: %v", err)
 	}
 	L.Push(fn)
 	done := make(chan struct{})
@@ -101,7 +86,7 @@ func processLuaPostMapRecord(r any, code string, mode string) (any, *Error, erro
 				return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: callErr.Error()}, nil
 			}
 			L.Close()
-			return nil, nil, fmt.Errorf("lua-postmap: %v", callErr)
+			return Record{}, nil, fmt.Errorf("lua-postmap: %v", callErr)
 		}
 	case <-time.After(200 * time.Millisecond):
 		if mode == "keep-going" {
@@ -110,7 +95,7 @@ func processLuaPostMapRecord(r any, code string, mode string) (any, *Error, erro
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: "timeout"}, nil
 		}
 		L.Close()
-		return nil, nil, fmt.Errorf("lua-postmap: timeout")
+		return Record{}, nil, fmt.Errorf("lua-postmap: timeout")
 	}
 	ret := L.Get(-1)
 	L.Pop(1)

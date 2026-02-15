@@ -40,13 +40,8 @@ func runLuaReduce(in Envelope, code string) (any, error) {
 	L := newMinimalLua()
 	defer L.Close()
 	var acc any
-	for _, r := range in.Records {
-		var item any
-		if rec, ok := r.(Record); ok {
-			item = reduceItemFromRecord(rec)
-		} else {
-			item = r
-		}
+	for _, rec := range in.Records {
+		item := reduceItemFromRecord(rec)
 		L.SetGlobal("acc", toLValue(L, acc))
 		L.SetGlobal("item", toLValue(L, item))
 		fn, err := L.LoadString(code)

@@ -15,7 +15,7 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	mode, _ := errorMode(in.Meta)
 	n := len(in.Records)
 	keeps := make([]bool, n)
-	outs := make([]any, n)
+	outs := make([]Record, n)
 	var envErrs []Error
 	var mu sync.Mutex
 	workers := getWorkers(in.Meta)
@@ -26,8 +26,8 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 		defer wg.Done()
 		for idx := range jobs {
 			r := in.Records[idx]
-			keep, outAny, envE, fatal := processLuaFilterRecord(r, pred, mode)
-			results <- luaFilterRes{idx: idx, keep: keep, out: outAny, envE: envE, fatal: fatal}
+			keep, outRec, envE, fatal := processLuaFilterRecord(r, pred, mode)
+			results <- luaFilterRes{idx: idx, keep: keep, out: outRec, envE: envE, fatal: fatal}
 		}
 	}
 	for w := 0; w < workers; w++ {

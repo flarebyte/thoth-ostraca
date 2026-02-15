@@ -39,33 +39,25 @@ func isKeepGoing(out stage.Envelope) bool {
 }
 
 // hasAnySuccessfulRecord returns true if any record has nil Error.
-func hasAnySuccessfulRecord(records []any) bool {
-	for _, r := range records {
-		if rec, ok := r.(stage.Record); ok {
-			if rec.Error == nil {
-				return true
-			}
+func hasAnySuccessfulRecord(records []stage.Record) bool {
+	for _, rec := range records {
+		if rec.Error == nil {
+			return true
 		}
 	}
 	return false
 }
 
 // stripRecordError clears the Error field if the value is a stage.Record.
-func stripRecordError(v any) any {
-	if rr, ok := v.(stage.Record); ok {
-		rr.Error = nil
-		return rr
-	}
+func stripRecordError(v stage.Record) stage.Record {
+	v.Error = nil
 	return v
 }
 
 // stripEnvelopeErrors clears Error in-place for all records in the envelope.
 func stripEnvelopeErrors(out *stage.Envelope) {
-	for i, r := range out.Records {
-		if rr, ok := r.(stage.Record); ok {
-			rr.Error = nil
-			out.Records[i] = rr
-		}
+	for i := range out.Records {
+		out.Records[i].Error = nil
 	}
 }
 

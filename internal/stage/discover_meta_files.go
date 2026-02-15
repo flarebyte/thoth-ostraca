@@ -23,7 +23,7 @@ func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 		return Envelope{}, err
 	}
 	out := in
-	out.Records = make([]any, 0, len(locators))
+	out.Records = make([]Record, 0, len(locators))
 	for _, l := range locators {
 		out.Records = append(out.Records, Record{Locator: l})
 	}

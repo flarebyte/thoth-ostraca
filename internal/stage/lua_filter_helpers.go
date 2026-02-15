@@ -1,7 +1,6 @@
 package stage
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -13,7 +12,7 @@ const luaFilterStage = "lua-filter"
 type luaFilterRes struct {
 	idx   int
 	keep  bool
-	out   any
+	out   Record
 	envE  *Error
 	fatal error
 }
@@ -54,41 +53,13 @@ func newMinimalLua() *lua.LState {
 // processLuaFilterRecord applies the lua predicate to a single record and
 // returns the outcome mimicking the original behavior. The mode determines
 // whether to keep going or fail fast.
-func processLuaFilterRecord(r any, pred string, mode string) (keep bool, out any, envE *Error, fatal error) {
-	var locator string
-	var meta map[string]any
-	var recErr *RecError
-	switch rec := r.(type) {
-	case Record:
-		locator = rec.Locator
-		meta = rec.Meta
-		recErr = rec.Error
-	case map[string]any:
-		locVal, ok := rec["locator"]
-		if !ok {
-			if mode == "keep-going" {
-				return true, r, &Error{Stage: luaFilterStage, Message: "missing locator"}, nil
-			}
-			return false, nil, nil, errors.New("lua-filter: missing locator")
-		}
-		s, ok := locVal.(string)
-		if !ok {
-			if mode == "keep-going" {
-				return true, r, &Error{Stage: luaFilterStage, Message: "invalid locator type"}, nil
-			}
-			return false, nil, nil, errors.New("lua-filter: invalid locator type")
-		}
-		locator = s
-		meta, _ = rec["meta"].(map[string]any)
-	default:
-		if mode == "keep-going" {
-			return true, r, &Error{Stage: luaFilterStage, Message: "invalid record type"}, nil
-		}
-		return false, nil, nil, errors.New("lua-filter: invalid record type")
-	}
+func processLuaFilterRecord(rec Record, pred string, mode string) (keep bool, out Record, envE *Error, fatal error) {
+	locator := rec.Locator
+	meta := rec.Meta
+	recErr := rec.Error
 
 	if recErr != nil {
-		return true, r, nil, nil
+		return true, rec, nil, nil
 	}
 
 	L := newMinimalLua()
@@ -103,7 +74,7 @@ func processLuaFilterRecord(r any, pred string, mode string) (keep bool, out any
 			return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: err.Error()}}, &Error{Stage: luaFilterStage, Locator: locator, Message: err.Error()}, nil
 		}
 		L.Close()
-		return false, nil, nil, fmt.Errorf("lua-filter: %v", err)
+		return false, Record{}, nil, fmt.Errorf("lua-filter: %v", err)
 	}
 	L.Push(fn)
 	done := make(chan struct{})
@@ -120,7 +91,7 @@ func processLuaFilterRecord(r any, pred string, mode string) (keep bool, out any
 				return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: callErr.Error()}}, &Error{Stage: luaFilterStage, Locator: locator, Message: callErr.Error()}, nil
 			}
 			L.Close()
-			return false, nil, nil, fmt.Errorf("lua-filter: %v", callErr)
+			return false, Record{}, nil, fmt.Errorf("lua-filter: %v", callErr)
 		}
 	case <-time.After(200 * time.Millisecond):
 		if mode == "keep-going" {
@@ -128,7 +99,7 @@ func processLuaFilterRecord(r any, pred string, mode string) (keep bool, out any
 			return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: "timeout"}}, &Error{Stage: luaFilterStage, Locator: locator, Message: "timeout"}, nil
 		}
 		L.Close()
-		return false, nil, nil, fmt.Errorf("lua-filter: timeout")
+		return false, Record{}, nil, fmt.Errorf("lua-filter: timeout")
 	}
 
 	ret := L.Get(-1)
@@ -138,7 +109,7 @@ func processLuaFilterRecord(r any, pred string, mode string) (keep bool, out any
 	if keep {
 		return true, Record{Locator: locator, Meta: meta}, nil, nil
 	}
-	return false, nil, nil, nil
+	return false, Record{}, nil, nil
 }
 
 // containsReturn reports whether the code string contains the token "return".

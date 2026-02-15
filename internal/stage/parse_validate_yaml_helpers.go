@@ -27,24 +27,8 @@ func determineRoot(in Envelope) string {
 // processYAMLRecord reads, parses, and validates a single YAML record according to the
 // stage rules, returning either a kv pair on success, or an env error (keep-going) or
 // fatal error.
-func processYAMLRecord(r any, root string, mode string) (yamlKV, *Error, error) {
-	var locator string
-	switch rec := r.(type) {
-	case Record:
-		locator = rec.Locator
-	case map[string]any:
-		locVal, ok := rec["locator"]
-		if !ok {
-			return yamlKV{}, nil, fmt.Errorf("invalid input record: missing locator")
-		}
-		s, ok := locVal.(string)
-		if !ok || s == "" {
-			return yamlKV{}, nil, fmt.Errorf("invalid input record: locator must be string")
-		}
-		locator = s
-	default:
-		return yamlKV{}, nil, fmt.Errorf("invalid input record: expected object")
-	}
+func processYAMLRecord(rec Record, root string, mode string) (yamlKV, *Error, error) {
+	locator := rec.Locator
 
 	p := filepath.Join(root, filepath.FromSlash(locator))
 	b, err := os.ReadFile(p)

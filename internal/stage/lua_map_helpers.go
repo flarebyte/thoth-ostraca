@@ -1,7 +1,6 @@
 package stage
 
 import (
-	"errors"
 	"fmt"
 	"time"
 
@@ -12,7 +11,7 @@ const luaMapStage = "lua-map"
 
 type luaMapRes struct {
 	idx   int
-	rec   any
+	rec   Record
 	envE  *Error
 	fatal error
 }
@@ -32,38 +31,14 @@ func buildLuaMapCode(in Envelope) string {
 }
 
 // processLuaMapRecord runs the Lua map code for a single record.
-func processLuaMapRecord(r any, code string, mode string) (any, *Error, error) {
+func processLuaMapRecord(rec Record, code string, mode string) (Record, *Error, error) {
 	var locator string
 	var meta map[string]any
-	if rec, ok := r.(Record); ok {
-		if rec.Error != nil {
-			return rec, nil, nil
-		}
-		locator = rec.Locator
-		meta = rec.Meta
-	} else if m, ok := r.(map[string]any); ok {
-		locVal, ok := m["locator"]
-		if !ok {
-			if mode == "keep-going" {
-				return r, &Error{Stage: luaMapStage, Message: "missing locator"}, nil
-			}
-			return nil, nil, errors.New("lua-map: missing locator")
-		}
-		s, ok := locVal.(string)
-		if !ok {
-			if mode == "keep-going" {
-				return r, &Error{Stage: luaMapStage, Message: "invalid locator type"}, nil
-			}
-			return nil, nil, errors.New("lua-map: invalid locator type")
-		}
-		locator = s
-		meta, _ = m["meta"].(map[string]any)
-	} else {
-		if mode == "keep-going" {
-			return r, &Error{Stage: luaMapStage, Message: "invalid record type"}, nil
-		}
-		return nil, nil, errors.New("lua-map: invalid record type")
+	if rec.Error != nil {
+		return rec, nil, nil
 	}
+	locator = rec.Locator
+	meta = rec.Meta
 
 	L := newMinimalLua()
 	L.SetGlobal("locator", lua.LString(locator))
@@ -76,7 +51,7 @@ func processLuaMapRecord(r any, code string, mode string) (any, *Error, error) {
 			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: err.Error()}}, &Error{Stage: luaMapStage, Locator: locator, Message: err.Error()}, nil
 		}
 		L.Close()
-		return nil, nil, fmt.Errorf("lua-map: %v", err)
+		return Record{}, nil, fmt.Errorf("lua-map: %v", err)
 	}
 	L.Push(fn)
 	done := make(chan struct{})
@@ -93,7 +68,7 @@ func processLuaMapRecord(r any, code string, mode string) (any, *Error, error) {
 				return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: callErr.Error()}}, &Error{Stage: luaMapStage, Locator: locator, Message: callErr.Error()}, nil
 			}
 			L.Close()
-			return nil, nil, fmt.Errorf("lua-map: %v", callErr)
+			return Record{}, nil, fmt.Errorf("lua-map: %v", callErr)
 		}
 	case <-time.After(200 * time.Millisecond):
 		if mode == "keep-going" {
@@ -101,7 +76,7 @@ func processLuaMapRecord(r any, code string, mode string) (any, *Error, error) {
 			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: "timeout"}}, &Error{Stage: luaMapStage, Locator: locator, Message: "timeout"}, nil
 		}
 		L.Close()
-		return nil, nil, fmt.Errorf("lua-map: timeout")
+		return Record{}, nil, fmt.Errorf("lua-map: timeout")
 	}
 	ret := L.Get(-1)
 	L.Pop(1)
