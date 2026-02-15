@@ -2,32 +2,19 @@ package stage
 
 import (
 	"context"
-	"errors"
-	"fmt"
-	"os"
-	"path/filepath"
 	"sort"
 	"sync"
-
-	"gopkg.in/yaml.v3"
 )
 
 func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	// Determine root
-	root := "."
-	if in.Meta != nil && in.Meta.Discovery != nil && in.Meta.Discovery.Root != "" {
-		root = in.Meta.Discovery.Root
-	}
+	root := determineRoot(in)
 
 	// Collect output
-	type kv struct {
-		locator string
-		meta    map[string]any
-	}
-	outs := make([]kv, 0, len(in.Records))
+	outs := make([]yamlKV, 0, len(in.Records))
 	mode, _ := errorMode(in.Meta)
 	type res struct {
-		kv    kv
+		kv    yamlKV
 		envE  *Error
 		fatal error
 	}
@@ -38,92 +25,8 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	worker := func() {
 		defer wg.Done()
 		for item := range jobs {
-			r := item
-			var locator string
-			switch rec := r.(type) {
-			case Record:
-				locator = rec.Locator
-			case map[string]any:
-				locVal, ok := rec["locator"]
-				if !ok {
-					results <- res{fatal: errors.New("invalid input record: missing locator")}
-					continue
-				}
-				s, ok := locVal.(string)
-				if !ok || s == "" {
-					results <- res{fatal: errors.New("invalid input record: locator must be string")}
-					continue
-				}
-				locator = s
-			default:
-				results <- res{fatal: errors.New("invalid input record: expected object")}
-				continue
-			}
-			p := filepath.Join(root, filepath.FromSlash(locator))
-			b, err := os.ReadFile(p)
-			if err != nil {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: fmt.Sprintf("read error: %v", err)}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("read error %s: %w", p, err)}
-				continue
-			}
-			var y any
-			if err := yaml.Unmarshal(b, &y); err != nil {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: fmt.Sprintf("invalid YAML: %v", err)}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("invalid YAML %s: %v", p, err)}
-				continue
-			}
-			ym, ok := y.(map[string]any)
-			if !ok {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "top-level must be mapping"}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("invalid YAML %s: top-level must be mapping", p)}
-				continue
-			}
-			yloc, ok := ym["locator"]
-			if !ok {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "missing required field: locator"}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("invalid YAML %s: missing required field: locator", p)}
-				continue
-			}
-			ylocStr, ok := yloc.(string)
-			if !ok || ylocStr == "" {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "invalid type for field: locator"}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("invalid YAML %s: invalid type for field: locator", p)}
-				continue
-			}
-			ymeta, ok := ym["meta"]
-			if !ok {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "missing required field: meta"}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("invalid YAML %s: missing required field: meta", p)}
-				continue
-			}
-			ymetaMap, ok := ymeta.(map[string]any)
-			if !ok {
-				if mode == "keep-going" {
-					results <- res{kv: kv{locator: locator, meta: nil}, envE: &Error{Stage: "parse-validate-yaml", Locator: locator, Message: "invalid type for field: meta"}}
-					continue
-				}
-				results <- res{fatal: fmt.Errorf("invalid YAML %s: invalid type for field: meta", p)}
-				continue
-			}
-			results <- res{kv: kv{locator: ylocStr, meta: ymetaMap}}
+			kv, envE, fatal := processYAMLRecord(item, root, mode)
+			results <- res{kv: kv, envE: envE, fatal: fatal}
 		}
 	}
 	// start workers
