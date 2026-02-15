@@ -197,15 +197,7 @@ func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 		}
 		return Envelope{}, fmt.Errorf("%s: %v", enrichGitStage, err)
 	}
-	var authorStr string
-	var authorTime time.Time
-	if head != "" {
-		if data, err := readLooseObject(root, head); err == nil {
-			if a, t, err := parseCommitAuthor(data); err == nil {
-				authorStr, authorTime = a, t
-			}
-		}
-	}
+	authorStr, authorTime := authorFromHead(root, head)
 	idx, _ := parseIndex(root)
 
 	out := in
@@ -213,37 +205,8 @@ func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 		if r.Error != nil {
 			continue
 		}
-		abs := filepath.Join(root, filepath.FromSlash(r.Locator))
-		// ignored via gitignore helper
-		ignored := matchIgnore(absRoot, r.Locator, false)
-		_, err := os.Stat(abs)
-		exists := err == nil
-		// tracked if path in index
-		posix := filepath.ToSlash(r.Locator)
-		ent, tracked := idx[posix]
-		status := "untracked"
-		if tracked {
-			if !exists {
-				status = "deleted"
-			} else {
-				// Compare blob hash against index hash for determinism
-				if h, err := computeBlobHash(abs); err == nil {
-					if h != hex.EncodeToString(ent.Hash[:]) {
-						status = "modified"
-					} else {
-						status = "clean"
-					}
-				} else {
-					status = "modified"
-				}
-			}
-		}
-		var lc *RecGitCommit
-		if tracked && !authorTime.IsZero() {
-			lc = &RecGitCommit{Hash: head, Author: authorStr, Time: normalizeRFC3339(authorTime)}
-		}
 		rr := r
-		rr.Git = &RecGit{Tracked: tracked, Ignored: ignored, Status: status, LastCommit: lc}
+		rr.Git = recGitFor(r.Locator, root, absRoot, idx, head, authorStr, authorTime)
 		out.Records[i] = rr
 	}
 	return out, nil
