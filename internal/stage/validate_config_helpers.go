@@ -1,0 +1,105 @@
+package stage
+
+import "github.com/flarebyte/thoth-ostraca/internal/config"
+
+// sanitizeWorkers ensures a minimum of 1 worker when present.
+func sanitizeWorkers(n int) int {
+	if n < 1 {
+		return 1
+	}
+	return n
+}
+
+// applyMinimalToMeta mutates out.Meta to reflect values from the parsed minimal config.
+// It mirrors the original field population and presence checks exactly.
+func applyMinimalToMeta(out *Envelope, min config.Minimal) {
+	if out.Meta == nil {
+		out.Meta = &Meta{}
+	}
+	out.Meta.Config = &ConfigMeta{ConfigVersion: min.ConfigVersion, Action: min.Action}
+	out.Meta.ConfigPath = "" // do not persist configPath in output
+
+	// Discovery
+	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore {
+		if out.Meta.Discovery == nil {
+			out.Meta.Discovery = &DiscoveryMeta{}
+		}
+		if min.Discovery.HasRoot {
+			out.Meta.Discovery.Root = min.Discovery.Root
+		}
+		if min.Discovery.HasNoGitignore {
+			out.Meta.Discovery.NoGitignore = min.Discovery.NoGitignore
+		}
+	}
+
+	// Lua: filter, map, postmap, reduce
+	if min.Filter.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.FilterInline = min.Filter.Inline
+	}
+	if min.Map.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.MapInline = min.Map.Inline
+	}
+	if min.PostMap.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.PostMapInline = min.PostMap.Inline
+	}
+	if min.Reduce.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.ReduceInline = min.Reduce.Inline
+	}
+
+	// Shell
+	if min.Shell.HasEnabled || min.Shell.HasProgram || min.Shell.HasArgs || min.Shell.HasTimeout {
+		if out.Meta.Shell == nil {
+			out.Meta.Shell = &ShellMeta{}
+		}
+		if min.Shell.HasEnabled {
+			out.Meta.Shell.Enabled = min.Shell.Enabled
+		}
+		if min.Shell.HasProgram {
+			out.Meta.Shell.Program = min.Shell.Program
+		}
+		if min.Shell.HasArgs {
+			out.Meta.Shell.ArgsTemplate = append([]string(nil), min.Shell.ArgsTemplate...)
+		}
+		if min.Shell.HasTimeout {
+			out.Meta.Shell.TimeoutMs = min.Shell.TimeoutMs
+		}
+	}
+
+	// Output
+	if min.Output.HasLines {
+		if out.Meta.Output == nil {
+			out.Meta.Output = &OutputMeta{}
+		}
+		out.Meta.Output.Lines = min.Output.Lines
+	}
+
+	// Errors
+	if min.Errors.HasMode || min.Errors.HasEmbed {
+		if out.Meta.Errors == nil {
+			out.Meta.Errors = &ErrorsMeta{}
+		}
+		if min.Errors.HasMode {
+			out.Meta.Errors.Mode = min.Errors.Mode
+		}
+		if min.Errors.HasEmbed {
+			out.Meta.Errors.EmbedErrors = min.Errors.EmbedErrors
+		}
+	}
+
+	// Workers (only when present in CUE)
+	if min.Workers.HasCount {
+		out.Meta.Workers = sanitizeWorkers(min.Workers.Count)
+	}
+}

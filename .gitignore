@@ -41,6 +41,20 @@ scratch/
 # Node / general JS deps
 node_modules/
 
+# Dev-only binaries
+.e2e-bin/
+
+# Go cache
+.gocache/
+.gomodcache/
+.cache/
+
+# Local GOPATH when sandboxed
+_gopath/
+
+# Script dependencies
+script/node_modules/
+
 # Bun caches and outputs
 .bun/
 bun.lockb.tmp

@@ -1,8 +1,8 @@
 package main
 
 import (
-    "os"
-    "fmt"
+	"fmt"
+	"os"
 )
 
 // TODO: CLI Wiring
@@ -10,13 +10,13 @@ import (
 // - For subcommands, switch on os.Args and call functions in internal/app.
 // - Later, you can replace this with a CLI framework if desired.
 func main() {
-    args := os.Args[1:]
-    if len(args) > 0 {
-        switch args[0] {
-        case "hello":
-            fmt.Println("Hello World")
-            return
-        }
-    }
-    fmt.Println("Hello World")
+	args := os.Args[1:]
+	if len(args) > 0 {
+		switch args[0] {
+		case "hello":
+			fmt.Println("Hello World")
+			return
+		}
+	}
+	fmt.Println("Hello World")
 }

@@ -1,5 +1,5 @@
-import { stringify as yamlStringify } from 'bun';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
+import { stringify as yamlStringify } from 'bun';
 
 /**
  * Canonical description of a capability or behavior we want to support.

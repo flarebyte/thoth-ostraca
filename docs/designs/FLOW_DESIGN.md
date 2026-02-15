@@ -87,7 +87,7 @@ Supported use cases:
 
 
 ## Suggested Go Implementation
-  - Module: go 1.22; command name: thoth
+  - Module: go 1.24; command name: thoth
   - CLI: cobra for command tree; viper optional
   - Types: type Record struct { Locator string; Meta map[string]any }
   - YAML: gopkg.in/yaml.v3 for *.thoth.yaml (meta records)
