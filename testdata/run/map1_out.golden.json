@@ -1,2 +1,1 @@
-{"records":[{"locator":"a","meta":{"enabled":true,"name":"A"},"mapped":{"locator":"a","name":"A"}}],"meta":{"config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/yaml1"},"lua":{"filterInline":"return (meta and meta.enabled) == true","mapInline":"return { locator = locator, name = meta and meta.name }"}}}
-
+{"records":[{"locator":"a","meta":{"enabled":true,"name":"A"},"mapped":{"locator":"a","name":"A"},"post":{"locator":"a"}}],"meta":{"config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/yaml1"},"lua":{"filterInline":"return (meta and meta.enabled) == true","mapInline":"return { locator = locator, name = meta and meta.name }"}}}

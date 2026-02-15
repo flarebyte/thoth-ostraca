@@ -25,6 +25,7 @@ type Meta struct {
 	Config     *ConfigMeta    `json:"config,omitempty"`
 	Discovery  *DiscoveryMeta `json:"discovery,omitempty"`
 	Lua        *LuaMeta       `json:"lua,omitempty"`
+	Shell      *ShellMeta     `json:"shell,omitempty"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.
@@ -37,6 +38,15 @@ type Envelope struct {
 
 // LuaMeta holds minimal Lua-related settings.
 type LuaMeta struct {
-	FilterInline string `json:"filterInline,omitempty"`
-	MapInline    string `json:"mapInline,omitempty"`
+	FilterInline  string `json:"filterInline,omitempty"`
+	MapInline     string `json:"mapInline,omitempty"`
+	PostMapInline string `json:"postMapInline,omitempty"`
+}
+
+// ShellMeta holds minimal shell execution settings.
+type ShellMeta struct {
+	Enabled      bool     `json:"enabled,omitempty"`
+	Program      string   `json:"program,omitempty"`
+	ArgsTemplate []string `json:"argsTemplate,omitempty"`
+	TimeoutMs    int      `json:"timeoutMs,omitempty"`
 }

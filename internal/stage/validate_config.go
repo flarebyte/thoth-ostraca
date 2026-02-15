@@ -50,6 +50,31 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 		}
 		out.Meta.Lua.MapInline = min.Map.Inline
 	}
+	// Shell config
+	if min.Shell.HasEnabled || min.Shell.HasProgram || min.Shell.HasArgs || min.Shell.HasTimeout {
+		if out.Meta.Shell == nil {
+			out.Meta.Shell = &ShellMeta{}
+		}
+		if min.Shell.HasEnabled {
+			out.Meta.Shell.Enabled = min.Shell.Enabled
+		}
+		if min.Shell.HasProgram {
+			out.Meta.Shell.Program = min.Shell.Program
+		}
+		if min.Shell.HasArgs {
+			out.Meta.Shell.ArgsTemplate = append([]string(nil), min.Shell.ArgsTemplate...)
+		}
+		if min.Shell.HasTimeout {
+			out.Meta.Shell.TimeoutMs = min.Shell.TimeoutMs
+		}
+	}
+	// PostMap inline
+	if min.PostMap.HasInline {
+		if out.Meta.Lua == nil {
+			out.Meta.Lua = &LuaMeta{}
+		}
+		out.Meta.Lua.PostMapInline = min.PostMap.Inline
+	}
 	return out, nil
 }
 

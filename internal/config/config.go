@@ -57,6 +57,8 @@ type Minimal struct {
 	Discovery     Discovery
 	Filter        Filter
 	Map           Map
+	Shell         Shell
+	PostMap       PostMap
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -124,6 +126,42 @@ func ParseMinimal(path string) (Minimal, error) {
 			}
 		}
 	}
+	// Optional shell.*
+	sv := v.LookupPath(cue.ParsePath("shell"))
+	if sv.Exists() {
+		ev := sv.LookupPath(cue.ParsePath("enabled"))
+		if ev.Exists() && ev.Kind() == cue.BoolKind {
+			_ = ev.Decode(&m.Shell.Enabled)
+			m.Shell.HasEnabled = true
+		}
+		pv := sv.LookupPath(cue.ParsePath("program"))
+		if pv.Exists() && pv.Kind() == cue.StringKind {
+			_ = pv.Decode(&m.Shell.Program)
+			m.Shell.HasProgram = true
+		}
+		av := sv.LookupPath(cue.ParsePath("argsTemplate"))
+		if av.Exists() && av.Kind() == cue.ListKind {
+			_ = av.Decode(&m.Shell.ArgsTemplate)
+			if len(m.Shell.ArgsTemplate) > 0 {
+				m.Shell.HasArgs = true
+			}
+		}
+		tv := sv.LookupPath(cue.ParsePath("timeoutMs"))
+		if tv.Exists() && tv.Kind() == cue.IntKind {
+			_ = tv.Decode(&m.Shell.TimeoutMs)
+			m.Shell.HasTimeout = true
+		}
+	}
+	// Optional postMap.inline
+	pm := v.LookupPath(cue.ParsePath("postMap"))
+	if pm.Exists() {
+		iv := pm.LookupPath(cue.ParsePath("inline"))
+		if iv.Exists() && iv.Kind() == cue.StringKind {
+			if err := iv.Decode(&m.PostMap.Inline); err == nil {
+				m.PostMap.HasInline = true
+			}
+		}
+	}
 	return m, nil
 }
 
@@ -143,6 +181,24 @@ type Filter struct {
 
 // Map holds optional map config.
 type Map struct {
+	Inline    string
+	HasInline bool
+}
+
+// Shell holds optional shell execution configuration.
+type Shell struct {
+	Enabled      bool
+	Program      string
+	ArgsTemplate []string
+	TimeoutMs    int
+	HasEnabled   bool
+	HasProgram   bool
+	HasArgs      bool
+	HasTimeout   bool
+}
+
+// PostMap holds optional post-map configuration.
+type PostMap struct {
 	Inline    string
 	HasInline bool
 }

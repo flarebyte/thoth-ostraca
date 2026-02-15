@@ -125,6 +125,28 @@ test("thoth run fails on invalid map Lua", () => {
   expect(run.stderr.includes("lua-map")).toBe(true);
 });
 
+test("thoth run executes shell and postmap", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/shell1.cue");
+  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/run/shell1_out.golden.json"), "utf8");
+  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe("");
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test("thoth run fails when shell program is missing", () => {
+  const root = path.resolve(__dirname, "../..");
+  const bin = buildBinary(root);
+  const cfg = path.join(root, "testdata/configs/shell_bad_prog.cue");
+  const run = spawnSync(bin, ["run", "--config", cfg], { encoding: "utf8", cwd: root });
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe("");
+  expect(run.stderr.includes("shell-exec")).toBe(true);
+});
+
 test("thoth run with missing field fails with short error", () => {
   const root = path.resolve(__dirname, "../..");
   const bin = buildBinary(root);

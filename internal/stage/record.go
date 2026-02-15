@@ -6,4 +6,13 @@ type Record struct {
 	Locator string         `json:"locator"`
 	Meta    map[string]any `json:"meta,omitempty"`
 	Mapped  any            `json:"mapped,omitempty"`
+	Shell   *ShellResult   `json:"shell,omitempty"`
+	Post    any            `json:"post,omitempty"`
+}
+
+// ShellResult captures deterministic outputs of a shell execution.
+type ShellResult struct {
+	ExitCode int    `json:"exitCode"`
+	Stdout   string `json:"stdout"`
+	Stderr   string `json:"stderr"`
 }
