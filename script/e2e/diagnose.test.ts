@@ -3,37 +3,16 @@ import { spawnSync } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { fileURLToPath } from "url";
+import { buildBinary, expectedJSONFromGolden, projectRoot, runThoth, saveOutputs } from "./helpers";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-function buildBinary(root: string) {
-  const binDir = path.join(root, ".e2e-bin");
-  fs.mkdirSync(binDir, { recursive: true });
-  const bin = path.join(binDir, process.platform === "win32" ? "thoth.exe" : "thoth");
-  const env = {
-    ...process.env,
-    CGO_ENABLED: "0",
-    GOCACHE: path.join(root, ".gocache"),
-    GOFLAGS: "-mod=mod",
-  } as Record<string, string>;
-  const build = spawnSync("go", ["build", "-o", bin, "./cmd/thoth"], {
-    cwd: root,
-    env,
-    encoding: "utf8",
-  });
-  if (build.status !== 0) {
-    throw new Error(`build failed (status ${build.status})\n${build.stdout}\n${build.stderr}`);
-  }
-  return bin;
-}
-
 test("diagnose echo prints expected JSON and writes dumps", () => {
-  const root = path.resolve(__dirname, "../..");
+  const root = projectRoot();
   const bin = buildBinary(root);
   const input = path.join(root, "testdata/diagnose/input.json");
-  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/diagnose/out.golden.json"), "utf8");
-  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const expectedOut = expectedJSONFromGolden(root, "testdata/diagnose/out.golden.json");
 
   const tmpRoot = path.join(root, "temp");
   fs.mkdirSync(tmpRoot, { recursive: true });
@@ -41,7 +20,7 @@ test("diagnose echo prints expected JSON and writes dumps", () => {
   const dumpIn = path.join(dumpDir, "in.json");
   const dumpOut = path.join(dumpDir, "out.json");
 
-  const run = spawnSync(
+  const run = runThoth(
     bin,
     [
       "diagnose",
@@ -54,13 +33,10 @@ test("diagnose echo prints expected JSON and writes dumps", () => {
       "--dump-out",
       dumpOut,
     ],
-    { encoding: "utf8", cwd: root }
+    root,
   );
   // Save outputs for inspection; temp/ is git-ignored
-  const tempDir = path.join(root, "temp");
-  fs.mkdirSync(tempDir, { recursive: true });
-  fs.writeFileSync(path.join(tempDir, "out.txt"), run.stdout);
-  fs.writeFileSync(path.join(tempDir, "err.txt"), (run as any).stderr ?? "");
+  saveOutputs(root, "diagnose-echo", run);
   expect(run.status).toBe(0);
   expect(run.stderr).toBe("");
   expect(run.stdout).toBe(expectedOut);
@@ -70,48 +46,36 @@ test("diagnose echo prints expected JSON and writes dumps", () => {
   expect(fs.existsSync(dumpOut)).toBe(true);
 
   const expectedDumpIn = JSON.stringify(JSON.parse(fs.readFileSync(input, "utf8")));
-  const expectedDumpOut = JSON.stringify(JSON.parse(expectedOutRaw));
+  const expectedDumpOut = JSON.stringify(JSON.parse(expectedOut));
   expect(fs.readFileSync(dumpIn, "utf8")).toBe(expectedDumpIn);
   expect(fs.readFileSync(dumpOut, "utf8")).toBe(expectedDumpOut);
 });
 
 test("diagnose validate-config produces expected envelope when --config is provided", () => {
-  const root = path.resolve(__dirname, "../..");
+  const root = projectRoot();
   const bin = buildBinary(root);
   const cfg = path.join(root, "testdata/configs/minimal.cue");
-  const expectedOutRaw = fs.readFileSync(path.join(root, "testdata/diagnose/validate_config_out.golden.json"), "utf8");
-  const expectedOut = JSON.stringify(JSON.parse(expectedOutRaw)) + "\n";
+  const expectedOut = expectedJSONFromGolden(root, "testdata/diagnose/validate_config_out.golden.json");
 
-  const run = spawnSync(
+  const run = runThoth(
     bin,
-    [
-      "diagnose",
-      "--stage",
-      "validate-config",
-      "--config",
-      cfg,
-    ],
-    { encoding: "utf8", cwd: root }
+    ["diagnose", "--stage", "validate-config", "--config", cfg],
+    root,
   );
   // Save outputs for inspection; temp/ is git-ignored
-  const tempDir2 = path.join(root, "temp");
-  fs.mkdirSync(tempDir2, { recursive: true });
-  fs.writeFileSync(path.join(tempDir2, "out.txt"), run.stdout);
-  fs.writeFileSync(path.join(tempDir2, "err.txt"), (run as any).stderr ?? "");
+  saveOutputs(root, "diagnose-validate-config", run);
   expect(run.status).toBe(0);
   expect(run.stderr).toBe("");
   expect(run.stdout).toBe(expectedOut);
 });
 
 test("diagnose discover-meta-files respects gitignore by default and can be disabled", () => {
-  const root = path.resolve(__dirname, "../..");
+  const root = projectRoot();
   const bin = buildBinary(root);
   const repoRoot = path.join(root, "testdata/repos/discovery1");
-  const expectedAllRaw = fs.readFileSync(path.join(root, "testdata/diagnose/discover_all_out.golden.json"), "utf8");
-  const expectedAll = JSON.stringify(JSON.parse(expectedAllRaw)) + "\n";
 
   // With no-gitignore: both files present
-  const runAll = spawnSync(
+  const runAll = runThoth(
     bin,
     [
       "diagnose",
@@ -121,13 +85,10 @@ test("diagnose discover-meta-files respects gitignore by default and can be disa
       repoRoot,
       "--no-gitignore",
     ],
-    { encoding: "utf8", cwd: root }
+    root,
   );
   // Save outputs for inspection; temp/ is git-ignored
-  const tempDir3 = path.join(root, "temp");
-  fs.mkdirSync(tempDir3, { recursive: true });
-  fs.writeFileSync(path.join(tempDir3, "out.txt"), runAll.stdout);
-  fs.writeFileSync(path.join(tempDir3, "err.txt"), (runAll as any).stderr ?? "");
+  saveOutputs(root, "diagnose-discover-no-gitignore", runAll);
   expect(runAll.status).toBe(0);
   expect(runAll.stderr).toBe("");
   const parsed = JSON.parse(runAll.stdout);
