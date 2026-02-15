@@ -1,7 +1,6 @@
 package diagnose
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -37,114 +36,13 @@ var Cmd = &cobra.Command{
 		if flagStage == "" {
 			return errors.New("missing required flag: --stage")
 		}
-		// If --in is provided, it takes precedence and --prepare is ignored.
 		if flagIn != "" {
-			inEnv, err := prepareDiagnoseInput(flagIn, flagConfig, "", false)
-			if err != nil {
-				return err
-			}
-			if flagDumpIn != "" {
-				if err := writeJSONFile(flagDumpIn, inEnv); err != nil {
-					return err
-				}
-			}
-			outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
-			if err != nil {
-				return err
-			}
-			if outEnv.Meta == nil {
-				outEnv.Meta = &stage.Meta{}
-			}
-			outEnv.Meta.ContractVersion = "1"
-			if flagDumpOut != "" {
-				if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-					return err
-				}
-			}
-			return printEnvelopeOneLine(os.Stdout, outEnv)
+			return runDiagnoseWithIn()
 		}
-
-		// If --prepare is set (and --in omitted), run the corresponding discovery stage first.
 		if flagPrepare != "" {
-			var firstStage string
-			switch flagPrepare {
-			case "meta-files":
-				firstStage = "discover-meta-files"
-			case "input-files":
-				firstStage = "discover-input-files"
-			default:
-				return fmt.Errorf("invalid prepare mode: %s", flagPrepare)
-			}
-			// Build minimal env with discovery from flags (root defaults to ".").
-			inEnv := stage.Envelope{Records: []stage.Record{}}
-			usedRoot := relativizeRoot(flagRoot)
-			inEnv.Meta = &stage.Meta{Discovery: &stage.DiscoveryMeta{Root: usedRoot, NoGitignore: flagNoGit}}
-			// Optional output when diagnosing without --in; only if flags deviate from defaults
-			if flagOut != "-" || flagPretty || flagLines {
-				inEnv.Meta.Output = &stage.OutputMeta{Out: flagOut, Pretty: flagPretty, Lines: flagLines}
-			}
-			// Run preparation stage
-			prepOut, err := stage.Run(context.Background(), firstStage, inEnv, stage.Deps{})
-			if err != nil {
-				return err
-			}
-			if flagDumpIn != "" {
-				if err := writeJSONFile(flagDumpIn, prepOut); err != nil {
-					return err
-				}
-			}
-			// Execute target stage using prepared input
-			outEnv, err := stage.Run(context.Background(), flagStage, prepOut, stage.Deps{})
-			if err != nil {
-				return err
-			}
-			if outEnv.Meta == nil {
-				outEnv.Meta = &stage.Meta{}
-			}
-			outEnv.Meta.ContractVersion = "1"
-			if flagDumpOut != "" {
-				if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-					return err
-				}
-			}
-			return printEnvelopeOneLine(os.Stdout, outEnv)
+			return runDiagnoseWithPrepare()
 		}
-
-		// Neither --in nor --prepare: keep existing behavior.
-		// Only apply discovery flags when explicitly provided by the user.
-		changedRoot := cmd.Flags().Changed("root")
-		changedNoGit := cmd.Flags().Changed("no-gitignore")
-		baseRoot := ""
-		baseNoGit := false
-		if changedRoot {
-			baseRoot = relativizeRoot(flagRoot)
-		}
-		if changedNoGit {
-			baseNoGit = flagNoGit
-		}
-		inEnv, err := prepareDiagnoseInput("", flagConfig, baseRoot, baseNoGit)
-		if err != nil {
-			return err
-		}
-		if flagDumpIn != "" {
-			if err := writeJSONFile(flagDumpIn, inEnv); err != nil {
-				return err
-			}
-		}
-		outEnv, err := stage.Run(context.Background(), flagStage, inEnv, stage.Deps{})
-		if err != nil {
-			return err
-		}
-		if outEnv.Meta == nil {
-			outEnv.Meta = &stage.Meta{}
-		}
-		outEnv.Meta.ContractVersion = "1"
-		if flagDumpOut != "" {
-			if err := writeJSONFile(flagDumpOut, outEnv); err != nil {
-				return err
-			}
-		}
-		return printEnvelopeOneLine(os.Stdout, outEnv)
+		return runDiagnoseDefault(cmd)
 	},
 }
 

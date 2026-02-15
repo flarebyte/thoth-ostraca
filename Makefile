@@ -42,6 +42,10 @@ release: build
 clean:
 	rm -rf build
 
+complexity:
+	scc --sort complexity --by-file -i go . | head -n 15
+	scc --sort complexity --by-file -i ts . | head -n 15
+
 help:
 	@printf "Targets:\n"
 	@printf "  lint     Run linters (Biome + go vet).\n"
