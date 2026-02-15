@@ -1,1 +1,4 @@
-{"records":[{"locator":"x"}],"meta":{"contractVersion":"1","stage":"echo"}}
+{
+  "records": [{ "locator": "x" }],
+  "meta": { "contractVersion": "1", "stage": "echo" }
+}

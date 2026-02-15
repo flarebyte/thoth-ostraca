@@ -1,2 +1,6 @@
-{"records":[{"locator":"a.thoth.yaml"},{"locator":"ignored/x.thoth.yaml"}]}
-
+{
+  "records": [
+    { "locator": "a.thoth.yaml" },
+    { "locator": "ignored/x.thoth.yaml" }
+  ]
+}

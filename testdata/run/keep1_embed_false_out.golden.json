@@ -1,1 +1,35 @@
-{"records":[{"locator":"a","meta":{"enabled":true,"name":"OK"},"mapped":{"locator":"a","name":"OK"},"post":{"locator":"a"}},{"locator":"badyaml.thoth.yaml"},{"locator":"luaerr","meta":{"enabled":true,"name":"LuaErr"}}],"meta":{"contractVersion":"1","config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/keep1"},"lua":{"filterInline":"return true","mapInline":"if (meta and meta.name) == \"LuaErr\" then error(\"boom\") end; return { locator = locator, name = meta and meta.name }"},"reduced":3,"errors":{"mode":"keep-going"}},"errors":[{"stage":"lua-map","locator":"luaerr","message":"<string>:1: boom\nstack traceback:\n\t[G]: in function 'error'\n\t<string>:1: in main chunk\n\t[G]: ?"},{"stage":"parse-validate-yaml","locator":"badyaml.thoth.yaml","message":"missing required field: meta"}]}
+{
+  "records": [
+    {
+      "locator": "a",
+      "meta": { "enabled": true, "name": "OK" },
+      "mapped": { "locator": "a", "name": "OK" },
+      "post": { "locator": "a" }
+    },
+    { "locator": "badyaml.thoth.yaml" },
+    { "locator": "luaerr", "meta": { "enabled": true, "name": "LuaErr" } }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "nop" },
+    "discovery": { "root": "testdata/repos/keep1" },
+    "lua": {
+      "filterInline": "return true",
+      "mapInline": "if (meta and meta.name) == \"LuaErr\" then error(\"boom\") end; return { locator = locator, name = meta and meta.name }"
+    },
+    "reduced": 3,
+    "errors": { "mode": "keep-going" }
+  },
+  "errors": [
+    {
+      "stage": "lua-map",
+      "locator": "luaerr",
+      "message": "<string>:1: boom\nstack traceback:\n\t[G]: in function 'error'\n\t<string>:1: in main chunk\n\t[G]: ?"
+    },
+    {
+      "stage": "parse-validate-yaml",
+      "locator": "badyaml.thoth.yaml",
+      "message": "missing required field: meta"
+    }
+  ]
+}

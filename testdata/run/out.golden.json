@@ -1,1 +1,7 @@
-{"records":[],"meta":{"contractVersion":"1","config":{"configVersion":"v0","action":"nop"}}}
+{
+  "records": [],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "nop" }
+  }
+}

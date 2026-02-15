@@ -6,7 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**/*.mts"],
+    "includes": ["**/*.mts", "**/*.ts", "**/*.json"],
     "ignoreUnknown": false
   },
   "formatter": {

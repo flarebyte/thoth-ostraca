@@ -1,1 +1,17 @@
-{"records":[{"locator":"a","meta":{"enabled":true,"name":"A"},"mapped":{"locator":"a","meta":{"enabled":true,"name":"A"}},"post":{"locator":"a"}}],"meta":{"contractVersion":"1","config":{"configVersion":"v0","action":"nop"},"discovery":{"root":"testdata/repos/yaml1"},"lua":{"filterInline":"return (meta and meta.enabled) == true"},"reduced":1}}
+{
+  "records": [
+    {
+      "locator": "a",
+      "meta": { "enabled": true, "name": "A" },
+      "mapped": { "locator": "a", "meta": { "enabled": true, "name": "A" } },
+      "post": { "locator": "a" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "nop" },
+    "discovery": { "root": "testdata/repos/yaml1" },
+    "lua": { "filterInline": "return (meta and meta.enabled) == true" },
+    "reduced": 1
+  }
+}
