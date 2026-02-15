@@ -24,59 +24,11 @@ func ValidateEnvelopeShape(e Envelope) error {
 	if err := json.Unmarshal(b, &g); err != nil {
 		return err
 	}
-	// Allowed top-level keys
-	allowedTop := map[string]bool{"records": true, "meta": true, "errors": true}
-	for k := range g {
-		if !allowedTop[k] {
-			return errors.New("unexpected top-level key: " + k)
-		}
+	if err := validateTopLevel(g); err != nil {
+		return err
 	}
-	// records array
-	recs, ok := g["records"].([]any)
-	if !ok {
-		return errors.New("records must be array")
-	}
-	for _, it := range recs {
-		m, ok := it.(map[string]any)
-		if !ok {
-			return errors.New("record must be object")
-		}
-		// allowed record keys
-		allowedRec := map[string]bool{
-			"locator": true, "meta": true, "mapped": true, "shell": true, "post": true, "error": true, "fileInfo": true, "git": true,
-		}
-		for k := range m {
-			if !allowedRec[k] {
-				return errors.New("unexpected record key: " + k)
-			}
-		}
-		if loc, ok := m["locator"]; ok {
-			if _, ok := loc.(string); !ok {
-				return errors.New("record.locator must be string")
-			}
-		}
-		if errv, hasErr := m["error"]; hasErr && errv != nil {
-			em, ok := errv.(map[string]any)
-			if !ok {
-				return errors.New("record.error must be object")
-			}
-			if _, ok := em["stage"].(string); !ok {
-				return errors.New("record.error.stage must be string")
-			}
-			if _, ok := em["message"].(string); !ok {
-				return errors.New("record.error.message must be string")
-			}
-			if loc, ok := em["locator"]; ok && loc != nil {
-				if _, ok := loc.(string); !ok {
-					return errors.New("record.error.locator must be string")
-				}
-			}
-			for k := range em {
-				if k != "stage" && k != "message" && k != "locator" {
-					return errors.New("unexpected error key: " + k)
-				}
-			}
-		}
+	if err := validateRecordsSection(g["records"]); err != nil {
+		return err
 	}
 	return nil
 }
@@ -103,27 +55,13 @@ func runActionWithConfig(t *testing.T, cfgPath string) (Envelope, []byte) {
 	if out.Meta != nil && out.Meta.Config != nil && out.Meta.Config.Action != "" {
 		action = out.Meta.Config.Action
 	}
-	var stages []string
-	switch action {
-	case "pipeline", "nop":
-		stages = []string{"discover-meta-files", "parse-validate-yaml", "validate-locators", "lua-filter", "lua-map", "shell-exec", "lua-postmap", "lua-reduce"}
-	case "validate":
-		stages = []string{"discover-meta-files", "parse-validate-yaml", "validate-locators"}
-	case "create-meta":
-		stages = []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "write-meta-files"}
-	case "update-meta":
-		stages = []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "load-existing-meta", "merge-meta", "write-updated-meta-files"}
-	case "diff-meta":
-		stages = []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "discover-meta-files", "compute-meta-diff"}
-	default:
-		t.Fatalf("unknown action: %s", action)
+	stages, selErr := selectStages(action)
+	if selErr != nil {
+		t.Fatalf("%v", selErr)
 	}
-	cur := out
-	for _, s := range stages {
-		cur, err = Run(ctx, s, cur, Deps{})
-		if err != nil {
-			t.Fatalf("stage %s: %v", s, err)
-		}
+	cur, failedStage, runErr := runStagesTest(ctx, stages, out)
+	if runErr != nil {
+		t.Fatalf("stage %s: %v", failedStage, runErr)
 	}
 	b, err := encodeEnvelopeContract(cur)
 	if err != nil {
