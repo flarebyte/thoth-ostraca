@@ -3,7 +3,7 @@
 ## - No dynamic variables or shell logic
 ## - Real logic lives in scripts (TypeScript/Bun, bash, Go)
 
-.PHONY: lint format test gen build build-dev e2e release clean help
+.PHONY: lint format test test-race gen build build-dev e2e release clean help
 
 BIOME := npx @biomejs/biome
 BUN := bun
@@ -22,6 +22,9 @@ format:
 
 test: gen
 	$(GO) test ./...
+
+test-race: gen
+	$(GO) test -race ./...
 
 gen:
 	true
@@ -54,6 +57,7 @@ help:
 	@printf "  lint     Run linters (Biome + go vet).\n"
 	@printf "  format   Apply formatting (gofmt + Biome).\n"
 	@printf "  test     Run Go tests.\n"
+	@printf "  test-race Run Go tests with race detector.\n"
 	@printf "  gen      Generate artifacts (no-op placeholder).\n"
 	@printf "  build    Build Go binaries via Bun script.\n"
 	@printf "  build-dev Build dev binary into .e2e-bin/.\n"
