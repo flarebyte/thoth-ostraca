@@ -52,6 +52,34 @@ test('thoth run executes discovery and respects gitignore by default', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run pipeline discovery excludes ignored meta files by default', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p3_discovery_default.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p3_discovery_default_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run pipeline discovery includes ignored meta files when noGitignore=true', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p3_discovery_no_gitignore.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p3_discovery_no_gitignore_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('thoth run parses YAML records into {locator,meta}', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

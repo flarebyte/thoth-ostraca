@@ -1,0 +1,12 @@
+{
+  "records": [
+    { "locator": "00-root.thoth.yaml" },
+    { "locator": "10-nested/20-child.thoth.yaml" },
+    { "locator": "10-nested/30-deep/40-leaf.thoth.yaml" },
+    { "locator": "90-ignored/95-hidden.thoth.yaml" }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "discovery": { "root": "testdata/repos/p3_discovery1", "noGitignore": true }
+  }
+}

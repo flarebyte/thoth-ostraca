@@ -1,6 +1,7 @@
 package stage
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -77,20 +78,42 @@ func matchIgnore(absRoot string, rel string, isDir bool) bool {
 	return m.Match(comps, isDir)
 }
 
+func displayDiscoveryPath(absRoot string, p string) string {
+	rel, err := filepath.Rel(absRoot, p)
+	if err == nil {
+		return filepath.ToSlash(rel)
+	}
+	return filepath.ToSlash(p)
+}
+
 // findThothYAMLs walks absRoot and returns sorted relative locators of *.thoth.yaml files,
 // respecting .gitignore patterns unless noGitignore is true.
-func findThothYAMLs(absRoot string, noGitignore bool) ([]string, error) {
+func findThothYAMLs(absRoot string, noGitignore bool, mode string) ([]string, []Error, error) {
 	var locators []string
+	var envErrs []Error
 	err := filepath.WalkDir(absRoot, func(p string, d fs.DirEntry, err error) error {
 		if err != nil {
-			return err
+			pathLabel := displayDiscoveryPath(absRoot, p)
+			if mode == "keep-going" {
+				envErrs = append(envErrs, Error{Stage: "discover-meta-files", Locator: pathLabel, Message: err.Error()})
+				if d != nil && d.IsDir() {
+					return fs.SkipDir
+				}
+				return nil
+			}
+			return fmt.Errorf("discover-meta-files: %s: %v", pathLabel, err)
 		}
 		if p == absRoot {
 			return nil
 		}
 		rel, err := filepath.Rel(absRoot, p)
 		if err != nil {
-			return err
+			pathLabel := displayDiscoveryPath(absRoot, p)
+			if mode == "keep-going" {
+				envErrs = append(envErrs, Error{Stage: "discover-meta-files", Locator: pathLabel, Message: err.Error()})
+				return nil
+			}
+			return fmt.Errorf("discover-meta-files: %s: %v", pathLabel, err)
 		}
 		isDir := d.IsDir()
 		if !noGitignore {
@@ -107,8 +130,8 @@ func findThothYAMLs(absRoot string, noGitignore bool) ([]string, error) {
 		return nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	sort.Strings(locators)
-	return locators, nil
+	return locators, envErrs, nil
 }

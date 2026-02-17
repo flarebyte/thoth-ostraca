@@ -1,0 +1,49 @@
+{
+  "records": [
+    {
+      "locator": "00-root",
+      "meta": { "kind": "p3-discovery", "order": 1 },
+      "mapped": {
+        "locator": "00-root",
+        "meta": { "kind": "p3-discovery", "order": 1 }
+      },
+      "post": { "locator": "00-root" }
+    },
+    {
+      "locator": "10-child",
+      "meta": { "kind": "p3-discovery", "order": 2 },
+      "mapped": {
+        "locator": "10-child",
+        "meta": { "kind": "p3-discovery", "order": 2 }
+      },
+      "post": { "locator": "10-child" }
+    },
+    {
+      "locator": "40-leaf",
+      "meta": { "kind": "p3-discovery", "order": 3 },
+      "mapped": {
+        "locator": "40-leaf",
+        "meta": { "kind": "p3-discovery", "order": 3 }
+      },
+      "post": { "locator": "40-leaf" }
+    },
+    {
+      "locator": "95-hidden",
+      "meta": { "kind": "p3-discovery", "order": 4 },
+      "mapped": {
+        "locator": "95-hidden",
+        "meta": { "kind": "p3-discovery", "order": 4 }
+      },
+      "post": { "locator": "95-hidden" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "pipeline" },
+    "discovery": {
+      "root": "testdata/repos/p3_discovery1",
+      "noGitignore": true
+    },
+    "reduced": 4
+  }
+}
