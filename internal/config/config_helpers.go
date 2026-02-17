@@ -77,9 +77,11 @@ type LocatorPolicy struct {
 	AllowAbsolute   bool
 	AllowParentRefs bool
 	PosixStyle      bool
+	AllowURLs       bool
 	HasAllowAbs     bool
 	HasAllowParent  bool
 	HasPosix        bool
+	HasAllowURLs    bool
 }
 
 // parseLocatorPolicySection extracts optional locatorPolicy.* fields.
@@ -103,6 +105,11 @@ func parseLocatorPolicySection(v cue.Value) LocatorPolicy {
 	if psv.Exists() && psv.Kind() == cue.BoolKind {
 		_ = psv.Decode(&lp.PosixStyle)
 		lp.HasPosix = true
+	}
+	auv := pv.LookupPath(cue.ParsePath("allowURLs"))
+	if auv.Exists() && auv.Kind() == cue.BoolKind {
+		_ = auv.Decode(&lp.AllowURLs)
+		lp.HasAllowURLs = true
 	}
 	return lp
 }

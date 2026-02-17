@@ -61,6 +61,7 @@ type LocatorPolicy struct {
 	AllowAbsolute   bool `json:"allowAbsolute"`
 	AllowParentRefs bool `json:"allowParentRefs"`
 	PosixStyle      bool `json:"posixStyle"`
+	AllowURLs       bool `json:"allowURLs"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.

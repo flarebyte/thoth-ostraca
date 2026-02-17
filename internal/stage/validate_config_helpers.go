@@ -139,9 +139,14 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	}
 
 	// LocatorPolicy
-	if (min.LocatorPolicy.HasAllowAbs || min.LocatorPolicy.HasAllowParent || min.LocatorPolicy.HasPosix) || out.Meta.LocatorPolicy != nil {
+	if (min.LocatorPolicy.HasAllowAbs || min.LocatorPolicy.HasAllowParent || min.LocatorPolicy.HasPosix || min.LocatorPolicy.HasAllowURLs) || out.Meta.LocatorPolicy != nil {
 		if out.Meta.LocatorPolicy == nil {
-			out.Meta.LocatorPolicy = &LocatorPolicy{}
+			out.Meta.LocatorPolicy = &LocatorPolicy{
+				AllowAbsolute:   false,
+				AllowParentRefs: false,
+				PosixStyle:      true,
+				AllowURLs:       false,
+			}
 		}
 		if min.LocatorPolicy.HasAllowAbs {
 			out.Meta.LocatorPolicy.AllowAbsolute = min.LocatorPolicy.AllowAbsolute
@@ -151,6 +156,9 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 		if min.LocatorPolicy.HasPosix {
 			out.Meta.LocatorPolicy.PosixStyle = min.LocatorPolicy.PosixStyle
+		}
+		if min.LocatorPolicy.HasAllowURLs {
+			out.Meta.LocatorPolicy.AllowURLs = min.LocatorPolicy.AllowURLs
 		}
 	}
 }

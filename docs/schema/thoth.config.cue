@@ -62,6 +62,7 @@ PipelineConfig: {
     allowAbsolute?: bool | false
     allowParentRefs?: bool | false
     posixStyle?: bool | true
+    allowURLs?: bool | false
   }
 
   // Diff options
@@ -122,4 +123,3 @@ PipelineConfig: {
 InlineScript: {
   inline: string
 }
-
