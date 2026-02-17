@@ -56,6 +56,22 @@ func parseDiscoverySection(v cue.Value) Discovery {
 	return d
 }
 
+// parseValidationSection extracts optional validation.allowUnknownTopLevel.
+func parseValidationSection(v cue.Value) Validation {
+	var val Validation
+	vv := v.LookupPath(cue.ParsePath("validation"))
+	if !vv.Exists() {
+		return val
+	}
+	auv := vv.LookupPath(cue.ParsePath("allowUnknownTopLevel"))
+	if auv.Exists() && (auv.Kind() == cue.BoolKind) {
+		if err := auv.Decode(&val.AllowUnknownTopLevel); err == nil {
+			val.HasAllowUnknownTop = true
+		}
+	}
+	return val
+}
+
 // LocatorPolicy holds optional locator policy booleans and presence flags.
 type LocatorPolicy struct {
 	AllowAbsolute   bool

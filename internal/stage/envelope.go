@@ -24,23 +24,29 @@ type ConfigMeta struct {
 
 // Meta holds optional metadata with deterministic JSON field order.
 type Meta struct {
-	ContractVersion string         `json:"contractVersion,omitempty"`
-	Stage           string         `json:"stage,omitempty"`
-	ConfigPath      string         `json:"configPath,omitempty"`
-	Config          *ConfigMeta    `json:"config,omitempty"`
-	Discovery       *DiscoveryMeta `json:"discovery,omitempty"`
-	LocatorPolicy   *LocatorPolicy `json:"locatorPolicy,omitempty"`
-	FileInfo        *FileInfoMeta  `json:"fileInfo,omitempty"`
-	Git             *GitMeta       `json:"git,omitempty"`
-	Inputs          []string       `json:"inputs,omitempty"`
-	MetaFiles       []string       `json:"metaFiles,omitempty"`
-	Diff            *DiffReport    `json:"diff,omitempty"`
-	Lua             *LuaMeta       `json:"lua,omitempty"`
-	Shell           *ShellMeta     `json:"shell,omitempty"`
-	Output          *OutputMeta    `json:"output,omitempty"`
-	Reduced         any            `json:"reduced,omitempty"`
-	Errors          *ErrorsMeta    `json:"errors,omitempty"`
-	Workers         int            `json:"workers,omitempty"`
+	ContractVersion string          `json:"contractVersion,omitempty"`
+	Stage           string          `json:"stage,omitempty"`
+	ConfigPath      string          `json:"configPath,omitempty"`
+	Config          *ConfigMeta     `json:"config,omitempty"`
+	Discovery       *DiscoveryMeta  `json:"discovery,omitempty"`
+	Validation      *ValidationMeta `json:"validation,omitempty"`
+	LocatorPolicy   *LocatorPolicy  `json:"locatorPolicy,omitempty"`
+	FileInfo        *FileInfoMeta   `json:"fileInfo,omitempty"`
+	Git             *GitMeta        `json:"git,omitempty"`
+	Inputs          []string        `json:"inputs,omitempty"`
+	MetaFiles       []string        `json:"metaFiles,omitempty"`
+	Diff            *DiffReport     `json:"diff,omitempty"`
+	Lua             *LuaMeta        `json:"lua,omitempty"`
+	Shell           *ShellMeta      `json:"shell,omitempty"`
+	Output          *OutputMeta     `json:"output,omitempty"`
+	Reduced         any             `json:"reduced,omitempty"`
+	Errors          *ErrorsMeta     `json:"errors,omitempty"`
+	Workers         int             `json:"workers,omitempty"`
+}
+
+// ValidationMeta controls strictness for top-level YAML fields.
+type ValidationMeta struct {
+	AllowUnknownTopLevel bool `json:"allowUnknownTopLevel"`
 }
 
 // DiffReport holds a minimal diff summary for meta files.

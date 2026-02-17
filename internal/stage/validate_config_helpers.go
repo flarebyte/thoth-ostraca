@@ -35,6 +35,14 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 	}
 
+	// Validation
+	if min.Validation.HasAllowUnknownTop {
+		if out.Meta.Validation == nil {
+			out.Meta.Validation = &ValidationMeta{}
+		}
+		out.Meta.Validation.AllowUnknownTopLevel = min.Validation.AllowUnknownTopLevel
+	}
+
 	// Lua: filter, map, postmap, reduce
 	if min.Filter.HasInline {
 		if out.Meta.Lua == nil {

@@ -24,10 +24,17 @@ func determineRoot(in Envelope) string {
 	return root
 }
 
+func allowUnknownTopLevel(in Envelope) bool {
+	if in.Meta != nil && in.Meta.Validation != nil {
+		return in.Meta.Validation.AllowUnknownTopLevel
+	}
+	return false
+}
+
 // processYAMLRecord reads, parses, and validates a single YAML record according to the
 // stage rules, returning either a kv pair on success, or an env error (keep-going) or
 // fatal error.
-func processYAMLRecord(rec Record, root string, mode string) (yamlKV, *Error, error) {
+func processYAMLRecord(rec Record, root string, mode string, allowUnknownTop bool) (yamlKV, *Error, error) {
 	locator := rec.Locator
 
 	p := filepath.Join(root, filepath.FromSlash(locator))
@@ -51,6 +58,16 @@ func processYAMLRecord(rec Record, root string, mode string) (yamlKV, *Error, er
 			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: "top-level must be mapping"}, nil
 		}
 		return yamlKV{}, nil, fmt.Errorf("invalid YAML %s: top-level must be mapping", p)
+	}
+	if !allowUnknownTop {
+		for k := range ym {
+			if k != "locator" && k != "meta" {
+				if mode == "keep-going" {
+					return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: fmt.Sprintf("unknown top-level field: %s", k)}, nil
+				}
+				return yamlKV{}, nil, fmt.Errorf("invalid YAML %s: unknown top-level field: %s", p, k)
+			}
+		}
 	}
 	yloc, ok := ym["locator"]
 	if !ok {

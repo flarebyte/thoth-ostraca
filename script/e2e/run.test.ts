@@ -341,6 +341,39 @@ test('thoth run pipeline parse-validate-yaml keep-going embeds record errors and
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run strict top-level default rejects unknown keys', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p3_yaml_strict_default.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p3_yaml_strict_default_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-p3-yaml-strict-default', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run strict top-level allowUnknownTopLevel accepts unknown keys and drops them', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(
+    root,
+    'testdata/configs/p3_yaml_strict_allow_unknown.cue',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p3_yaml_strict_allow_unknown_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-p3-yaml-strict-allow-unknown', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('thoth run parses YAML records into {locator,meta}', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

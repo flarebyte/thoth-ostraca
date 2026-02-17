@@ -42,6 +42,7 @@ type Minimal struct {
 	ConfigVersion string
 	Action        string
 	Discovery     Discovery
+	Validation    Validation
 	LocatorPolicy LocatorPolicy
 	FileInfo      FileInfo
 	Git           Git
@@ -78,6 +79,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	}
 	// Optional sections
 	m.Discovery = parseDiscoverySection(v)
+	m.Validation = parseValidationSection(v)
 	m.LocatorPolicy = parseLocatorPolicySection(v)
 	m.FileInfo = parseFileInfoSection(v)
 	m.Git = parseGitSection(v)
@@ -90,6 +92,12 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Errors = parseErrorsSection(v)
 	m.Workers = parseWorkersSection(v)
 	return m, nil
+}
+
+// Validation holds optional validation config and presence flags.
+type Validation struct {
+	AllowUnknownTopLevel bool
+	HasAllowUnknownTop   bool
 }
 
 // Discovery holds optional discovery config and presence flags.

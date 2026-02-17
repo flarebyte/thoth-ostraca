@@ -9,13 +9,14 @@ import (
 func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	// Determine root
 	root := determineRoot(in)
+	allowUnknownTop := allowUnknownTopLevel(in)
 
 	// Collect output
 	outs := make([]yamlKV, 0, len(in.Records))
 	mode, _ := errorMode(in.Meta)
 	if mode != "keep-going" {
 		for _, rec := range in.Records {
-			kv, _, fatal := processYAMLRecord(rec, root, mode)
+			kv, _, fatal := processYAMLRecord(rec, root, mode, allowUnknownTop)
 			if fatal != nil {
 				return Envelope{}, fatal
 			}
@@ -45,7 +46,7 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 		defer wg.Done()
 		for item := range jobs {
 			rec := in.Records[item]
-			kv, envE, fatal := processYAMLRecord(rec, root, mode)
+			kv, envE, fatal := processYAMLRecord(rec, root, mode, allowUnknownTop)
 			results <- res{kv: kv, envE: envE, fatal: fatal}
 		}
 	}
