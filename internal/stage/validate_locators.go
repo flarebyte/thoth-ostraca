@@ -6,7 +6,6 @@ import (
 	"net/url"
 	"sort"
 	"strings"
-	"sync"
 )
 
 const validateLocatorsStage = "validate-locators"
@@ -114,87 +113,59 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 	mode, embed := errorMode(in.Meta)
 	p := policyFromMeta(in.Meta)
 	n := len(in.Records)
-	jobs := make(chan int)
-	results := make(chan validateLocRes)
-	var wg sync.WaitGroup
 	var envErrs []Error
-	var mu sync.Mutex
-	worker := func() {
-		defer wg.Done()
-		for idx := range jobs {
-			r := in.Records[idx]
-			// Pass through records that already have an error
-			if r.Error != nil {
-				results <- validateLocRes{idx: idx, rec: r}
-				continue
-			}
-			_, isURL := parseHTTPURLLocator(r.Locator)
-			if isURL {
-				if !p.allowURLs {
-					msg := "URL locators are not allowed"
-					if mode == "keep-going" {
-						rr := r
-						if embed {
-							rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
-						}
-						results <- validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
-						continue
-					}
-					results <- validateLocRes{idx: idx, fatal: &ErrInvalidLocator{msg: msg, locator: r.Locator}}
-					continue
-				}
-				normalized, err := normalizeHTTPURLLocator(r.Locator)
-				if err != nil {
-					msg := "invalid URL locator"
-					if mode == "keep-going" {
-						rr := r
-						if embed {
-							rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
-						}
-						results <- validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
-						continue
-					}
-					results <- validateLocRes{idx: idx, fatal: err}
-					continue
-				}
-				rr := r
-				rr.Locator = normalized
-				results <- validateLocRes{idx: idx, rec: rr}
-				continue
-			}
-			if bad, msg := violatesPathPolicy(r.Locator, p); bad {
+	workers := getWorkers(in.Meta)
+	results := runIndexedParallel(n, workers, func(idx int) validateLocRes {
+		r := in.Records[idx]
+		// Pass through records that already have an error
+		if r.Error != nil {
+			return validateLocRes{idx: idx, rec: r}
+		}
+		_, isURL := parseHTTPURLLocator(r.Locator)
+		if isURL {
+			if !p.allowURLs {
+				msg := "URL locators are not allowed"
 				if mode == "keep-going" {
 					rr := r
 					if embed {
 						rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
 					}
-					results <- validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
-					continue
+					return validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
 				}
-				results <- validateLocRes{idx: idx, fatal: &ErrInvalidLocator{msg: msg, locator: r.Locator}}
-				continue
+				return validateLocRes{idx: idx, fatal: &ErrInvalidLocator{msg: msg, locator: r.Locator}}
 			}
-			results <- validateLocRes{idx: idx, rec: r}
+			normalized, err := normalizeHTTPURLLocator(r.Locator)
+			if err != nil {
+				msg := "invalid URL locator"
+				if mode == "keep-going" {
+					rr := r
+					if embed {
+						rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
+					}
+					return validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
+				}
+				return validateLocRes{idx: idx, fatal: err}
+			}
+			rr := r
+			rr.Locator = normalized
+			return validateLocRes{idx: idx, rec: rr}
 		}
-	}
-	workers := getWorkers(in.Meta)
-	for w := 0; w < workers; w++ {
-		wg.Add(1)
-		go worker()
-	}
-	go func() {
-		for i := range in.Records {
-			jobs <- i
+		if bad, msg := violatesPathPolicy(r.Locator, p); bad {
+			if mode == "keep-going" {
+				rr := r
+				if embed {
+					rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
+				}
+				return validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
+			}
+			return validateLocRes{idx: idx, fatal: &ErrInvalidLocator{msg: msg, locator: r.Locator}}
 		}
-		close(jobs)
-	}()
+		return validateLocRes{idx: idx, rec: r}
+	})
 	var firstErr error
-	for i := 0; i < n; i++ {
-		rr := <-results
+	for _, rr := range results {
 		if rr.envE != nil {
-			mu.Lock()
 			envErrs = append(envErrs, *rr.envE)
-			mu.Unlock()
 		}
 		if rr.fatal != nil && firstErr == nil {
 			firstErr = rr.fatal
@@ -203,7 +174,6 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 			out.Records[rr.idx] = rr.rec
 		}
 	}
-	wg.Wait()
 	if firstErr != nil {
 		return Envelope{}, firstErr
 	}
