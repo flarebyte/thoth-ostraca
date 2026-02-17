@@ -1,0 +1,4 @@
+locator: "extra-loc"
+meta:
+  kind: "extra"
+extra: 1

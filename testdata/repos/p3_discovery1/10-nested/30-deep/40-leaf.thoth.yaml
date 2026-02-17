@@ -1,0 +1,4 @@
+locator: "40-leaf"
+meta:
+  kind: "p3-discovery"
+  order: 3

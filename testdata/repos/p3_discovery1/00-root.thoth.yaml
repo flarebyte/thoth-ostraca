@@ -1,0 +1,4 @@
+locator: "00-root"
+meta:
+  kind: "p3-discovery"
+  order: 1

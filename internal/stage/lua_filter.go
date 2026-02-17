@@ -2,7 +2,6 @@ package stage
 
 import (
 	"context"
-	"sync"
 )
 
 func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
@@ -17,36 +16,16 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	keeps := make([]bool, n)
 	outs := make([]Record, n)
 	var envErrs []Error
-	var mu sync.Mutex
 	workers := getWorkers(in.Meta)
-	jobs := make(chan int)
-	results := make(chan luaFilterRes)
-	var wg sync.WaitGroup
-	worker := func() {
-		defer wg.Done()
-		for idx := range jobs {
-			r := in.Records[idx]
-			keep, outRec, envE, fatal := processLuaFilterRecord(r, pred, mode)
-			results <- luaFilterRes{idx: idx, keep: keep, out: outRec, envE: envE, fatal: fatal}
-		}
-	}
-	for w := 0; w < workers; w++ {
-		wg.Add(1)
-		go worker()
-	}
-	go func() {
-		for i := range in.Records {
-			jobs <- i
-		}
-		close(jobs)
-	}()
+	results := runIndexedParallel(n, workers, func(idx int) luaFilterRes {
+		r := in.Records[idx]
+		keep, outRec, envE, fatal := processLuaFilterRecord(r, pred, mode)
+		return luaFilterRes{idx: idx, keep: keep, out: outRec, envE: envE, fatal: fatal}
+	})
 	var firstErr error
-	for i := 0; i < n; i++ {
-		rr := <-results
+	for _, rr := range results {
 		if rr.envE != nil {
-			mu.Lock()
 			envErrs = append(envErrs, *rr.envE)
-			mu.Unlock()
 		}
 		if rr.fatal != nil && firstErr == nil {
 			firstErr = rr.fatal
@@ -56,7 +35,6 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 			outs[rr.idx] = rr.out
 		}
 	}
-	wg.Wait()
 	if firstErr != nil {
 		return Envelope{}, firstErr
 	}

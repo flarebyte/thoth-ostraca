@@ -1,0 +1,41 @@
+{
+  "records": [
+    {
+      "locator": "http://example.com/a",
+      "meta": { "kind": "url2" },
+      "mapped": {
+        "locator": "http://example.com/a",
+        "meta": { "kind": "url2" }
+      },
+      "post": { "locator": "http://example.com/a" }
+    },
+    {
+      "locator": "https://example.com/",
+      "meta": { "kind": "url1" },
+      "mapped": {
+        "locator": "https://example.com/",
+        "meta": { "kind": "url1" }
+      },
+      "post": { "locator": "https://example.com/" }
+    },
+    {
+      "locator": "ok/path",
+      "meta": { "kind": "path1" },
+      "mapped": { "locator": "ok/path", "meta": { "kind": "path1" } },
+      "post": { "locator": "ok/path" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "pipeline" },
+    "discovery": { "root": "testdata/repos/p3_locator_urls1" },
+    "locatorPolicy": {
+      "allowAbsolute": false,
+      "allowParentRefs": false,
+      "posixStyle": true,
+      "allowURLs": true
+    },
+    "reduced": 3,
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  }
+}

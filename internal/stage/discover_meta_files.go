@@ -12,17 +12,22 @@ func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	}
 	root := in.Meta.Discovery.Root
 	noGitignore := in.Meta.Discovery.NoGitignore
+	followSymlinks := in.Meta.Discovery.FollowSymlinks
+	mode, _ := errorMode(in.Meta)
 
 	absRoot, err := filepath.Abs(root)
 	if err != nil {
 		return Envelope{}, err
 	}
 
-	locators, err := findThothYAMLs(absRoot, noGitignore)
+	locators, envErrs, err := findThothYAMLs(absRoot, noGitignore, followSymlinks, mode)
 	if err != nil {
 		return Envelope{}, err
 	}
 	out := in
+	if len(envErrs) > 0 {
+		out.Errors = append(out.Errors, envErrs...)
+	}
 	out.Records = make([]Record, 0, len(locators))
 	for _, l := range locators {
 		out.Records = append(out.Records, Record{Locator: l})

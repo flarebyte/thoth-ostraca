@@ -2,7 +2,6 @@ package stage
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	lua "github.com/yuin/gopher-lua"
@@ -111,30 +110,13 @@ func runPostMapParallel(in Envelope, mode string, fn func(Record) (Record, *Erro
 	out := in
 	n := len(in.Records)
 	workers := getWorkers(in.Meta)
-	jobs := make(chan int)
-	results := make(chan luaPostMapRes)
-	var wg sync.WaitGroup
-	worker := func() {
-		defer wg.Done()
-		for idx := range jobs {
-			r := in.Records[idx]
-			rec, envE, fatal := fn(r)
-			results <- luaPostMapRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
-		}
-	}
-	for w := 0; w < workers; w++ {
-		wg.Add(1)
-		go worker()
-	}
-	go func() {
-		for i := range in.Records {
-			jobs <- i
-		}
-		close(jobs)
-	}()
+	results := runIndexedParallel(n, workers, func(idx int) luaPostMapRes {
+		r := in.Records[idx]
+		rec, envE, fatal := fn(r)
+		return luaPostMapRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
+	})
 	var firstErr error
-	for i := 0; i < n; i++ {
-		rr := <-results
+	for _, rr := range results {
 		if rr.envE != nil {
 			out.Errors = append(out.Errors, *rr.envE)
 		}
@@ -143,7 +125,6 @@ func runPostMapParallel(in Envelope, mode string, fn func(Record) (Record, *Erro
 		}
 		out.Records[rr.idx] = rr.rec
 	}
-	wg.Wait()
 	if firstErr != nil {
 		return Envelope{}, firstErr
 	}

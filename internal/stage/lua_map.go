@@ -2,7 +2,6 @@ package stage
 
 import (
 	"context"
-	"sync"
 
 	lua "github.com/yuin/gopher-lua"
 )
@@ -15,43 +14,22 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 	mode, _ := errorMode(in.Meta)
 	n := len(in.Records)
 	workers := getWorkers(in.Meta)
-	jobs := make(chan int)
-	results := make(chan luaMapRes)
-	var wg sync.WaitGroup
 	var envErrs []Error
-	var mu sync.Mutex
-	worker := func() {
-		defer wg.Done()
-		for idx := range jobs {
-			r := in.Records[idx]
-			rec, envE, fatal := processLuaMapRecord(r, code, mode)
-			results <- luaMapRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
-		}
-	}
-	for w := 0; w < workers; w++ {
-		wg.Add(1)
-		go worker()
-	}
-	go func() {
-		for i := range in.Records {
-			jobs <- i
-		}
-		close(jobs)
-	}()
+	results := runIndexedParallel(n, workers, func(idx int) luaMapRes {
+		r := in.Records[idx]
+		rec, envE, fatal := processLuaMapRecord(r, code, mode)
+		return luaMapRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
+	})
 	var firstErr error
-	for i := 0; i < n; i++ {
-		rr := <-results
+	for _, rr := range results {
 		if rr.envE != nil {
-			mu.Lock()
 			envErrs = append(envErrs, *rr.envE)
-			mu.Unlock()
 		}
 		if rr.fatal != nil && firstErr == nil {
 			firstErr = rr.fatal
 		}
 		out.Records[rr.idx] = rr.rec
 	}
-	wg.Wait()
 	if firstErr != nil {
 		return Envelope{}, firstErr
 	}

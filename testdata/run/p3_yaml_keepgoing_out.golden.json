@@ -1,0 +1,43 @@
+{
+  "records": [
+    {
+      "locator": "aa-locator",
+      "meta": { "score": 1, "title": "B" },
+      "mapped": {
+        "locator": "aa-locator",
+        "meta": { "score": 1, "title": "B" }
+      },
+      "post": { "locator": "aa-locator" }
+    },
+    {
+      "locator": "invalid/c.thoth.yaml",
+      "error": {
+        "stage": "parse-validate-yaml",
+        "message": "invalid type for field: locator"
+      }
+    },
+    {
+      "locator": "zz-locator",
+      "meta": { "score": 2, "title": "A" },
+      "mapped": {
+        "locator": "zz-locator",
+        "meta": { "score": 2, "title": "A" }
+      },
+      "post": { "locator": "zz-locator" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "pipeline" },
+    "discovery": { "root": "testdata/repos/p3_yaml1" },
+    "reduced": 3,
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  },
+  "errors": [
+    {
+      "stage": "parse-validate-yaml",
+      "locator": "invalid/c.thoth.yaml",
+      "message": "invalid type for field: locator"
+    }
+  ]
+}

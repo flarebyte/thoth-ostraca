@@ -1,0 +1,45 @@
+{
+  "records": [
+    {
+      "locator": "http://example.com:80/a",
+      "meta": { "kind": "url2" },
+      "error": {
+        "stage": "validate-locators",
+        "message": "URL locators are not allowed"
+      }
+    },
+    {
+      "locator": "https://Example.com",
+      "meta": { "kind": "url1" },
+      "error": {
+        "stage": "validate-locators",
+        "message": "URL locators are not allowed"
+      }
+    },
+    {
+      "locator": "ok/path",
+      "meta": { "kind": "path1" },
+      "mapped": { "locator": "ok/path", "meta": { "kind": "path1" } },
+      "post": { "locator": "ok/path" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "pipeline" },
+    "discovery": { "root": "testdata/repos/p3_locator_urls1" },
+    "reduced": 3,
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  },
+  "errors": [
+    {
+      "stage": "validate-locators",
+      "locator": "http://example.com:80/a",
+      "message": "URL locators are not allowed"
+    },
+    {
+      "stage": "validate-locators",
+      "locator": "https://Example.com",
+      "message": "URL locators are not allowed"
+    }
+  ]
+}

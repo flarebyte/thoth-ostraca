@@ -1,0 +1,4 @@
+locator: "10-child"
+meta:
+  kind: "p3-discovery"
+  order: 2

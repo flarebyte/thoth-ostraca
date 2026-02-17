@@ -4,12 +4,11 @@ import (
 	"bufio"
 	"compress/zlib"
 	"context"
-	"crypto/sha1"
 	"encoding/binary"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -159,27 +158,13 @@ func parseIndex(repo string) (map[string]idxEntry, error) {
 	return entries, nil
 }
 
-func computeBlobHash(path string) (string, error) {
-	f, err := os.Open(path)
+func computeBlobHash(path, repoRoot string) (string, error) {
+	cmd := exec.Command("git", "-C", repoRoot, "hash-object", "--", path)
+	out, err := cmd.Output()
 	if err != nil {
 		return "", err
 	}
-	defer func() { _ = f.Close() }()
-	// size
-	st, err := f.Stat()
-	if err != nil {
-		return "", err
-	}
-	hdr := fmt.Sprintf("blob %d\x00", st.Size())
-	h := sha1.New()
-	if _, err := io.WriteString(h, hdr); err != nil {
-		return "", err
-	}
-	if _, err := io.Copy(h, f); err != nil {
-		return "", err
-	}
-	sum := h.Sum(nil)
-	return hex.EncodeToString(sum), nil
+	return strings.TrimSpace(string(out)), nil
 }
 
 func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {

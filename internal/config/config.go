@@ -42,6 +42,8 @@ type Minimal struct {
 	ConfigVersion string
 	Action        string
 	Discovery     Discovery
+	Validation    Validation
+	Limits        Limits
 	LocatorPolicy LocatorPolicy
 	FileInfo      FileInfo
 	Git           Git
@@ -78,6 +80,8 @@ func ParseMinimal(path string) (Minimal, error) {
 	}
 	// Optional sections
 	m.Discovery = parseDiscoverySection(v)
+	m.Validation = parseValidationSection(v)
+	m.Limits = parseLimitsSection(v)
 	m.LocatorPolicy = parseLocatorPolicySection(v)
 	m.FileInfo = parseFileInfoSection(v)
 	m.Git = parseGitSection(v)
@@ -92,12 +96,26 @@ func ParseMinimal(path string) (Minimal, error) {
 	return m, nil
 }
 
+// Validation holds optional validation config and presence flags.
+type Validation struct {
+	AllowUnknownTopLevel bool
+	HasAllowUnknownTop   bool
+}
+
+// Limits holds optional processing limits and presence flags.
+type Limits struct {
+	MaxYAMLBytes    int
+	HasMaxYAMLBytes bool
+}
+
 // Discovery holds optional discovery config and presence flags.
 type Discovery struct {
-	Root           string
-	NoGitignore    bool
-	HasRoot        bool
-	HasNoGitignore bool
+	Root             string
+	NoGitignore      bool
+	FollowSymlinks   bool
+	HasRoot          bool
+	HasNoGitignore   bool
+	HasFollowSymlink bool
 }
 
 // Filter holds optional filter config.

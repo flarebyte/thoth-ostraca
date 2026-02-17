@@ -112,3 +112,74 @@ test('diagnose discover-meta-files respects gitignore by default and can be disa
     JSON.stringify(['a.thoth.yaml', 'ignored/x.thoth.yaml']),
   );
 });
+
+test('diagnose discover-meta-files default excludes ignored files and keeps sorted locators', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/diagnose/p3_discovery_default_discover_meta_files_out.golden.json',
+  );
+  const run = runThoth(
+    bin,
+    [
+      'diagnose',
+      '--stage',
+      'discover-meta-files',
+      '--root',
+      path.join(root, 'testdata/repos/p3_discovery1'),
+    ],
+    root,
+  );
+  saveOutputs(root, 'diagnose-p3-discover-default', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('diagnose discover-meta-files no-gitignore includes ignored files and keeps sorted locators', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/diagnose/p3_discovery_no_gitignore_discover_meta_files_out.golden.json',
+  );
+  const run = runThoth(
+    bin,
+    [
+      'diagnose',
+      '--stage',
+      'discover-meta-files',
+      '--root',
+      path.join(root, 'testdata/repos/p3_discovery1'),
+      '--no-gitignore',
+    ],
+    root,
+  );
+  saveOutputs(root, 'diagnose-p3-discover-no-gitignore', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('diagnose parse-validate-yaml works with --in envelope using discovery root + discovered locators', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const input = path.join(
+    root,
+    'testdata/diagnose/p3_yaml_parse_validate_in.json',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/diagnose/p3_yaml_parse_validate_in_out.golden.json',
+  );
+  const run = runThoth(
+    bin,
+    ['diagnose', '--stage', 'parse-validate-yaml', '--in', input],
+    root,
+  );
+  saveOutputs(root, 'diagnose-p3-yaml-parse-validate-in', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});

@@ -26,7 +26,8 @@
     "locatorPolicy": {
       "allowAbsolute": false,
       "allowParentRefs": true,
-      "posixStyle": false
+      "posixStyle": false,
+      "allowURLs": false
     },
     "reduced": 3,
     "errors": { "mode": "keep-going", "embedErrors": true }

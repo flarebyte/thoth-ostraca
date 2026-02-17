@@ -8,7 +8,10 @@
     },
     {
       "locator": "badyaml.thoth.yaml",
-      "error": { "stage": "parse-validate-yaml", "message": "failed" }
+      "error": {
+        "stage": "parse-validate-yaml",
+        "message": "missing required field: meta"
+      }
     },
     {
       "locator": "luaerr",

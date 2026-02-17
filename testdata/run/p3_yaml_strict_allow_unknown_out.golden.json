@@ -1,0 +1,24 @@
+{
+  "records": [
+    {
+      "locator": "extra-loc",
+      "meta": { "kind": "extra" },
+      "mapped": { "locator": "extra-loc", "meta": { "kind": "extra" } },
+      "post": { "locator": "extra-loc" }
+    },
+    {
+      "locator": "ok-loc",
+      "meta": { "kind": "ok" },
+      "mapped": { "locator": "ok-loc", "meta": { "kind": "ok" } },
+      "post": { "locator": "ok-loc" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "pipeline" },
+    "discovery": { "root": "testdata/repos/p3_yaml_strict1" },
+    "validation": { "allowUnknownTopLevel": true },
+    "reduced": 2,
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  }
+}

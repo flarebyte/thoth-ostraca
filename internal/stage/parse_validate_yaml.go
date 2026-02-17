@@ -7,78 +7,108 @@ import (
 )
 
 func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
-	// Determine root
 	root := determineRoot(in)
-
-	// Collect output
-	outs := make([]yamlKV, 0, len(in.Records))
+	allowUnknownTop := allowUnknownTopLevel(in)
+	maxBytes := maxYAMLBytes(in)
 	mode, _ := errorMode(in.Meta)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
 	type res struct {
+		path  string
 		kv    yamlKV
 		envE  *Error
 		fatal error
 	}
 	workers := getWorkers(in.Meta)
 	jobs := make(chan int)
-	results := make(chan res)
+	results := make(chan res, len(in.Records))
 	var wg sync.WaitGroup
 	worker := func() {
 		defer wg.Done()
-		for item := range jobs {
-			rec := in.Records[item]
-			kv, envE, fatal := processYAMLRecord(rec, root, mode)
-			results <- res{kv: kv, envE: envE, fatal: fatal}
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case item, ok := <-jobs:
+				if !ok {
+					return
+				}
+				rec := in.Records[item]
+				path := rec.Locator
+				kv, envE, fatal := processYAMLRecord(rec, root, mode, allowUnknownTop, maxBytes)
+				select {
+				case results <- res{path: path, kv: kv, envE: envE, fatal: fatal}:
+				case <-ctx.Done():
+					return
+				}
+			}
 		}
 	}
-	// start workers
 	for w := 0; w < workers; w++ {
 		wg.Add(1)
 		go worker()
 	}
 	go func() {
+		defer close(jobs)
 		for i := range in.Records {
-			jobs <- i
+			select {
+			case <-ctx.Done():
+				return
+			case jobs <- i:
+			}
 		}
-		close(jobs)
 	}()
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
 	var firstErr error
-	var envErrs []Error
-	for i := 0; i < len(in.Records); i++ {
-		rr := <-results
+	outs := make([]yamlKV, 0, len(in.Records))
+	envErrs := make([]Error, 0)
+	failedRecords := make([]Record, 0)
+	for rr := range results {
+		if rr.fatal != nil {
+			if firstErr == nil {
+				firstErr = rr.fatal
+				if mode != "keep-going" {
+					cancel()
+				}
+			}
+			continue
+		}
 		if rr.envE != nil {
 			envErrs = append(envErrs, *rr.envE)
+			if mode == "keep-going" {
+				fr := Record{
+					Locator: rr.path,
+					Error:   &RecError{Stage: parseValidateYAMLStage, Message: rr.envE.Message},
+				}
+				failedRecords = append(failedRecords, fr)
+			}
+			continue
 		}
-		if rr.kv.locator != "" || rr.kv.meta != nil {
+		if rr.kv.meta != nil {
 			outs = append(outs, rr.kv)
 		}
-		if firstErr == nil && rr.fatal != nil {
-			firstErr = rr.fatal
-		}
 	}
-	wg.Wait()
 	if firstErr != nil {
 		return Envelope{}, firstErr
-	}
-	// Append collected errors
-	if len(envErrs) > 0 {
-		outE := in
-		outE.Errors = append(outE.Errors, envErrs...)
-		in = outE
 	}
 
 	sort.Slice(outs, func(i, j int) bool { return outs[i].locator < outs[j].locator })
 
 	out := in
-	out.Records = make([]Record, 0, len(outs))
+	out.Records = make([]Record, 0, len(outs)+len(failedRecords))
 	for _, pr := range outs {
-		rec := Record{Locator: pr.locator}
-		if pr.meta != nil {
-			rec.Meta = pr.meta
-		} else {
-			// In keep-going with error, embed if requested
-			rec.Error = &RecError{Stage: "parse-validate-yaml", Message: "failed"}
-		}
-		out.Records = append(out.Records, rec)
+		out.Records = append(out.Records, Record{Locator: pr.locator, Meta: pr.meta})
+	}
+	out.Records = append(out.Records, failedRecords...)
+	sort.Slice(out.Records, func(i, j int) bool { return out.Records[i].Locator < out.Records[j].Locator })
+	if len(envErrs) > 0 {
+		out.Errors = append(out.Errors, envErrs...)
+		SortEnvelopeErrors(&out)
 	}
 	return out, nil
 }

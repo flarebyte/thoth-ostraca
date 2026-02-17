@@ -47,7 +47,45 @@ func parseDiscoverySection(v cue.Value) Discovery {
 			d.HasNoGitignore = true
 		}
 	}
+	fsv := dv.LookupPath(cue.ParsePath("followSymlinks"))
+	if fsv.Exists() && (fsv.Kind() == cue.BoolKind) {
+		if err := fsv.Decode(&d.FollowSymlinks); err == nil {
+			d.HasFollowSymlink = true
+		}
+	}
 	return d
+}
+
+// parseValidationSection extracts optional validation.allowUnknownTopLevel.
+func parseValidationSection(v cue.Value) Validation {
+	var val Validation
+	vv := v.LookupPath(cue.ParsePath("validation"))
+	if !vv.Exists() {
+		return val
+	}
+	auv := vv.LookupPath(cue.ParsePath("allowUnknownTopLevel"))
+	if auv.Exists() && (auv.Kind() == cue.BoolKind) {
+		if err := auv.Decode(&val.AllowUnknownTopLevel); err == nil {
+			val.HasAllowUnknownTop = true
+		}
+	}
+	return val
+}
+
+// parseLimitsSection extracts optional limits.maxYAMLBytes.
+func parseLimitsSection(v cue.Value) Limits {
+	var l Limits
+	lv := v.LookupPath(cue.ParsePath("limits"))
+	if !lv.Exists() {
+		return l
+	}
+	mv := lv.LookupPath(cue.ParsePath("maxYAMLBytes"))
+	if mv.Exists() && mv.Kind() == cue.IntKind {
+		if err := mv.Decode(&l.MaxYAMLBytes); err == nil {
+			l.HasMaxYAMLBytes = true
+		}
+	}
+	return l
 }
 
 // LocatorPolicy holds optional locator policy booleans and presence flags.
@@ -55,9 +93,11 @@ type LocatorPolicy struct {
 	AllowAbsolute   bool
 	AllowParentRefs bool
 	PosixStyle      bool
+	AllowURLs       bool
 	HasAllowAbs     bool
 	HasAllowParent  bool
 	HasPosix        bool
+	HasAllowURLs    bool
 }
 
 // parseLocatorPolicySection extracts optional locatorPolicy.* fields.
@@ -81,6 +121,11 @@ func parseLocatorPolicySection(v cue.Value) LocatorPolicy {
 	if psv.Exists() && psv.Kind() == cue.BoolKind {
 		_ = psv.Decode(&lp.PosixStyle)
 		lp.HasPosix = true
+	}
+	auv := pv.LookupPath(cue.ParsePath("allowURLs"))
+	if auv.Exists() && auv.Kind() == cue.BoolKind {
+		_ = auv.Decode(&lp.AllowURLs)
+		lp.HasAllowURLs = true
 	}
 	return lp
 }

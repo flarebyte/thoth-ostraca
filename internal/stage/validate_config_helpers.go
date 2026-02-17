@@ -20,7 +20,7 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	out.Meta.ConfigPath = "" // do not persist configPath in output
 
 	// Discovery
-	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore {
+	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore || min.Discovery.HasFollowSymlink {
 		if out.Meta.Discovery == nil {
 			out.Meta.Discovery = &DiscoveryMeta{}
 		}
@@ -30,6 +30,25 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		if min.Discovery.HasNoGitignore {
 			out.Meta.Discovery.NoGitignore = min.Discovery.NoGitignore
 		}
+		if min.Discovery.HasFollowSymlink {
+			out.Meta.Discovery.FollowSymlinks = min.Discovery.FollowSymlinks
+		}
+	}
+
+	// Validation
+	if min.Validation.HasAllowUnknownTop {
+		if out.Meta.Validation == nil {
+			out.Meta.Validation = &ValidationMeta{}
+		}
+		out.Meta.Validation.AllowUnknownTopLevel = min.Validation.AllowUnknownTopLevel
+	}
+
+	// Limits
+	if min.Limits.HasMaxYAMLBytes {
+		if out.Meta.Limits == nil {
+			out.Meta.Limits = &LimitsMeta{}
+		}
+		out.Meta.Limits.MaxYAMLBytes = min.Limits.MaxYAMLBytes
 	}
 
 	// Lua: filter, map, postmap, reduce
@@ -128,9 +147,14 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	}
 
 	// LocatorPolicy
-	if (min.LocatorPolicy.HasAllowAbs || min.LocatorPolicy.HasAllowParent || min.LocatorPolicy.HasPosix) || out.Meta.LocatorPolicy != nil {
+	if (min.LocatorPolicy.HasAllowAbs || min.LocatorPolicy.HasAllowParent || min.LocatorPolicy.HasPosix || min.LocatorPolicy.HasAllowURLs) || out.Meta.LocatorPolicy != nil {
 		if out.Meta.LocatorPolicy == nil {
-			out.Meta.LocatorPolicy = &LocatorPolicy{}
+			out.Meta.LocatorPolicy = &LocatorPolicy{
+				AllowAbsolute:   false,
+				AllowParentRefs: false,
+				PosixStyle:      true,
+				AllowURLs:       false,
+			}
 		}
 		if min.LocatorPolicy.HasAllowAbs {
 			out.Meta.LocatorPolicy.AllowAbsolute = min.LocatorPolicy.AllowAbsolute
@@ -140,6 +164,9 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 		if min.LocatorPolicy.HasPosix {
 			out.Meta.LocatorPolicy.PosixStyle = min.LocatorPolicy.PosixStyle
+		}
+		if min.LocatorPolicy.HasAllowURLs {
+			out.Meta.LocatorPolicy.AllowURLs = min.LocatorPolicy.AllowURLs
 		}
 	}
 }

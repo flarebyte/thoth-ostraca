@@ -11,8 +11,9 @@ type Error struct {
 
 // DiscoveryMeta holds discovery options.
 type DiscoveryMeta struct {
-	Root        string `json:"root,omitempty"`
-	NoGitignore bool   `json:"noGitignore,omitempty"`
+	Root           string `json:"root,omitempty"`
+	NoGitignore    bool   `json:"noGitignore,omitempty"`
+	FollowSymlinks bool   `json:"followSymlinks,omitempty"`
 }
 
 // ConfigMeta holds validated config essentials.
@@ -23,23 +24,35 @@ type ConfigMeta struct {
 
 // Meta holds optional metadata with deterministic JSON field order.
 type Meta struct {
-	ContractVersion string         `json:"contractVersion,omitempty"`
-	Stage           string         `json:"stage,omitempty"`
-	ConfigPath      string         `json:"configPath,omitempty"`
-	Config          *ConfigMeta    `json:"config,omitempty"`
-	Discovery       *DiscoveryMeta `json:"discovery,omitempty"`
-	LocatorPolicy   *LocatorPolicy `json:"locatorPolicy,omitempty"`
-	FileInfo        *FileInfoMeta  `json:"fileInfo,omitempty"`
-	Git             *GitMeta       `json:"git,omitempty"`
-	Inputs          []string       `json:"inputs,omitempty"`
-	MetaFiles       []string       `json:"metaFiles,omitempty"`
-	Diff            *DiffReport    `json:"diff,omitempty"`
-	Lua             *LuaMeta       `json:"lua,omitempty"`
-	Shell           *ShellMeta     `json:"shell,omitempty"`
-	Output          *OutputMeta    `json:"output,omitempty"`
-	Reduced         any            `json:"reduced,omitempty"`
-	Errors          *ErrorsMeta    `json:"errors,omitempty"`
-	Workers         int            `json:"workers,omitempty"`
+	ContractVersion string          `json:"contractVersion,omitempty"`
+	Stage           string          `json:"stage,omitempty"`
+	ConfigPath      string          `json:"configPath,omitempty"`
+	Config          *ConfigMeta     `json:"config,omitempty"`
+	Discovery       *DiscoveryMeta  `json:"discovery,omitempty"`
+	Validation      *ValidationMeta `json:"validation,omitempty"`
+	Limits          *LimitsMeta     `json:"limits,omitempty"`
+	LocatorPolicy   *LocatorPolicy  `json:"locatorPolicy,omitempty"`
+	FileInfo        *FileInfoMeta   `json:"fileInfo,omitempty"`
+	Git             *GitMeta        `json:"git,omitempty"`
+	Inputs          []string        `json:"inputs,omitempty"`
+	MetaFiles       []string        `json:"metaFiles,omitempty"`
+	Diff            *DiffReport     `json:"diff,omitempty"`
+	Lua             *LuaMeta        `json:"lua,omitempty"`
+	Shell           *ShellMeta      `json:"shell,omitempty"`
+	Output          *OutputMeta     `json:"output,omitempty"`
+	Reduced         any             `json:"reduced,omitempty"`
+	Errors          *ErrorsMeta     `json:"errors,omitempty"`
+	Workers         int             `json:"workers,omitempty"`
+}
+
+// ValidationMeta controls strictness for top-level YAML fields.
+type ValidationMeta struct {
+	AllowUnknownTopLevel bool `json:"allowUnknownTopLevel"`
+}
+
+// LimitsMeta controls parsing size limits.
+type LimitsMeta struct {
+	MaxYAMLBytes int `json:"maxYAMLBytes"`
 }
 
 // DiffReport holds a minimal diff summary for meta files.
@@ -54,6 +67,7 @@ type LocatorPolicy struct {
 	AllowAbsolute   bool `json:"allowAbsolute"`
 	AllowParentRefs bool `json:"allowParentRefs"`
 	PosixStyle      bool `json:"posixStyle"`
+	AllowURLs       bool `json:"allowURLs"`
 }
 
 // Envelope is a minimal JSON-serializable contract between stages.
