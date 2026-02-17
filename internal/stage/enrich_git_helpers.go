@@ -40,7 +40,7 @@ func recGitFor(locator, root, absRoot string, idx map[string]idxEntry, head, aut
 		if !exists {
 			status = "deleted"
 		} else {
-			if h, err := computeBlobHash(abs); err == nil {
+			if h, err := computeBlobHash(abs, root); err == nil {
 				if h != hex.EncodeToString(ent.Hash[:]) {
 					status = "modified"
 				} else {

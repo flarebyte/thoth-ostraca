@@ -49,6 +49,8 @@ complexity:
 	scc --sort complexity --by-file -i go . | head -n 15
 	scc --sort complexity --by-file -i ts . | head -n 15
 
+sec:
+	semgrep scan --config auto
 dup:
 	npx jscpd --format go,typescript --min-lines 20 --gitignore .
 
