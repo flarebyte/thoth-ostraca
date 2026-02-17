@@ -57,6 +57,10 @@ PipelineConfig: {
     allowUnknownTopLevel?: bool | false
   }
 
+  limits?: {
+    maxYAMLBytes?: int & >=1 | 1048576
+  }
+
   // Locator normalization policy
   locatorPolicy?: {
     allowAbsolute?: bool | false

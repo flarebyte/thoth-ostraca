@@ -43,6 +43,14 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		out.Meta.Validation.AllowUnknownTopLevel = min.Validation.AllowUnknownTopLevel
 	}
 
+	// Limits
+	if min.Limits.HasMaxYAMLBytes {
+		if out.Meta.Limits == nil {
+			out.Meta.Limits = &LimitsMeta{}
+		}
+		out.Meta.Limits.MaxYAMLBytes = min.Limits.MaxYAMLBytes
+	}
+
 	// Lua: filter, map, postmap, reduce
 	if min.Filter.HasInline {
 		if out.Meta.Lua == nil {

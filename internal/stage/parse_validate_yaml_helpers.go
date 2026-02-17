@@ -9,6 +9,7 @@ import (
 )
 
 const parseValidateYAMLStage = "parse-validate-yaml"
+const defaultMaxYAMLBytes = 1048576
 
 type yamlKV struct {
 	locator string
@@ -31,13 +32,34 @@ func allowUnknownTopLevel(in Envelope) bool {
 	return false
 }
 
+func maxYAMLBytes(in Envelope) int {
+	if in.Meta != nil && in.Meta.Limits != nil && in.Meta.Limits.MaxYAMLBytes > 0 {
+		return in.Meta.Limits.MaxYAMLBytes
+	}
+	return defaultMaxYAMLBytes
+}
+
 // processYAMLRecord reads, parses, and validates a single YAML record according to the
 // stage rules, returning either a kv pair on success, or an env error (keep-going) or
 // fatal error.
-func processYAMLRecord(rec Record, root string, mode string, allowUnknownTop bool) (yamlKV, *Error, error) {
+func processYAMLRecord(rec Record, root string, mode string, allowUnknownTop bool, maxBytes int) (yamlKV, *Error, error) {
 	locator := rec.Locator
 
 	p := filepath.Join(root, filepath.FromSlash(locator))
+	info, statErr := os.Stat(p)
+	if statErr != nil {
+		if mode == "keep-going" {
+			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: fmt.Sprintf("read error: %v", statErr)}, nil
+		}
+		return yamlKV{}, nil, fmt.Errorf("read error %s: %w", p, statErr)
+	}
+	if info.Size() > int64(maxBytes) {
+		msg := fmt.Sprintf("file exceeds maxYAMLBytes limit: %d", maxBytes)
+		if mode == "keep-going" {
+			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: msg}, nil
+		}
+		return yamlKV{}, nil, fmt.Errorf("yaml too large %s: exceeds maxYAMLBytes %d", p, maxBytes)
+	}
 	b, err := os.ReadFile(p)
 	if err != nil {
 		if mode == "keep-going" {

@@ -30,6 +30,7 @@ type Meta struct {
 	Config          *ConfigMeta     `json:"config,omitempty"`
 	Discovery       *DiscoveryMeta  `json:"discovery,omitempty"`
 	Validation      *ValidationMeta `json:"validation,omitempty"`
+	Limits          *LimitsMeta     `json:"limits,omitempty"`
 	LocatorPolicy   *LocatorPolicy  `json:"locatorPolicy,omitempty"`
 	FileInfo        *FileInfoMeta   `json:"fileInfo,omitempty"`
 	Git             *GitMeta        `json:"git,omitempty"`
@@ -47,6 +48,11 @@ type Meta struct {
 // ValidationMeta controls strictness for top-level YAML fields.
 type ValidationMeta struct {
 	AllowUnknownTopLevel bool `json:"allowUnknownTopLevel"`
+}
+
+// LimitsMeta controls parsing size limits.
+type LimitsMeta struct {
+	MaxYAMLBytes int `json:"maxYAMLBytes"`
 }
 
 // DiffReport holds a minimal diff summary for meta files.

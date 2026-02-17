@@ -72,6 +72,22 @@ func parseValidationSection(v cue.Value) Validation {
 	return val
 }
 
+// parseLimitsSection extracts optional limits.maxYAMLBytes.
+func parseLimitsSection(v cue.Value) Limits {
+	var l Limits
+	lv := v.LookupPath(cue.ParsePath("limits"))
+	if !lv.Exists() {
+		return l
+	}
+	mv := lv.LookupPath(cue.ParsePath("maxYAMLBytes"))
+	if mv.Exists() && mv.Kind() == cue.IntKind {
+		if err := mv.Decode(&l.MaxYAMLBytes); err == nil {
+			l.HasMaxYAMLBytes = true
+		}
+	}
+	return l
+}
+
 // LocatorPolicy holds optional locator policy booleans and presence flags.
 type LocatorPolicy struct {
 	AllowAbsolute   bool
