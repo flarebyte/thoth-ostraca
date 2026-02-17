@@ -161,3 +161,25 @@ test('diagnose discover-meta-files no-gitignore includes ignored files and keeps
   expect(run.stderr).toBe('');
   expect(run.stdout).toBe(expectedOut);
 });
+
+test('diagnose parse-validate-yaml works with --in envelope using discovery root + discovered locators', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const input = path.join(
+    root,
+    'testdata/diagnose/p3_yaml_parse_validate_in.json',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/diagnose/p3_yaml_parse_validate_in_out.golden.json',
+  );
+  const run = runThoth(
+    bin,
+    ['diagnose', '--stage', 'parse-validate-yaml', '--in', input],
+    root,
+  );
+  saveOutputs(root, 'diagnose-p3-yaml-parse-validate-in', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});

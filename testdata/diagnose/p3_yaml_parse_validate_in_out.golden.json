@@ -1,0 +1,25 @@
+{
+  "records": [
+    { "locator": "aa-locator", "meta": { "score": 1, "title": "B" } },
+    {
+      "locator": "invalid/c.thoth.yaml",
+      "error": {
+        "stage": "parse-validate-yaml",
+        "message": "invalid type for field: locator"
+      }
+    },
+    { "locator": "zz-locator", "meta": { "score": 2, "title": "A" } }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "discovery": { "root": "testdata/repos/p3_yaml1" },
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  },
+  "errors": [
+    {
+      "stage": "parse-validate-yaml",
+      "locator": "invalid/c.thoth.yaml",
+      "message": "invalid type for field: locator"
+    }
+  ]
+}

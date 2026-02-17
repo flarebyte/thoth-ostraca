@@ -1,0 +1,11 @@
+{
+  "records": [
+    { "locator": "a.thoth.yaml" },
+    { "locator": "invalid/c.thoth.yaml" },
+    { "locator": "nested/b.thoth.yaml" }
+  ],
+  "meta": {
+    "discovery": { "root": "testdata/repos/p3_yaml1" },
+    "errors": { "mode": "keep-going", "embedErrors": true }
+  }
+}

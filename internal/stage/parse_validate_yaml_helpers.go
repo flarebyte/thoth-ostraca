@@ -60,7 +60,7 @@ func processYAMLRecord(rec Record, root string, mode string) (yamlKV, *Error, er
 		return yamlKV{}, nil, fmt.Errorf("invalid YAML %s: missing required field: locator", p)
 	}
 	ylocStr, ok := yloc.(string)
-	if !ok || ylocStr == "" {
+	if !ok {
 		if mode == "keep-going" {
 			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: "invalid type for field: locator"}, nil
 		}

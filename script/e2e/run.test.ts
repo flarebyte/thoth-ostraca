@@ -80,6 +80,34 @@ test('thoth run pipeline discovery includes ignored meta files when noGitignore=
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run pipeline parse-validate-yaml fail-fast exits non-zero and includes invalid file path', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p3_yaml_failfast.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-p3-yaml-failfast', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(
+    run.stderr.includes('testdata/repos/p3_yaml1/invalid/c.thoth.yaml'),
+  ).toBe(true);
+});
+
+test('thoth run pipeline parse-validate-yaml keep-going embeds record errors and envelope errors', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p3_yaml_keepgoing.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p3_yaml_keepgoing_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-p3-yaml-keepgoing', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('thoth run parses YAML records into {locator,meta}', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

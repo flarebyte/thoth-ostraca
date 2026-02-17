@@ -13,6 +13,25 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	// Collect output
 	outs := make([]yamlKV, 0, len(in.Records))
 	mode, _ := errorMode(in.Meta)
+	if mode != "keep-going" {
+		for _, rec := range in.Records {
+			kv, _, fatal := processYAMLRecord(rec, root, mode)
+			if fatal != nil {
+				return Envelope{}, fatal
+			}
+			if kv.locator != "" || kv.meta != nil {
+				outs = append(outs, kv)
+			}
+		}
+		sort.Slice(outs, func(i, j int) bool { return outs[i].locator < outs[j].locator })
+		out := in
+		out.Records = make([]Record, 0, len(outs))
+		for _, pr := range outs {
+			out.Records = append(out.Records, Record{Locator: pr.locator, Meta: pr.meta})
+		}
+		return out, nil
+	}
+
 	type res struct {
 		kv    yamlKV
 		envE  *Error
@@ -43,12 +62,14 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	}()
 	var firstErr error
 	var envErrs []Error
+	failedByPath := map[string]string{}
 	for i := 0; i < len(in.Records); i++ {
 		rr := <-results
 		if rr.envE != nil {
 			envErrs = append(envErrs, *rr.envE)
+			failedByPath[rr.envE.Locator] = rr.envE.Message
 		}
-		if rr.kv.locator != "" || rr.kv.meta != nil {
+		if rr.kv.meta != nil {
 			outs = append(outs, rr.kv)
 		}
 		if firstErr == nil && rr.fatal != nil {
@@ -69,17 +90,17 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	sort.Slice(outs, func(i, j int) bool { return outs[i].locator < outs[j].locator })
 
 	out := in
-	out.Records = make([]Record, 0, len(outs))
+	out.Records = make([]Record, 0, len(outs)+len(failedByPath))
 	for _, pr := range outs {
-		rec := Record{Locator: pr.locator}
-		if pr.meta != nil {
-			rec.Meta = pr.meta
-		} else {
-			// In keep-going with error, embed if requested
-			rec.Error = &RecError{Stage: "parse-validate-yaml", Message: "failed"}
-		}
-		out.Records = append(out.Records, rec)
+		out.Records = append(out.Records, Record{Locator: pr.locator, Meta: pr.meta})
 	}
+	for locator, msg := range failedByPath {
+		out.Records = append(out.Records, Record{
+			Locator: locator,
+			Error:   &RecError{Stage: parseValidateYAMLStage, Message: msg},
+		})
+	}
+	sort.Slice(out.Records, func(i, j int) bool { return out.Records[i].Locator < out.Records[j].Locator })
 	return out, nil
 }
 
