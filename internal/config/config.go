@@ -94,10 +94,12 @@ func ParseMinimal(path string) (Minimal, error) {
 
 // Discovery holds optional discovery config and presence flags.
 type Discovery struct {
-	Root           string
-	NoGitignore    bool
-	HasRoot        bool
-	HasNoGitignore bool
+	Root             string
+	NoGitignore      bool
+	FollowSymlinks   bool
+	HasRoot          bool
+	HasNoGitignore   bool
+	HasFollowSymlink bool
 }
 
 // Filter holds optional filter config.

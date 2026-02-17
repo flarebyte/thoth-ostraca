@@ -12,6 +12,7 @@ func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	}
 	root := in.Meta.Discovery.Root
 	noGitignore := in.Meta.Discovery.NoGitignore
+	followSymlinks := in.Meta.Discovery.FollowSymlinks
 	mode, _ := errorMode(in.Meta)
 
 	absRoot, err := filepath.Abs(root)
@@ -19,7 +20,7 @@ func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 		return Envelope{}, err
 	}
 
-	locators, envErrs, err := findThothYAMLs(absRoot, noGitignore, mode)
+	locators, envErrs, err := findThothYAMLs(absRoot, noGitignore, followSymlinks, mode)
 	if err != nil {
 		return Envelope{}, err
 	}

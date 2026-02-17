@@ -22,6 +22,11 @@ function normalizeWorkersOut(stdout: string): string {
   return `${JSON.stringify(actual)}\n`;
 }
 
+function writeCueConfig(cfgPath: string, body: string): void {
+  fs.mkdirSync(path.dirname(cfgPath), { recursive: true });
+  fs.writeFileSync(cfgPath, body, 'utf8');
+}
+
 test('thoth run with valid config prints envelope JSON', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -78,6 +83,234 @@ test('thoth run pipeline discovery includes ignored meta files when noGitignore=
   expect(run.status).toBe(0);
   expect(run.stderr).toBe('');
   expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run discovery followSymlinks handles symlink dirs and loops deterministically', () => {
+  if (process.platform === 'win32') {
+    return;
+  }
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const tmpRoot = path.join(root, 'temp');
+  fs.mkdirSync(tmpRoot, { recursive: true });
+  const repo = fs.mkdtempSync(path.join(tmpRoot, 'p3-symlink-'));
+  fs.mkdirSync(path.join(repo, 'real'), { recursive: true });
+  fs.writeFileSync(
+    path.join(repo, 'real', 'a.thoth.yaml'),
+    'locator: "loc-real"\nmeta:\n  ok: true\n',
+    'utf8',
+  );
+  try {
+    fs.symlinkSync('real', path.join(repo, 'alias'), 'dir');
+    fs.symlinkSync('../real', path.join(repo, 'real', 'loop'), 'dir');
+  } catch {
+    return;
+  }
+
+  const cfgNoFollow = path.join(repo, 'no-follow.cue');
+  writeCueConfig(
+    cfgNoFollow,
+    `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+}`,
+  );
+  const runNoFollow = runThoth(bin, ['run', '--config', cfgNoFollow], root);
+  expect(runNoFollow.status).toBe(0);
+  expect(runNoFollow.stderr).toBe('');
+  const outNoFollow = JSON.parse(runNoFollow.stdout) as {
+    records: Array<{ locator: string }>;
+  };
+  expect(outNoFollow.records.map((r) => r.locator)).toEqual(['loc-real']);
+
+  const cfgFollow = path.join(repo, 'follow.cue');
+  writeCueConfig(
+    cfgFollow,
+    `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: {
+    root: "${repo.replaceAll('\\', '\\\\')}"
+    followSymlinks: true
+  }
+  errors: { mode: "keep-going", embedErrors: true }
+}`,
+  );
+  const runFollow = runThoth(bin, ['run', '--config', cfgFollow], root);
+  expect(runFollow.status).toBe(0);
+  expect(runFollow.stderr).toBe('');
+  const outFollow = JSON.parse(runFollow.stdout) as {
+    records: Array<{ locator: string }>;
+  };
+  const locs = outFollow.records.map((r) => r.locator);
+  expect(locs).toEqual(['loc-real']);
+  expect(new Set(locs).size).toBe(locs.length);
+});
+
+test('thoth run discovery/parse permission errors obey keep-going and fail-fast', () => {
+  if (process.platform === 'win32') {
+    return;
+  }
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const tmpRoot = path.join(root, 'temp');
+  fs.mkdirSync(tmpRoot, { recursive: true });
+  const repo = fs.mkdtempSync(path.join(tmpRoot, 'p3-perm-'));
+
+  const goodDir = path.join(repo, 'good');
+  const deniedDir = path.join(repo, 'denied');
+  fs.mkdirSync(goodDir, { recursive: true });
+  fs.mkdirSync(deniedDir, { recursive: true });
+  fs.writeFileSync(
+    path.join(goodDir, 'ok.thoth.yaml'),
+    'locator: "ok"\nmeta:\n  n: 1\n',
+    'utf8',
+  );
+  fs.writeFileSync(
+    path.join(deniedDir, 'bad.thoth.yaml'),
+    'locator: "bad"\nmeta:\n  n: 2\n',
+    'utf8',
+  );
+
+  try {
+    fs.chmodSync(deniedDir, 0o000);
+    try {
+      fs.readdirSync(deniedDir);
+      fs.chmodSync(deniedDir, 0o755);
+      return;
+    } catch {
+      // expected path is unreadable
+    }
+
+    const cfgKeep = path.join(repo, 'keep.cue');
+    writeCueConfig(
+      cfgKeep,
+      `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+}`,
+    );
+    const runKeep = runThoth(bin, ['run', '--config', cfgKeep], root);
+    expect(runKeep.status).toBe(0);
+    expect(runKeep.stderr).toBe('');
+    const outKeep = JSON.parse(runKeep.stdout) as {
+      records: Array<{ locator: string }>;
+      errors?: Array<{ stage: string; locator: string }>;
+    };
+    expect(outKeep.records.map((r) => r.locator)).toContain('ok');
+    expect(
+      (outKeep.errors ?? []).some(
+        (e) =>
+          e.stage === 'discover-meta-files' && e.locator.includes('denied'),
+      ),
+    ).toBe(true);
+
+    const cfgFail = path.join(repo, 'fail.cue');
+    writeCueConfig(
+      cfgFail,
+      `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
+  errors: { mode: "fail-fast" }
+}`,
+    );
+    const runFail = runThoth(bin, ['run', '--config', cfgFail], root);
+    expect(runFail.status).not.toBe(0);
+    expect(runFail.stdout).toBe('');
+    expect(runFail.stderr.includes('denied')).toBe(true);
+  } finally {
+    try {
+      fs.chmodSync(deniedDir, 0o755);
+    } catch {}
+  }
+});
+
+test('thoth run parse-validate-yaml unreadable file obeys keep-going and fail-fast', () => {
+  if (process.platform === 'win32') {
+    return;
+  }
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const tmpRoot = path.join(root, 'temp');
+  fs.mkdirSync(tmpRoot, { recursive: true });
+  const repo = fs.mkdtempSync(path.join(tmpRoot, 'p3-parse-perm-'));
+
+  fs.writeFileSync(
+    path.join(repo, 'good.thoth.yaml'),
+    'locator: "good"\nmeta:\n  n: 1\n',
+    'utf8',
+  );
+  const unreadable = path.join(repo, 'blocked.thoth.yaml');
+  fs.writeFileSync(unreadable, 'locator: "blocked"\nmeta:\n  n: 2\n', 'utf8');
+
+  try {
+    fs.chmodSync(unreadable, 0o000);
+    try {
+      fs.readFileSync(unreadable, 'utf8');
+      fs.chmodSync(unreadable, 0o644);
+      return;
+    } catch {
+      // expected unreadable file
+    }
+
+    const cfgKeep = path.join(repo, 'keep.cue');
+    writeCueConfig(
+      cfgKeep,
+      `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+}`,
+    );
+    const runKeep = runThoth(bin, ['run', '--config', cfgKeep], root);
+    expect(runKeep.status).toBe(0);
+    expect(runKeep.stderr).toBe('');
+    const outKeep = JSON.parse(runKeep.stdout) as {
+      records: Array<{ locator: string; error?: { stage: string } }>;
+      errors?: Array<{ stage: string; locator: string }>;
+    };
+    expect(outKeep.records.map((r) => r.locator)).toContain('good');
+    expect(
+      outKeep.records.some(
+        (r) =>
+          r.locator === 'blocked.thoth.yaml' &&
+          r.error &&
+          r.error.stage === 'parse-validate-yaml',
+      ),
+    ).toBe(true);
+    expect(
+      (outKeep.errors ?? []).some(
+        (e) =>
+          e.stage === 'parse-validate-yaml' &&
+          e.locator === 'blocked.thoth.yaml',
+      ),
+    ).toBe(true);
+
+    const cfgFail = path.join(repo, 'fail.cue');
+    writeCueConfig(
+      cfgFail,
+      `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
+  errors: { mode: "fail-fast" }
+}`,
+    );
+    const runFail = runThoth(bin, ['run', '--config', cfgFail], root);
+    expect(runFail.status).not.toBe(0);
+    expect(runFail.stdout).toBe('');
+    expect(runFail.stderr.includes('blocked.thoth.yaml')).toBe(true);
+  } finally {
+    try {
+      fs.chmodSync(unreadable, 0o644);
+    } catch {}
+  }
 });
 
 test('thoth run pipeline parse-validate-yaml fail-fast exits non-zero and includes invalid file path', () => {

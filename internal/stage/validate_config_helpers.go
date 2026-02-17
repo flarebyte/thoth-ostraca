@@ -20,7 +20,7 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	out.Meta.ConfigPath = "" // do not persist configPath in output
 
 	// Discovery
-	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore {
+	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore || min.Discovery.HasFollowSymlink {
 		if out.Meta.Discovery == nil {
 			out.Meta.Discovery = &DiscoveryMeta{}
 		}
@@ -29,6 +29,9 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 		if min.Discovery.HasNoGitignore {
 			out.Meta.Discovery.NoGitignore = min.Discovery.NoGitignore
+		}
+		if min.Discovery.HasFollowSymlink {
+			out.Meta.Discovery.FollowSymlinks = min.Discovery.FollowSymlinks
 		}
 	}
 

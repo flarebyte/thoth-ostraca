@@ -2,7 +2,6 @@ package stage
 
 import (
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"sort"
@@ -86,51 +85,143 @@ func displayDiscoveryPath(absRoot string, p string) string {
 	return filepath.ToSlash(p)
 }
 
+func addDiscoveryError(envErrs *[]Error, absRoot string, p string, err error) {
+	*envErrs = append(*envErrs, Error{
+		Stage:   "discover-meta-files",
+		Locator: displayDiscoveryPath(absRoot, p),
+		Message: err.Error(),
+	})
+}
+
+func discoveryFatal(absRoot string, p string, err error) error {
+	return fmt.Errorf("discover-meta-files: %s: %v", displayDiscoveryPath(absRoot, p), err)
+}
+
+func shouldIgnore(absRoot, rel string, isDir bool, noGitignore bool) bool {
+	if noGitignore {
+		return false
+	}
+	return matchIgnore(absRoot, rel, isDir)
+}
+
 // findThothYAMLs walks absRoot and returns sorted relative locators of *.thoth.yaml files,
 // respecting .gitignore patterns unless noGitignore is true.
-func findThothYAMLs(absRoot string, noGitignore bool, mode string) ([]string, []Error, error) {
-	var locators []string
+func findThothYAMLs(absRoot string, noGitignore bool, followSymlinks bool, mode string) ([]string, []Error, error) {
 	var envErrs []Error
-	err := filepath.WalkDir(absRoot, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			pathLabel := displayDiscoveryPath(absRoot, p)
-			if mode == "keep-going" {
-				envErrs = append(envErrs, Error{Stage: "discover-meta-files", Locator: pathLabel, Message: err.Error()})
-				if d != nil && d.IsDir() {
-					return fs.SkipDir
-				}
-				return nil
-			}
-			return fmt.Errorf("discover-meta-files: %s: %v", pathLabel, err)
-		}
-		if p == absRoot {
+	locatorSet := map[string]struct{}{}
+	visitedDirs := map[string]struct{}{}
+
+	var walkDir func(string) error
+	walkDir = func(dirPath string) error {
+		relDir := displayDiscoveryPath(absRoot, dirPath)
+		if relDir != "." && shouldIgnore(absRoot, filepath.FromSlash(relDir), true, noGitignore) {
 			return nil
 		}
-		rel, err := filepath.Rel(absRoot, p)
+
+		canonDir, err := filepath.EvalSymlinks(dirPath)
 		if err != nil {
-			pathLabel := displayDiscoveryPath(absRoot, p)
 			if mode == "keep-going" {
-				envErrs = append(envErrs, Error{Stage: "discover-meta-files", Locator: pathLabel, Message: err.Error()})
+				addDiscoveryError(&envErrs, absRoot, dirPath, err)
 				return nil
 			}
-			return fmt.Errorf("discover-meta-files: %s: %v", pathLabel, err)
+			return discoveryFatal(absRoot, dirPath, err)
 		}
-		isDir := d.IsDir()
-		if !noGitignore {
-			if matchIgnore(absRoot, rel, isDir) {
-				if isDir {
-					return fs.SkipDir
+		if _, ok := visitedDirs[canonDir]; ok {
+			return nil
+		}
+		visitedDirs[canonDir] = struct{}{}
+
+		entries, err := os.ReadDir(dirPath)
+		if err != nil {
+			if mode == "keep-going" {
+				addDiscoveryError(&envErrs, absRoot, dirPath, err)
+				return nil
+			}
+			return discoveryFatal(absRoot, dirPath, err)
+		}
+
+		var symlinkDirs []string
+		for _, ent := range entries {
+			name := ent.Name()
+			childPath := filepath.Join(dirPath, name)
+			relChild, err := filepath.Rel(absRoot, childPath)
+			if err != nil {
+				if mode == "keep-going" {
+					addDiscoveryError(&envErrs, absRoot, childPath, err)
+					continue
 				}
-				return nil
+				return discoveryFatal(absRoot, childPath, err)
+			}
+
+			info, err := os.Lstat(childPath)
+			if err != nil {
+				if mode == "keep-going" {
+					addDiscoveryError(&envErrs, absRoot, childPath, err)
+					continue
+				}
+				return discoveryFatal(absRoot, childPath, err)
+			}
+			isSymlink := (info.Mode() & os.ModeSymlink) != 0
+
+			if isSymlink {
+				targetInfo, err := os.Stat(childPath)
+				if err != nil {
+					if mode == "keep-going" {
+						addDiscoveryError(&envErrs, absRoot, childPath, err)
+						continue
+					}
+					return discoveryFatal(absRoot, childPath, err)
+				}
+				if targetInfo.IsDir() {
+					if followSymlinks {
+						symlinkDirs = append(symlinkDirs, childPath)
+					}
+					continue
+				}
+			}
+
+			if info.IsDir() {
+				if err := walkDir(childPath); err != nil {
+					return err
+				}
+				continue
+			}
+
+			if shouldIgnore(absRoot, relChild, false, noGitignore) {
+				continue
+			}
+			if hasThothYAML(name) {
+				locatorSet[filepath.ToSlash(relChild)] = struct{}{}
 			}
 		}
-		if !isDir && hasThothYAML(d.Name()) {
-			locators = append(locators, filepath.ToSlash(rel))
+
+		sort.Strings(symlinkDirs)
+		for _, symlinkDir := range symlinkDirs {
+			relChild, err := filepath.Rel(absRoot, symlinkDir)
+			if err != nil {
+				if mode == "keep-going" {
+					addDiscoveryError(&envErrs, absRoot, symlinkDir, err)
+					continue
+				}
+				return discoveryFatal(absRoot, symlinkDir, err)
+			}
+			if shouldIgnore(absRoot, relChild, true, noGitignore) {
+				continue
+			}
+			if err := walkDir(symlinkDir); err != nil {
+				return err
+			}
 		}
 		return nil
-	})
-	if err != nil {
+	}
+
+	if err := walkDir(absRoot); err != nil {
 		return nil, nil, err
+	}
+
+	locators := make([]string, 0, len(locatorSet))
+	for l := range locatorSet {
+		locators = append(locators, l)
 	}
 	sort.Strings(locators)
 	return locators, envErrs, nil

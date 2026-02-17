@@ -47,6 +47,12 @@ func parseDiscoverySection(v cue.Value) Discovery {
 			d.HasNoGitignore = true
 		}
 	}
+	fsv := dv.LookupPath(cue.ParsePath("followSymlinks"))
+	if fsv.Exists() && (fsv.Kind() == cue.BoolKind) {
+		if err := fsv.Decode(&d.FollowSymlinks); err == nil {
+			d.HasFollowSymlink = true
+		}
+	}
 	return d
 }
 
