@@ -38,6 +38,7 @@ type Meta struct {
 	MetaFiles       []string        `json:"metaFiles,omitempty"`
 	Diff            *DiffReport     `json:"diff,omitempty"`
 	Lua             *LuaMeta        `json:"lua,omitempty"`
+	LuaSandbox      *LuaSandboxMeta `json:"luaSandbox,omitempty"`
 	Shell           *ShellMeta      `json:"shell,omitempty"`
 	Output          *OutputMeta     `json:"output,omitempty"`
 	Reduced         any             `json:"reduced,omitempty"`
@@ -111,6 +112,23 @@ type LuaMeta struct {
 	MapInline     string `json:"mapInline,omitempty"`
 	PostMapInline string `json:"postMapInline,omitempty"`
 	ReduceInline  string `json:"reduceInline,omitempty"`
+}
+
+// LuaSandboxMeta holds runtime sandbox controls for Lua.
+type LuaSandboxMeta struct {
+	TimeoutMs           int                `json:"timeoutMs"`
+	InstructionLimit    int                `json:"instructionLimit"`
+	MemoryLimitBytes    int                `json:"memoryLimitBytes"`
+	Libs                LuaSandboxLibsMeta `json:"libs"`
+	DeterministicRandom bool               `json:"deterministicRandom"`
+}
+
+// LuaSandboxLibsMeta toggles exposed Lua libs.
+type LuaSandboxLibsMeta struct {
+	Base   bool `json:"base"`
+	Table  bool `json:"table"`
+	String bool `json:"string"`
+	Math   bool `json:"math"`
 }
 
 // ShellMeta holds minimal shell execution settings.

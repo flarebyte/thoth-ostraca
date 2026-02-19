@@ -2,9 +2,6 @@ package stage
 
 import (
 	"fmt"
-	"time"
-
-	lua "github.com/yuin/gopher-lua"
 )
 
 const luaMapStage = "lua-map"
@@ -31,7 +28,7 @@ func buildLuaMapCode(in Envelope) string {
 }
 
 // processLuaMapRecord runs the Lua map code for a single record.
-func processLuaMapRecord(rec Record, code string, mode string) (Record, *Error, error) {
+func processLuaMapRecord(rec Record, code string, mode string, metaCfg *Meta) (Record, *Error, error) {
 	var locator string
 	var meta map[string]any
 	if rec.Error != nil {
@@ -40,47 +37,21 @@ func processLuaMapRecord(rec Record, code string, mode string) (Record, *Error, 
 	locator = rec.Locator
 	meta = rec.Meta
 
-	L := newMinimalLua()
-	L.SetGlobal("locator", lua.LString(locator))
-	L.SetGlobal("meta", toLValue(L, meta))
-
-	fn, err := L.LoadString(code)
+	ret, violation, err := runLuaScriptWithSandbox(luaMapStage, metaCfg, locator, map[string]any{
+		"locator": locator,
+		"meta":    meta,
+	}, code)
 	if err != nil {
 		if mode == "keep-going" {
-			L.Close()
 			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: err.Error()}}, &Error{Stage: luaMapStage, Locator: locator, Message: err.Error()}, nil
 		}
-		L.Close()
 		return Record{}, nil, fmt.Errorf("lua-map: %v", err)
 	}
-	L.Push(fn)
-	done := make(chan struct{})
-	var callErr error
-	go func() {
-		callErr = L.PCall(0, 1, nil)
-		close(done)
-	}()
-	select {
-	case <-done:
-		if callErr != nil {
-			if mode == "keep-going" {
-				L.Close()
-				return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: callErr.Error()}}, &Error{Stage: luaMapStage, Locator: locator, Message: callErr.Error()}, nil
-			}
-			L.Close()
-			return Record{}, nil, fmt.Errorf("lua-map: %v", callErr)
-		}
-	case <-time.After(200 * time.Millisecond):
+	if violation != "" {
 		if mode == "keep-going" {
-			L.Close()
-			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: "timeout"}}, &Error{Stage: luaMapStage, Locator: locator, Message: "timeout"}, nil
+			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: violation}}, &Error{Stage: luaMapStage, Locator: locator, Message: violation}, nil
 		}
-		L.Close()
-		return Record{}, nil, fmt.Errorf("lua-map: timeout")
+		return Record{}, nil, luaViolationFailFast(luaMapStage, violation)
 	}
-	ret := L.Get(-1)
-	L.Pop(1)
-	mapped := fromLValue(ret)
-	L.Close()
-	return Record{Locator: locator, Meta: meta, Mapped: mapped}, nil, nil
+	return Record{Locator: locator, Meta: meta, Mapped: ret}, nil, nil
 }

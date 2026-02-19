@@ -2,7 +2,6 @@ package stage
 
 import (
 	"fmt"
-	"time"
 
 	lua "github.com/yuin/gopher-lua"
 )
@@ -32,28 +31,10 @@ func buildLuaPredicate(in Envelope) string {
 	return pred
 }
 
-// newMinimalLua creates a Lua state with a minimal set of libraries opened.
-func newMinimalLua() *lua.LState {
-	L := lua.NewState(lua.Options{SkipOpenLibs: true})
-	L.Push(L.NewFunction(lua.OpenBase))
-	L.Push(lua.LString("base"))
-	L.Call(1, 0)
-	L.Push(L.NewFunction(lua.OpenString))
-	L.Push(lua.LString("string"))
-	L.Call(1, 0)
-	L.Push(L.NewFunction(lua.OpenTable))
-	L.Push(lua.LString("table"))
-	L.Call(1, 0)
-	L.Push(L.NewFunction(lua.OpenMath))
-	L.Push(lua.LString("math"))
-	L.Call(1, 0)
-	return L
-}
-
 // processLuaFilterRecord applies the lua predicate to a single record and
 // returns the outcome mimicking the original behavior. The mode determines
 // whether to keep going or fail fast.
-func processLuaFilterRecord(rec Record, pred string, mode string) (keep bool, out Record, envE *Error, fatal error) {
+func processLuaFilterRecord(rec Record, pred string, mode string, metaCfg *Meta) (keep bool, out Record, envE *Error, fatal error) {
 	locator := rec.Locator
 	meta := rec.Meta
 	recErr := rec.Error
@@ -62,50 +43,23 @@ func processLuaFilterRecord(rec Record, pred string, mode string) (keep bool, ou
 		return true, rec, nil, nil
 	}
 
-	L := newMinimalLua()
-	// Set globals
-	L.SetGlobal("locator", lua.LString(locator))
-	L.SetGlobal("meta", toLValue(L, meta))
-
-	fn, err := L.LoadString(pred)
+	ret, violation, err := runLuaScriptWithSandbox(luaFilterStage, metaCfg, locator, map[string]any{
+		"locator": locator,
+		"meta":    meta,
+	}, pred)
 	if err != nil {
 		if mode == "keep-going" {
-			L.Close()
 			return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: err.Error()}}, &Error{Stage: luaFilterStage, Locator: locator, Message: err.Error()}, nil
 		}
-		L.Close()
 		return false, Record{}, nil, fmt.Errorf("lua-filter: %v", err)
 	}
-	L.Push(fn)
-	done := make(chan struct{})
-	var callErr error
-	go func() {
-		callErr = L.PCall(0, 1, nil)
-		close(done)
-	}()
-	select {
-	case <-done:
-		if callErr != nil {
-			if mode == "keep-going" {
-				L.Close()
-				return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: callErr.Error()}}, &Error{Stage: luaFilterStage, Locator: locator, Message: callErr.Error()}, nil
-			}
-			L.Close()
-			return false, Record{}, nil, fmt.Errorf("lua-filter: %v", callErr)
-		}
-	case <-time.After(200 * time.Millisecond):
+	if violation != "" {
 		if mode == "keep-going" {
-			L.Close()
-			return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: "timeout"}}, &Error{Stage: luaFilterStage, Locator: locator, Message: "timeout"}, nil
+			return true, Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaFilterStage, Message: violation}}, &Error{Stage: luaFilterStage, Locator: locator, Message: violation}, nil
 		}
-		L.Close()
-		return false, Record{}, nil, fmt.Errorf("lua-filter: timeout")
+		return false, Record{}, nil, luaViolationFailFast(luaFilterStage, violation)
 	}
-
-	ret := L.Get(-1)
-	L.Pop(1)
-	keep = lua.LVAsBool(ret)
-	L.Close()
+	keep, _ = ret.(bool)
 	if keep {
 		return true, Record{Locator: locator, Meta: meta}, nil, nil
 	}

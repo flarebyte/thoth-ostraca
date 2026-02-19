@@ -17,7 +17,7 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 	var envErrs []Error
 	results := runIndexedParallel(n, workers, func(idx int) luaMapRes {
 		r := in.Records[idx]
-		rec, envE, fatal := processLuaMapRecord(r, code, mode)
+		rec, envE, fatal := processLuaMapRecord(r, code, mode, in.Meta)
 		return luaMapRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
 	})
 	var firstErr error

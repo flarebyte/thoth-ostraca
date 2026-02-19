@@ -44,6 +44,7 @@ type Minimal struct {
 	Discovery     Discovery
 	Validation    Validation
 	Limits        Limits
+	LuaSandbox    LuaSandbox
 	LocatorPolicy LocatorPolicy
 	FileInfo      FileInfo
 	Git           Git
@@ -82,6 +83,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Discovery = parseDiscoverySection(v)
 	m.Validation = parseValidationSection(v)
 	m.Limits = parseLimitsSection(v)
+	m.LuaSandbox = parseLuaSandboxSection(v)
 	m.LocatorPolicy = parseLocatorPolicySection(v)
 	m.FileInfo = parseFileInfoSection(v)
 	m.Git = parseGitSection(v)
@@ -108,6 +110,32 @@ type Limits struct {
 	HasMaxYAMLBytes       bool
 	MaxRecordsInMemory    int
 	HasMaxRecordsInMemory bool
+}
+
+// LuaSandboxLibs holds optional lua libs toggles.
+type LuaSandboxLibs struct {
+	Base      bool
+	Table     bool
+	String    bool
+	Math      bool
+	HasBase   bool
+	HasTable  bool
+	HasString bool
+	HasMath   bool
+}
+
+// LuaSandbox holds optional lua sandbox settings and presence flags.
+type LuaSandbox struct {
+	TimeoutMs              int
+	InstructionLimit       int
+	MemoryLimitBytes       int
+	DeterministicRandom    bool
+	HasSection             bool
+	HasTimeoutMs           bool
+	HasInstructionLimit    bool
+	HasMemoryLimitBytes    bool
+	HasDeterministicRandom bool
+	Libs                   LuaSandboxLibs
 }
 
 // Discovery holds optional discovery config and presence flags.

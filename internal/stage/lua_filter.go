@@ -19,7 +19,7 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	workers := getWorkers(in.Meta)
 	results := runIndexedParallel(n, workers, func(idx int) luaFilterRes {
 		r := in.Records[idx]
-		keep, outRec, envE, fatal := processLuaFilterRecord(r, pred, mode)
+		keep, outRec, envE, fatal := processLuaFilterRecord(r, pred, mode, in.Meta)
 		return luaFilterRes{idx: idx, keep: keep, out: outRec, envE: envE, fatal: fatal}
 	})
 	var firstErr error
