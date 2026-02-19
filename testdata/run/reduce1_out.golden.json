@@ -26,7 +26,13 @@
     "shell": {
       "enabled": true,
       "program": "sh",
-      "argsTemplate": ["-c", "echo '{json}'"]
+      "argsTemplate": ["-c", "echo '{json}'"],
+      "workingDir": ".",
+      "timeoutMs": 60000,
+      "capture": { "stdout": true, "stderr": true, "maxBytes": 1048576 },
+      "strictTemplating": true,
+      "killProcessGroup": true,
+      "termGraceMs": 2000
     },
     "reduced": 1
   }

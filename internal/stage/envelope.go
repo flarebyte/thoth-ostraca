@@ -133,10 +133,23 @@ type LuaSandboxLibsMeta struct {
 
 // ShellMeta holds minimal shell execution settings.
 type ShellMeta struct {
-	Enabled      bool     `json:"enabled,omitempty"`
-	Program      string   `json:"program,omitempty"`
-	ArgsTemplate []string `json:"argsTemplate,omitempty"`
-	TimeoutMs    int      `json:"timeoutMs,omitempty"`
+	Enabled          bool              `json:"enabled"`
+	Program          string            `json:"program"`
+	ArgsTemplate     []string          `json:"argsTemplate,omitempty"`
+	WorkingDir       string            `json:"workingDir"`
+	Env              map[string]string `json:"env,omitempty"`
+	TimeoutMs        int               `json:"timeoutMs"`
+	Capture          ShellCaptureMeta  `json:"capture"`
+	StrictTemplating bool              `json:"strictTemplating"`
+	KillProcessGroup bool              `json:"killProcessGroup"`
+	TermGraceMs      int               `json:"termGraceMs"`
+}
+
+// ShellCaptureMeta controls shell output capture behavior.
+type ShellCaptureMeta struct {
+	Stdout   bool `json:"stdout"`
+	Stderr   bool `json:"stderr"`
+	MaxBytes int  `json:"maxBytes"`
 }
 
 // OutputMeta holds minimal output settings.

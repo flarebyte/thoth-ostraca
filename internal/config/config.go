@@ -162,14 +162,32 @@ type Map struct {
 
 // Shell holds optional shell execution configuration.
 type Shell struct {
-	Enabled      bool
-	Program      string
-	ArgsTemplate []string
-	TimeoutMs    int
-	HasEnabled   bool
-	HasProgram   bool
-	HasArgs      bool
-	HasTimeout   bool
+	Enabled          bool
+	Program          string
+	ArgsTemplate     []string
+	WorkingDir       string
+	Env              map[string]string
+	TimeoutMs        int
+	CaptureStdout    bool
+	CaptureStderr    bool
+	CaptureMaxBytes  int
+	StrictTemplating bool
+	KillProcessGroup bool
+	TermGraceMs      int
+	HasSection       bool
+	HasEnabled       bool
+	HasProgram       bool
+	HasArgs          bool
+	HasWorkingDir    bool
+	HasEnv           bool
+	HasTimeout       bool
+	HasCapture       bool
+	HasCaptureStdout bool
+	HasCaptureStderr bool
+	HasCaptureMax    bool
+	HasStrictTpl     bool
+	HasKillPG        bool
+	HasTermGrace     bool
 }
 
 // PostMap holds optional post-map configuration.

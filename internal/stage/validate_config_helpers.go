@@ -6,6 +6,11 @@ const defaultMaxRecordsInMemory = 10000
 const defaultLuaTimeoutMs = 2000
 const defaultLuaInstructionLimit = 1000000
 const defaultLuaMemoryLimitBytes = 8388608
+const defaultShellProgram = "bash"
+const defaultShellWorkingDir = "."
+const defaultShellTimeoutMs = 60000
+const defaultShellCaptureMaxBytes = 1048576
+const defaultShellTermGraceMs = 2000
 
 // sanitizeWorkers ensures a minimum of 1 worker when present.
 func sanitizeWorkers(n int) int {
@@ -135,9 +140,19 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	}
 
 	// Shell
-	if min.Shell.HasEnabled || min.Shell.HasProgram || min.Shell.HasArgs || min.Shell.HasTimeout {
+	if min.Shell.HasSection {
 		if out.Meta.Shell == nil {
-			out.Meta.Shell = &ShellMeta{}
+			out.Meta.Shell = &ShellMeta{
+				Enabled:          false,
+				Program:          defaultShellProgram,
+				WorkingDir:       defaultShellWorkingDir,
+				Env:              map[string]string{},
+				TimeoutMs:        defaultShellTimeoutMs,
+				Capture:          ShellCaptureMeta{Stdout: true, Stderr: true, MaxBytes: defaultShellCaptureMaxBytes},
+				StrictTemplating: true,
+				KillProcessGroup: true,
+				TermGraceMs:      defaultShellTermGraceMs,
+			}
 		}
 		if min.Shell.HasEnabled {
 			out.Meta.Shell.Enabled = min.Shell.Enabled
@@ -148,8 +163,53 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		if min.Shell.HasArgs {
 			out.Meta.Shell.ArgsTemplate = append([]string(nil), min.Shell.ArgsTemplate...)
 		}
+		if min.Shell.HasWorkingDir {
+			out.Meta.Shell.WorkingDir = min.Shell.WorkingDir
+		}
+		if min.Shell.HasEnv {
+			out.Meta.Shell.Env = make(map[string]string, len(min.Shell.Env))
+			for k, v := range min.Shell.Env {
+				out.Meta.Shell.Env[k] = v
+			}
+		}
 		if min.Shell.HasTimeout {
 			out.Meta.Shell.TimeoutMs = min.Shell.TimeoutMs
+		}
+		if min.Shell.HasCaptureStdout {
+			out.Meta.Shell.Capture.Stdout = min.Shell.CaptureStdout
+		}
+		if min.Shell.HasCaptureStderr {
+			out.Meta.Shell.Capture.Stderr = min.Shell.CaptureStderr
+		}
+		if min.Shell.HasCaptureMax {
+			out.Meta.Shell.Capture.MaxBytes = min.Shell.CaptureMaxBytes
+		}
+		if min.Shell.HasStrictTpl {
+			out.Meta.Shell.StrictTemplating = min.Shell.StrictTemplating
+		}
+		if min.Shell.HasKillPG {
+			out.Meta.Shell.KillProcessGroup = min.Shell.KillProcessGroup
+		}
+		if min.Shell.HasTermGrace {
+			out.Meta.Shell.TermGraceMs = min.Shell.TermGraceMs
+		}
+		if out.Meta.Shell.Program == "" {
+			out.Meta.Shell.Program = defaultShellProgram
+		}
+		if out.Meta.Shell.WorkingDir == "" {
+			out.Meta.Shell.WorkingDir = defaultShellWorkingDir
+		}
+		if out.Meta.Shell.Env == nil {
+			out.Meta.Shell.Env = map[string]string{}
+		}
+		if out.Meta.Shell.TimeoutMs < 0 {
+			out.Meta.Shell.TimeoutMs = defaultShellTimeoutMs
+		}
+		if out.Meta.Shell.Capture.MaxBytes < 0 {
+			out.Meta.Shell.Capture.MaxBytes = defaultShellCaptureMaxBytes
+		}
+		if out.Meta.Shell.TermGraceMs < 0 {
+			out.Meta.Shell.TermGraceMs = defaultShellTermGraceMs
 		}
 	}
 

@@ -2,6 +2,7 @@ package stage
 
 import (
 	"context"
+	"fmt"
 )
 
 func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
@@ -9,6 +10,9 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	opts := buildShellOptions(in)
 	if !opts.enabled {
 		return in, nil
+	}
+	if err := validateShellOptions(opts); err != nil {
+		return Envelope{}, fmt.Errorf("shell-exec: %v", err)
 	}
 
 	out := in
