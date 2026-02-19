@@ -44,6 +44,7 @@ type Minimal struct {
 	Discovery     Discovery
 	Validation    Validation
 	Limits        Limits
+	LuaSandbox    LuaSandbox
 	LocatorPolicy LocatorPolicy
 	FileInfo      FileInfo
 	Git           Git
@@ -52,6 +53,8 @@ type Minimal struct {
 	Shell         Shell
 	PostMap       PostMap
 	Reduce        Reduce
+	UpdateMeta    UpdateMeta
+	DiffMeta      DiffMeta
 	Output        Output
 	Errors        Errors
 	Workers       Workers
@@ -82,6 +85,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Discovery = parseDiscoverySection(v)
 	m.Validation = parseValidationSection(v)
 	m.Limits = parseLimitsSection(v)
+	m.LuaSandbox = parseLuaSandboxSection(v)
 	m.LocatorPolicy = parseLocatorPolicySection(v)
 	m.FileInfo = parseFileInfoSection(v)
 	m.Git = parseGitSection(v)
@@ -90,6 +94,14 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Shell = parseShellSection(v)
 	m.PostMap = parsePostMapSection(v)
 	m.Reduce = parseReduceSection(v)
+	m.UpdateMeta, err = parseUpdateMetaSection(v)
+	if err != nil {
+		return Minimal{}, err
+	}
+	m.DiffMeta, err = parseDiffMetaSection(v)
+	if err != nil {
+		return Minimal{}, err
+	}
 	m.Output = parseOutputSection(v)
 	m.Errors = parseErrorsSection(v)
 	m.Workers = parseWorkersSection(v)
@@ -104,8 +116,36 @@ type Validation struct {
 
 // Limits holds optional processing limits and presence flags.
 type Limits struct {
-	MaxYAMLBytes    int
-	HasMaxYAMLBytes bool
+	MaxYAMLBytes          int
+	HasMaxYAMLBytes       bool
+	MaxRecordsInMemory    int
+	HasMaxRecordsInMemory bool
+}
+
+// LuaSandboxLibs holds optional lua libs toggles.
+type LuaSandboxLibs struct {
+	Base      bool
+	Table     bool
+	String    bool
+	Math      bool
+	HasBase   bool
+	HasTable  bool
+	HasString bool
+	HasMath   bool
+}
+
+// LuaSandbox holds optional lua sandbox settings and presence flags.
+type LuaSandbox struct {
+	TimeoutMs              int
+	InstructionLimit       int
+	MemoryLimitBytes       int
+	DeterministicRandom    bool
+	HasSection             bool
+	HasTimeoutMs           bool
+	HasInstructionLimit    bool
+	HasMemoryLimitBytes    bool
+	HasDeterministicRandom bool
+	Libs                   LuaSandboxLibs
 }
 
 // Discovery holds optional discovery config and presence flags.
@@ -132,14 +172,32 @@ type Map struct {
 
 // Shell holds optional shell execution configuration.
 type Shell struct {
-	Enabled      bool
-	Program      string
-	ArgsTemplate []string
-	TimeoutMs    int
-	HasEnabled   bool
-	HasProgram   bool
-	HasArgs      bool
-	HasTimeout   bool
+	Enabled          bool
+	Program          string
+	ArgsTemplate     []string
+	WorkingDir       string
+	Env              map[string]string
+	TimeoutMs        int
+	CaptureStdout    bool
+	CaptureStderr    bool
+	CaptureMaxBytes  int
+	StrictTemplating bool
+	KillProcessGroup bool
+	TermGraceMs      int
+	HasSection       bool
+	HasEnabled       bool
+	HasProgram       bool
+	HasArgs          bool
+	HasWorkingDir    bool
+	HasEnv           bool
+	HasTimeout       bool
+	HasCapture       bool
+	HasCaptureStdout bool
+	HasCaptureStderr bool
+	HasCaptureMax    bool
+	HasStrictTpl     bool
+	HasKillPG        bool
+	HasTermGrace     bool
 }
 
 // PostMap holds optional post-map configuration.
@@ -152,6 +210,20 @@ type PostMap struct {
 type Reduce struct {
 	Inline    string
 	HasInline bool
+}
+
+// UpdateMeta holds optional update-meta patch config.
+type UpdateMeta struct {
+	Patch      map[string]any
+	HasSection bool
+	HasPatch   bool
+}
+
+// DiffMeta holds optional diff-meta expected patch config.
+type DiffMeta struct {
+	ExpectedPatch    map[string]any
+	HasSection       bool
+	HasExpectedPatch bool
 }
 
 // Output holds optional output config.

@@ -7,7 +7,10 @@
       "shell": {
         "exitCode": 0,
         "stdout": "{\"locator\":\"a\",\"name\":\"A\"}\n",
-        "stderr": ""
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
       },
       "post": { "exit": 0, "locator": "a" }
     }
@@ -16,6 +19,7 @@
     "contractVersion": "1",
     "config": { "configVersion": "v0", "action": "nop" },
     "discovery": { "root": "testdata/repos/yaml1" },
+    "limits": { "maxRecordsInMemory": 10000 },
     "lua": {
       "filterInline": "return (meta and meta.enabled) == true",
       "mapInline": "return { locator = locator, name = meta and meta.name }",
@@ -24,7 +28,13 @@
     "shell": {
       "enabled": true,
       "program": "sh",
-      "argsTemplate": ["-c", "echo '{json}'"]
+      "argsTemplate": ["-c", "echo '{json}'"],
+      "workingDir": ".",
+      "timeoutMs": 60000,
+      "capture": { "stdout": true, "stderr": true, "maxBytes": 1048576 },
+      "strictTemplating": true,
+      "killProcessGroup": true,
+      "termGraceMs": 2000
     },
     "reduced": 1
   }

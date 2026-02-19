@@ -2,6 +2,7 @@ package stage
 
 import (
 	"context"
+	"fmt"
 )
 
 func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
@@ -10,35 +11,20 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	if !opts.enabled {
 		return in, nil
 	}
+	if err := validateShellOptions(opts); err != nil {
+		return Envelope{}, fmt.Errorf("shell-exec: %v", err)
+	}
 
 	out := in
 	mode, _ := errorMode(in.Meta)
 	n := len(in.Records)
-	type res = shellExecRes
 	workers := getWorkers(in.Meta)
-	var envErrs []Error
-	results := runIndexedParallel(n, workers, func(idx int) res {
+	results := runIndexedParallel(n, workers, func(idx int) recordParallelRes {
 		r := in.Records[idx]
 		rec, envE, fatal := processShellRecord(ctx, r, opts, mode)
-		return res{idx: idx, rec: rec, envE: envE, fatal: fatal}
+		return recordParallelRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
 	})
-	var firstErr error
-	for _, rr := range results {
-		if rr.envE != nil {
-			envErrs = append(envErrs, *rr.envE)
-		}
-		if rr.fatal != nil && firstErr == nil {
-			firstErr = rr.fatal
-		}
-		out.Records[rr.idx] = rr.rec
-	}
-	if firstErr != nil {
-		return Envelope{}, firstErr
-	}
-	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
-	}
-	return out, nil
+	return mergeRecordParallelResults(out, results)
 }
 
 func init() { Register("shell-exec", shellExecRunner) }

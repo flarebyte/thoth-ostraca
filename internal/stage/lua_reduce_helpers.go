@@ -2,8 +2,9 @@ package stage
 
 import (
 	"fmt"
-	"time"
 )
+
+const luaReduceStage = "lua-reduce"
 
 // buildLuaReduceCode returns the Lua reduce code, wrapping expressions without explicit return.
 func buildLuaReduceCode(in Envelope) string {
@@ -27,7 +28,20 @@ func reduceItemFromRecord(rec Record) any {
 		m["mapped"] = rec.Mapped
 	}
 	if rec.Shell != nil {
-		m["shell"] = map[string]any{"exitCode": rec.Shell.ExitCode, "stdout": rec.Shell.Stdout, "stderr": rec.Shell.Stderr}
+		sm := map[string]any{
+			"exitCode": rec.Shell.ExitCode,
+			"timedOut": rec.Shell.TimedOut,
+		}
+		if rec.Shell.Stdout != nil {
+			sm["stdout"] = *rec.Shell.Stdout
+		}
+		if rec.Shell.Stderr != nil {
+			sm["stderr"] = *rec.Shell.Stderr
+		}
+		if rec.Shell.Error != nil {
+			sm["error"] = *rec.Shell.Error
+		}
+		m["shell"] = sm
 	}
 	if rec.Post != nil {
 		m["post"] = rec.Post
@@ -37,35 +51,24 @@ func reduceItemFromRecord(rec Record) any {
 
 // runLuaReduce executes the reduce across all records and returns the final accumulator.
 func runLuaReduce(in Envelope, code string) (any, error) {
-	L := newMinimalLua()
-	defer L.Close()
 	var acc any
 	for _, rec := range in.Records {
 		item := reduceItemFromRecord(rec)
-		L.SetGlobal("acc", toLValue(L, acc))
-		L.SetGlobal("item", toLValue(L, item))
-		fn, err := L.LoadString(code)
+		locator := rec.Locator
+		if locator == "" {
+			locator = "reduce"
+		}
+		ret, violation, err := runLuaScriptWithSandbox(luaReduceStage, in.Meta, locator, map[string]any{
+			"acc":  acc,
+			"item": item,
+		}, code)
 		if err != nil {
 			return nil, fmt.Errorf("lua-reduce: %v", err)
 		}
-		L.Push(fn)
-		done := make(chan struct{})
-		var callErr error
-		go func() {
-			callErr = L.PCall(0, 1, nil)
-			close(done)
-		}()
-		select {
-		case <-done:
-			if callErr != nil {
-				return nil, fmt.Errorf("lua-reduce: %v", callErr)
-			}
-		case <-time.After(200 * time.Millisecond):
-			return nil, fmt.Errorf("lua-reduce: timeout")
+		if violation != "" {
+			return nil, luaViolationFailFast(luaReduceStage, violation)
 		}
-		ret := L.Get(-1)
-		L.Pop(1)
-		acc = fromLValue(ret)
+		acc = ret
 	}
 	return acc, nil
 }

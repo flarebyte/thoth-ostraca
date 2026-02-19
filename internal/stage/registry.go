@@ -4,7 +4,9 @@ import "context"
 
 // Deps is a placeholder for stage dependencies (e.g., FS, log, etc.).
 // Keep minimal for now.
-type Deps struct{}
+type Deps struct {
+	RecordStream <-chan Record
+}
 
 // Runner executes a stage.
 type Runner func(ctx context.Context, in Envelope, deps Deps) (Envelope, error)

@@ -2,9 +2,6 @@ package stage
 
 import (
 	"fmt"
-	"time"
-
-	lua "github.com/yuin/gopher-lua"
 )
 
 const luaPostMapStage = "lua-postmap"
@@ -44,63 +41,44 @@ func processDefaultPostMapRecord(rec Record, mode string) (Record, *Error, error
 }
 
 // processLuaPostMapRecord runs the Lua postmap code against a record.
-func processLuaPostMapRecord(rec Record, code string, mode string) (Record, *Error, error) {
-	L := newMinimalLua()
-	// Globals
-	L.SetGlobal("locator", lua.LString(rec.Locator))
-	L.SetGlobal("meta", toLValue(L, rec.Meta))
-	L.SetGlobal("mapped", toLValue(L, rec.Mapped))
+func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta) (Record, *Error, error) {
 	var shellMap map[string]any
 	if rec.Shell != nil {
 		shellMap = map[string]any{
 			"exitCode": rec.Shell.ExitCode,
-			"stdout":   rec.Shell.Stdout,
-			"stderr":   rec.Shell.Stderr,
+			"timedOut": rec.Shell.TimedOut,
+		}
+		if rec.Shell.Stdout != nil {
+			shellMap["stdout"] = *rec.Shell.Stdout
+		}
+		if rec.Shell.Stderr != nil {
+			shellMap["stderr"] = *rec.Shell.Stderr
+		}
+		if rec.Shell.Error != nil {
+			shellMap["error"] = *rec.Shell.Error
 		}
 	}
-	L.SetGlobal("shell", toLValue(L, shellMap))
-
-	fn, err := L.LoadString(code)
+	ret, violation, err := runLuaScriptWithSandbox(luaPostMapStage, metaCfg, rec.Locator, map[string]any{
+		"locator": rec.Locator,
+		"meta":    rec.Meta,
+		"mapped":  rec.Mapped,
+		"shell":   shellMap,
+	}, code)
 	if err != nil {
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaPostMapStage, Message: err.Error()}
-			L.Close()
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: err.Error()}, nil
 		}
-		L.Close()
 		return Record{}, nil, fmt.Errorf("lua-postmap: %v", err)
 	}
-	L.Push(fn)
-	done := make(chan struct{})
-	var callErr error
-	go func() {
-		callErr = L.PCall(0, 1, nil)
-		close(done)
-	}()
-	select {
-	case <-done:
-		if callErr != nil {
-			if mode == "keep-going" {
-				rec.Error = &RecError{Stage: luaPostMapStage, Message: callErr.Error()}
-				L.Close()
-				return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: callErr.Error()}, nil
-			}
-			L.Close()
-			return Record{}, nil, fmt.Errorf("lua-postmap: %v", callErr)
-		}
-	case <-time.After(200 * time.Millisecond):
+	if violation != "" {
 		if mode == "keep-going" {
-			rec.Error = &RecError{Stage: luaPostMapStage, Message: "timeout"}
-			L.Close()
-			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: "timeout"}, nil
+			rec.Error = &RecError{Stage: luaPostMapStage, Message: violation}
+			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: violation}, nil
 		}
-		L.Close()
-		return Record{}, nil, fmt.Errorf("lua-postmap: timeout")
+		return Record{}, nil, luaViolationFailFast(luaPostMapStage, violation)
 	}
-	ret := L.Get(-1)
-	L.Pop(1)
-	rec.Post = fromLValue(ret)
-	L.Close()
+	rec.Post = ret
 	return rec, nil, nil
 }
 

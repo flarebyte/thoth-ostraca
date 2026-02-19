@@ -1,0 +1,11 @@
+locator: a.txt
+meta:
+  add:
+    k: 1
+  arr:
+    - 7
+  keep: 1
+  obj:
+    x: 1
+    y: 9
+    z: 3

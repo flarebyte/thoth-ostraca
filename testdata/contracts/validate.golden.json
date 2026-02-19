@@ -1,23 +1,12 @@
 {
   "records": [
-    { "locator": "a", "meta": { "enabled": true, "name": "OK" } },
-    {
-      "locator": "badyaml.thoth.yaml",
-      "error": { "stage": "parse-validate-yaml", "message": "failed" }
-    },
-    { "locator": "luaerr", "meta": { "enabled": true, "name": "LuaErr" } }
+    { "locator": "a", "meta": { "enabled": true, "name": "A" } },
+    { "locator": "b", "meta": { "enabled": false, "name": "B" } }
   ],
   "meta": {
     "contractVersion": "1",
     "config": { "configVersion": "v0", "action": "validate" },
-    "discovery": { "root": "testdata/repos/keep1" },
-    "errors": { "mode": "keep-going", "embedErrors": true }
-  },
-  "errors": [
-    {
-      "stage": "parse-validate-yaml",
-      "locator": "badyaml.thoth.yaml",
-      "message": "missing required field: meta"
-    }
-  ]
+    "discovery": { "root": "testdata/repos/yaml1" },
+    "limits": { "maxRecordsInMemory": 10000 }
+  }
 }

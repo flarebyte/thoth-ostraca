@@ -44,6 +44,7 @@
       "root": "testdata/repos/p3_discovery1",
       "noGitignore": true
     },
+    "limits": { "maxRecordsInMemory": 10000 },
     "reduced": 4
   }
 }

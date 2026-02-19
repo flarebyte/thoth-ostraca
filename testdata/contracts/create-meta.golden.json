@@ -6,6 +6,7 @@
   "meta": {
     "contractVersion": "1",
     "config": { "configVersion": "v0", "action": "create-meta" },
-    "discovery": { "root": "temp/create1_repo_contract" }
+    "discovery": { "root": "temp/create1_repo_contract" },
+    "limits": { "maxRecordsInMemory": 10000 }
   }
 }

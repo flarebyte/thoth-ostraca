@@ -15,7 +15,7 @@ func luaPostMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, er
 
 	code := buildLuaPostMapCode(in)
 	return runPostMapParallel(in, mode, func(r Record) (Record, *Error, error) {
-		return processLuaPostMapRecord(r, code, mode)
+		return processLuaPostMapRecord(r, code, mode, in.Meta)
 	})
 }
 

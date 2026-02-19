@@ -19,15 +19,7 @@ func loadOneExisting(root string, rec Record) (Record, *Error, error) {
 		// Not found → expose path only
 		if os.IsNotExist(err) {
 			// attach existingMetaPath only
-			m := map[string]any{"existingMetaPath": rel}
-			if rec.Post != nil {
-				if pm, ok := rec.Post.(map[string]any); ok {
-					for k, v := range pm {
-						m[k] = v
-					}
-				}
-			}
-			rec.Post = m
+			rec.Post = mergePostMap(rec, map[string]any{"existingMetaPath": rel})
 			return rec, nil, nil
 		}
 		return rec, &Error{Stage: loadExistingStage, Locator: rec.Locator, Message: err.Error()}, err
@@ -48,48 +40,29 @@ func loadOneExisting(root string, rec Record) (Record, *Error, error) {
 	if !ok {
 		return rec, &Error{Stage: loadExistingStage, Locator: rec.Locator, Message: "missing or invalid meta"}, fmt.Errorf("invalid meta YAML: %s", rel)
 	}
-	m := map[string]any{"existingMetaPath": rel, "existingMeta": ymeta}
-	if rec.Post != nil {
-		if pm, ok := rec.Post.(map[string]any); ok {
-			for k, v := range pm {
-				m[k] = v
-			}
+	rec.Post = mergePostMap(rec, map[string]any{"existingMetaPath": rel, "existingMeta": ymeta})
+	return rec, nil, nil
+}
+
+func mergePostMap(rec Record, base map[string]any) map[string]any {
+	m := make(map[string]any, len(base))
+	for k, v := range base {
+		m[k] = v
+	}
+	if pm, ok := rec.Post.(map[string]any); ok {
+		for k, v := range pm {
+			m[k] = v
 		}
 	}
-	rec.Post = m
-	return rec, nil, nil
+	return m
 }
 
 func loadExistingMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	root := determineRoot(in)
-	out := in
 	mode, embed := errorMode(in.Meta)
-	var envErrs []Error
-	for i, r := range in.Records {
-		if r.Error != nil {
-			continue
-		}
-		rec, envE, err := loadOneExisting(root, r)
-		if envE != nil {
-			envErrs = append(envErrs, *envE)
-		}
-		if err != nil {
-			if mode == "keep-going" {
-				if embed {
-					rec = r
-					rec.Error = &RecError{Stage: loadExistingStage, Message: envE.Message}
-				}
-				out.Records[i] = rec
-				continue
-			}
-			return Envelope{}, err
-		}
-		out.Records[i] = rec
-	}
-	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
-	}
-	return out, nil
+	return runSequentialRecordStage(in, loadExistingStage, mode, embed, func(r Record) (Record, *Error, error) {
+		return loadOneExisting(root, r)
+	})
 }
 
 func init() { Register(loadExistingStage, loadExistingMetaRunner) }

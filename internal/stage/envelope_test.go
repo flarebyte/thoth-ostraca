@@ -35,8 +35,15 @@ func TestEnvelopeContractSnapshotV1(t *testing.T) {
 			Locator: "a",
 			Meta:    map[string]any{"k": "v"},
 			Mapped:  map[string]any{"x": 1.0},
-			Shell:   &ShellResult{ExitCode: 0, Stdout: "ok\n", Stderr: ""},
-			Post:    map[string]any{"locator": "a"},
+			Shell: &ShellResult{
+				ExitCode:        0,
+				Stdout:          strPtr("ok\n"),
+				Stderr:          strPtr(""),
+				StdoutTruncated: false,
+				StderrTruncated: false,
+				TimedOut:        false,
+			},
+			Post: map[string]any{"locator": "a"},
 		}},
 		Meta: &Meta{ContractVersion: "1", Stage: "echo", Config: &ConfigMeta{ConfigVersion: "v0", Action: "nop"}},
 	}

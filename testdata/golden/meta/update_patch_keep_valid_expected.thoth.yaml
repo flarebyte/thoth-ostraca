@@ -1,0 +1,9 @@
+locator: good.txt
+meta:
+  add:
+    k: 1
+  arr:
+    - 7
+  obj:
+    y: 9
+    z: 3
