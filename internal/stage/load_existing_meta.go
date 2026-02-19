@@ -19,15 +19,7 @@ func loadOneExisting(root string, rec Record) (Record, *Error, error) {
 		// Not found → expose path only
 		if os.IsNotExist(err) {
 			// attach existingMetaPath only
-			m := map[string]any{"existingMetaPath": rel}
-			if rec.Post != nil {
-				if pm, ok := rec.Post.(map[string]any); ok {
-					for k, v := range pm {
-						m[k] = v
-					}
-				}
-			}
-			rec.Post = m
+			rec.Post = mergePostMap(rec, map[string]any{"existingMetaPath": rel})
 			return rec, nil, nil
 		}
 		return rec, &Error{Stage: loadExistingStage, Locator: rec.Locator, Message: err.Error()}, err
@@ -48,16 +40,21 @@ func loadOneExisting(root string, rec Record) (Record, *Error, error) {
 	if !ok {
 		return rec, &Error{Stage: loadExistingStage, Locator: rec.Locator, Message: "missing or invalid meta"}, fmt.Errorf("invalid meta YAML: %s", rel)
 	}
-	m := map[string]any{"existingMetaPath": rel, "existingMeta": ymeta}
-	if rec.Post != nil {
-		if pm, ok := rec.Post.(map[string]any); ok {
-			for k, v := range pm {
-				m[k] = v
-			}
+	rec.Post = mergePostMap(rec, map[string]any{"existingMetaPath": rel, "existingMeta": ymeta})
+	return rec, nil, nil
+}
+
+func mergePostMap(rec Record, base map[string]any) map[string]any {
+	m := make(map[string]any, len(base))
+	for k, v := range base {
+		m[k] = v
+	}
+	if pm, ok := rec.Post.(map[string]any); ok {
+		for k, v := range pm {
+			m[k] = v
 		}
 	}
-	rec.Post = m
-	return rec, nil, nil
+	return m
 }
 
 func loadExistingMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
