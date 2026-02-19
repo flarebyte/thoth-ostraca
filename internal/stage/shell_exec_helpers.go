@@ -6,13 +6,6 @@ import (
 
 const shellExecStage = "shell-exec"
 
-type shellExecRes struct {
-	idx   int
-	rec   Record
-	envE  *Error
-	fatal error
-}
-
 type shellOptions struct {
 	enabled          bool
 	program          string

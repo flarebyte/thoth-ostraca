@@ -14,29 +14,12 @@ func luaMapRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error)
 	mode, _ := errorMode(in.Meta)
 	n := len(in.Records)
 	workers := getWorkers(in.Meta)
-	var envErrs []Error
-	results := runIndexedParallel(n, workers, func(idx int) luaMapRes {
+	results := runIndexedParallel(n, workers, func(idx int) recordParallelRes {
 		r := in.Records[idx]
 		rec, envE, fatal := processLuaMapRecord(r, code, mode, in.Meta)
-		return luaMapRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
+		return recordParallelRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
 	})
-	var firstErr error
-	for _, rr := range results {
-		if rr.envE != nil {
-			envErrs = append(envErrs, *rr.envE)
-		}
-		if rr.fatal != nil && firstErr == nil {
-			firstErr = rr.fatal
-		}
-		out.Records[rr.idx] = rr.rec
-	}
-	if firstErr != nil {
-		return Envelope{}, firstErr
-	}
-	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
-	}
-	return out, nil
+	return mergeRecordParallelResults(out, results)
 }
 
 func fromLValue(v lua.LValue) any {

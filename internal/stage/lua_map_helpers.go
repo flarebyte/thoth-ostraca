@@ -6,13 +6,6 @@ import (
 
 const luaMapStage = "lua-map"
 
-type luaMapRes struct {
-	idx   int
-	rec   Record
-	envE  *Error
-	fatal error
-}
-
 // buildLuaMapCode returns the Lua mapping code, wrapping expressions without explicit return.
 func buildLuaMapCode(in Envelope) string {
 	code := "return { locator = locator, meta = meta }"
