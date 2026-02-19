@@ -31,34 +31,10 @@ func writeSingleMeta(root string, rec Record) (Record, *Error, error) {
 
 func writeMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	root := determineRoot(in)
-	out := in
 	mode, embed := errorMode(in.Meta)
-	var envErrs []Error
-	for i, r := range in.Records {
-		if r.Error != nil {
-			continue
-		}
-		rec, envE, err := writeSingleMeta(root, r)
-		if envE != nil {
-			envErrs = append(envErrs, *envE)
-		}
-		if err != nil {
-			if mode == "keep-going" {
-				if embed {
-					rec = r
-					rec.Error = &RecError{Stage: writeMetaFilesStage, Message: envE.Message}
-				}
-				out.Records[i] = rec
-				continue
-			}
-			return Envelope{}, err
-		}
-		out.Records[i] = rec
-	}
-	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
-	}
-	return out, nil
+	return runSequentialRecordStage(in, writeMetaFilesStage, mode, embed, func(r Record) (Record, *Error, error) {
+		return writeSingleMeta(root, r)
+	})
 }
 
 func init() { Register(writeMetaFilesStage, writeMetaFilesRunner) }
