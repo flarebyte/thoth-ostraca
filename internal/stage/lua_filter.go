@@ -24,12 +24,7 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	})
 	var firstErr error
 	for _, rr := range results {
-		if rr.envE != nil {
-			envErrs = append(envErrs, *rr.envE)
-		}
-		if rr.fatal != nil && firstErr == nil {
-			firstErr = rr.fatal
-		}
+		accumulateStageError(&envErrs, &firstErr, rr.envE, rr.fatal)
 		if rr.keep {
 			keeps[rr.idx] = true
 			outs[rr.idx] = rr.out

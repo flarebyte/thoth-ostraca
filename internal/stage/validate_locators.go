@@ -164,12 +164,7 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 	})
 	var firstErr error
 	for _, rr := range results {
-		if rr.envE != nil {
-			envErrs = append(envErrs, *rr.envE)
-		}
-		if rr.fatal != nil && firstErr == nil {
-			firstErr = rr.fatal
-		}
+		accumulateStageError(&envErrs, &firstErr, rr.envE, rr.fatal)
 		if rr.rec.Locator != "" || rr.rec.Error != nil {
 			out.Records[rr.idx] = rr.rec
 		}
