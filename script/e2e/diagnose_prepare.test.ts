@@ -1,7 +1,6 @@
 import { expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import {
   buildBinary,
   expectedJSONFromGolden,
@@ -9,9 +8,6 @@ import {
   runThoth,
   saveOutputs,
 } from './helpers';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 test('diagnose prepare meta-files then parse-validate-yaml matches golden', () => {
   const root = projectRoot();
