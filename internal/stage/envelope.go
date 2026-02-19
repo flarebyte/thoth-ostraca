@@ -52,7 +52,8 @@ type ValidationMeta struct {
 
 // LimitsMeta controls parsing size limits.
 type LimitsMeta struct {
-	MaxYAMLBytes int `json:"maxYAMLBytes"`
+	MaxYAMLBytes       int `json:"maxYAMLBytes,omitempty"`
+	MaxRecordsInMemory int `json:"maxRecordsInMemory"`
 }
 
 // DiffReport holds a minimal diff summary for meta files.

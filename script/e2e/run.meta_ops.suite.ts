@@ -50,7 +50,21 @@ test('create-meta: creates .thoth.yaml files and prints expected envelope', () =
 test('create-meta: second run fails-fast when meta exists', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
-  const cfgPath = path.join(root, 'temp', 'create1_tmp.cue');
+  const srcRepo = path.join(root, 'testdata/repos/create1');
+  const tempRepo = path.join(root, 'temp', 'create1_repo_second');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'create1_tmp_second.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "create-meta"
+  discovery: { root: "${path.join('temp', 'create1_repo_second').replaceAll('\\', '\\\\')}" }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const first = runThoth(bin, ['run', '--config', cfgPath], root);
+  expect(first.status).toBe(0);
+  expect(first.stderr).toBe('');
   const run = runThoth(bin, ['run', '--config', cfgPath], root);
   saveOutputs(root, 'run-create-meta-second', run);
   expect(run.status).not.toBe(0);
@@ -93,7 +107,11 @@ test('update-meta: preserves existing meta and creates missing', () => {
 test('update-meta: invalid existing meta embeds errors in keep-going and still creates others', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
-  const tempRepo = path.join(root, 'temp', 'update1_repo');
+  const srcRepo = path.join(root, 'testdata/repos/update1');
+  const tempRepo = path.join(root, 'temp', 'update1_repo_keep');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
   fs.writeFileSync(
     path.join(tempRepo, 'a.txt.thoth.yaml'),
     'locator: a.txt\n# missing meta\n',
@@ -103,7 +121,7 @@ test('update-meta: invalid existing meta embeds errors in keep-going and still c
   const cfgContent = `{
   configVersion: "v0"
   action: "update-meta"
-  discovery: { root: "${path.join('temp', 'update1_repo').replaceAll('\\', '\\\\')}" }
+  discovery: { root: "${path.join('temp', 'update1_repo_keep').replaceAll('\\', '\\\\')}" }
   errors: { mode: "keep-going", embedErrors: true }
 }`;
   fs.writeFileSync(cfgPath, cfgContent, 'utf8');
@@ -126,11 +144,21 @@ test('update-meta: invalid existing meta embeds errors in keep-going and still c
 test('update-meta: invalid existing meta fails fast', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/update1');
+  const tempRepo = path.join(root, 'temp', 'update1_repo_fail');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  fs.writeFileSync(
+    path.join(tempRepo, 'a.txt.thoth.yaml'),
+    'locator: a.txt\n# missing meta\n',
+    'utf8',
+  );
   const cfgPath = path.join(root, 'temp', 'update1_tmp_fail.cue');
   const cfgContent = `{
   configVersion: "v0"
   action: "update-meta"
-  discovery: { root: "${path.join('temp', 'update1_repo').replaceAll('\\', '\\\\')}" }
+  discovery: { root: "${path.join('temp', 'update1_repo_fail').replaceAll('\\', '\\\\')}" }
 }`;
   fs.writeFileSync(cfgPath, cfgContent, 'utf8');
   const run = runThoth(bin, ['run', '--config', cfgPath], root);

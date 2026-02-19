@@ -23,6 +23,7 @@
     "contractVersion": "1",
     "config": { "configVersion": "v0", "action": "nop" },
     "discovery": { "root": "testdata/repos/locator1" },
+    "limits": { "maxRecordsInMemory": 10000 },
     "locatorPolicy": {
       "allowAbsolute": false,
       "allowParentRefs": true,

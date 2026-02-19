@@ -11,6 +11,7 @@
     "contractVersion": "1",
     "config": { "configVersion": "v0", "action": "nop" },
     "discovery": { "root": "testdata/repos/yaml1" },
+    "limits": { "maxRecordsInMemory": 10000 },
     "lua": {
       "filterInline": "return (meta and meta.enabled) == true",
       "mapInline": "return { locator = locator, name = meta and meta.name }"

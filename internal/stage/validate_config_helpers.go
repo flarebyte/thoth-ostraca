@@ -2,6 +2,8 @@ package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"
 
+const defaultMaxRecordsInMemory = 10000
+
 // sanitizeWorkers ensures a minimum of 1 worker when present.
 func sanitizeWorkers(n int) int {
 	if n < 1 {
@@ -44,11 +46,21 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	}
 
 	// Limits
+	if out.Meta.Limits == nil {
+		out.Meta.Limits = &LimitsMeta{MaxRecordsInMemory: defaultMaxRecordsInMemory}
+	}
 	if min.Limits.HasMaxYAMLBytes {
-		if out.Meta.Limits == nil {
-			out.Meta.Limits = &LimitsMeta{}
-		}
 		out.Meta.Limits.MaxYAMLBytes = min.Limits.MaxYAMLBytes
+	}
+	if min.Limits.HasMaxRecordsInMemory {
+		if min.Limits.MaxRecordsInMemory < 1 {
+			out.Meta.Limits.MaxRecordsInMemory = 1
+		} else {
+			out.Meta.Limits.MaxRecordsInMemory = min.Limits.MaxRecordsInMemory
+		}
+	}
+	if out.Meta.Limits.MaxRecordsInMemory < 1 {
+		out.Meta.Limits.MaxRecordsInMemory = defaultMaxRecordsInMemory
 	}
 
 	// Lua: filter, map, postmap, reduce

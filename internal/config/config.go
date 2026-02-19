@@ -104,8 +104,10 @@ type Validation struct {
 
 // Limits holds optional processing limits and presence flags.
 type Limits struct {
-	MaxYAMLBytes    int
-	HasMaxYAMLBytes bool
+	MaxYAMLBytes          int
+	HasMaxYAMLBytes       bool
+	MaxRecordsInMemory    int
+	HasMaxRecordsInMemory bool
 }
 
 // Discovery holds optional discovery config and presence flags.

@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 )
@@ -40,6 +41,13 @@ func stripErrorsIfNeeded(env *Envelope) {
 	}
 }
 
+func stripRecordErrorIfNeeded(meta *Meta, rec *Record) {
+	if rec == nil || meta == nil || meta.Errors == nil || meta.Errors.EmbedErrors {
+		return
+	}
+	rec.Error = nil
+}
+
 func encodeJSONCompact(v any) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
@@ -63,20 +71,62 @@ func encodeJSONPretty(v any) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func writeTo(outPath string, data []byte) error {
+type nopWriteCloser struct{ io.Writer }
+
+func (n nopWriteCloser) Close() error { return nil }
+
+func openWriter(outPath string) (io.WriteCloser, error) {
 	if outPath == "" || outPath == "-" {
-		_, err := os.Stdout.Write(data)
-		return err
+		return nopWriteCloser{Writer: os.Stdout}, nil
 	}
 	if dir := filepath.Dir(outPath); dir != "." && dir != "" {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
-			return fmt.Errorf("write-output: %v", err)
+			return nil, fmt.Errorf("write-output: %v", err)
 		}
 	}
-	return os.WriteFile(outPath, data, 0o644)
+	f, err := os.Create(outPath)
+	if err != nil {
+		return nil, err
+	}
+	return f, nil
 }
 
-func writeOutputRunner(_ctx context.Context, in Envelope, _deps Deps) (Envelope, error) {
+func writeTo(outPath string, data []byte) error {
+	w, err := openWriter(outPath)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = w.Close() }()
+	_, err = w.Write(data)
+	return err
+}
+
+func writeLinesFromStream(outPath string, meta *Meta, stream <-chan Record) (bool, error) {
+	w, err := openWriter(outPath)
+	if err != nil {
+		return false, err
+	}
+	defer func() { _ = w.Close() }()
+
+	successSeen := false
+	for rec := range stream {
+		r := rec
+		stripRecordErrorIfNeeded(meta, &r)
+		if r.Error == nil {
+			successSeen = true
+		}
+		b, encErr := encodeJSONCompact(r)
+		if encErr != nil {
+			return false, encErr
+		}
+		if _, writeErr := w.Write(b); writeErr != nil {
+			return false, writeErr
+		}
+	}
+	return successSeen, nil
+}
+
+func writeOutputRunner(_ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	// Prepare env for serialization
 	outPath, pretty, lines := getOutputSettings(in.Meta)
 	env := in
@@ -88,6 +138,16 @@ func writeOutputRunner(_ctx context.Context, in Envelope, _deps Deps) (Envelope,
 	stripErrorsIfNeeded(&env)
 
 	if lines {
+		if deps.RecordStream != nil {
+			successSeen, err := writeLinesFromStream(outPath, env.Meta, deps.RecordStream)
+			if err != nil {
+				return Envelope{}, err
+			}
+			if env.Meta != nil && env.Meta.Errors != nil && env.Meta.Errors.Mode == "keep-going" && !successSeen {
+				return Envelope{}, fmt.Errorf("keep-going: no successful records")
+			}
+			return in, nil
+		}
 		// NDJSON lines: one per record
 		var all bytes.Buffer
 		for _, r := range env.Records {

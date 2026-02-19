@@ -72,7 +72,7 @@ func parseValidationSection(v cue.Value) Validation {
 	return val
 }
 
-// parseLimitsSection extracts optional limits.maxYAMLBytes.
+// parseLimitsSection extracts optional limits.maxYAMLBytes and limits.maxRecordsInMemory.
 func parseLimitsSection(v cue.Value) Limits {
 	var l Limits
 	lv := v.LookupPath(cue.ParsePath("limits"))
@@ -83,6 +83,12 @@ func parseLimitsSection(v cue.Value) Limits {
 	if mv.Exists() && mv.Kind() == cue.IntKind {
 		if err := mv.Decode(&l.MaxYAMLBytes); err == nil {
 			l.HasMaxYAMLBytes = true
+		}
+	}
+	rv := lv.LookupPath(cue.ParsePath("maxRecordsInMemory"))
+	if rv.Exists() && rv.Kind() == cue.IntKind {
+		if err := rv.Decode(&l.MaxRecordsInMemory); err == nil {
+			l.HasMaxRecordsInMemory = true
 		}
 	}
 	return l

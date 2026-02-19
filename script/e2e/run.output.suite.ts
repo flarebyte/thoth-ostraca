@@ -47,6 +47,6 @@ test('write-output: file output writes to disk and stdout is empty', () => {
   expect(run.stdout).toBe('');
   expect(fs.existsSync(outPath)).toBe(true);
   const expected =
-    '{"records":[],"meta":{"contractVersion":"1","config":{"configVersion":"v0","action":"nop"},"output":{"out":"temp/out.json"},"reduced":0}}\n';
+    '{"records":[],"meta":{"contractVersion":"1","config":{"configVersion":"v0","action":"nop"},"limits":{"maxRecordsInMemory":10000},"output":{"out":"temp/out.json"},"reduced":0}}\n';
   expect(fs.readFileSync(outPath, 'utf8')).toBe(expected);
 });

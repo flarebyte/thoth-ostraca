@@ -6,6 +6,9 @@
       "configVersion": "v0",
       "action": "nop"
     },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
     "output": {
       "out": "-",
       "pretty": true

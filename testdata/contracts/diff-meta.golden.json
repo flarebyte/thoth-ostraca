@@ -1,9 +1,20 @@
 {
-  "records": [{ "locator": "a.txt" }, { "locator": "dir/b.txt" }],
+  "records": [
+    { "locator": "a.txt.thoth.yaml" },
+    { "locator": "dir/b.txt.thoth.yaml" },
+    { "locator": "orphan.txt.thoth.yaml" }
+  ],
   "meta": {
     "contractVersion": "1",
     "config": { "configVersion": "v0", "action": "diff-meta" },
     "discovery": { "root": "testdata/repos/diff1" },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "inputs": ["a.txt", "dir/b.txt"],
+    "metaFiles": [
+      "a.txt.thoth.yaml",
+      "dir/b.txt.thoth.yaml",
+      "orphan.txt.thoth.yaml"
+    ],
     "diff": {
       "orphans": ["orphan.txt.thoth.yaml"],
       "presentCount": 2,

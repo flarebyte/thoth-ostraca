@@ -9,6 +9,24 @@ import (
 	"testing"
 )
 
+func testdataPath(parts ...string) string {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		root = filepath.Join("..", "..")
+	}
+	base := append([]string{root, "testdata"}, parts...)
+	return filepath.Join(base...)
+}
+
+func rootTempPath(parts ...string) string {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		root = filepath.Join("..", "..")
+	}
+	base := append([]string{root, "temp"}, parts...)
+	return filepath.Join(base...)
+}
+
 // ValidateEnvelopeShape asserts a minimal, strict public JSON contract.
 func ValidateEnvelopeShape(e Envelope) error {
 	// contractVersion
@@ -43,8 +61,42 @@ func encodeEnvelopeContract(env Envelope) ([]byte, error) {
 	return encodeJSONCompact(env)
 }
 
+func canonicalJSON(t *testing.T, b []byte) []byte {
+	t.Helper()
+	var v any
+	if err := json.Unmarshal(b, &v); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	out, err := json.Marshal(v)
+	if err != nil {
+		t.Fatalf("marshal: %v", err)
+	}
+	return out
+}
+
+func assertJSONEqual(t *testing.T, actual, expected []byte) {
+	t.Helper()
+	a := canonicalJSON(t, actual)
+	e := canonicalJSON(t, expected)
+	if string(a) != string(e) {
+		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(actual), string(expected))
+	}
+}
+
 func runActionWithConfig(t *testing.T, cfgPath string) (Envelope, []byte) {
 	t.Helper()
+	prevDir, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("getwd: %v", err)
+	}
+	root := filepath.Join("..", "..")
+	if err := os.Chdir(root); err != nil {
+		t.Fatalf("chdir root: %v", err)
+	}
+	defer func() {
+		_ = os.Chdir(prevDir)
+	}()
+
 	ctx := context.Background()
 	in := Envelope{Records: []Record{}, Meta: &Meta{ConfigPath: cfgPath}}
 	out, err := Run(ctx, "validate-config", in, Deps{})
@@ -71,8 +123,8 @@ func runActionWithConfig(t *testing.T, cfgPath string) (Envelope, []byte) {
 }
 
 func TestContract_Pipeline(t *testing.T) {
-	_, b := runActionWithConfig(t, filepath.Join("testdata", "configs", "keep1_embed_true.cue"))
-	g, _ := os.ReadFile(filepath.Join("testdata", "contracts", "pipeline.golden.json"))
+	_, b := runActionWithConfig(t, testdataPath("configs", "keep1_embed_true.cue"))
+	g, _ := os.ReadFile(testdataPath("contracts", "pipeline.golden.json"))
 	var env Envelope
 	if err := json.Unmarshal(b, &env); err != nil {
 		t.Fatalf("unmarshal: %v", err)
@@ -80,14 +132,12 @@ func TestContract_Pipeline(t *testing.T) {
 	if err := ValidateEnvelopeShape(env); err != nil {
 		t.Fatalf("shape: %v", err)
 	}
-	if string(b) != string(g) {
-		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(b), string(g))
-	}
+	assertJSONEqual(t, b, g)
 }
 
 func TestContract_Validate(t *testing.T) {
-	_, b := runActionWithConfig(t, filepath.Join("testdata", "configs", "validate_only_ok.cue"))
-	g, _ := os.ReadFile(filepath.Join("testdata", "contracts", "validate.golden.json"))
+	_, b := runActionWithConfig(t, testdataPath("configs", "validate_only_ok.cue"))
+	g, _ := os.ReadFile(testdataPath("contracts", "validate.golden.json"))
 	var env Envelope
 	if err := json.Unmarshal(b, &env); err != nil {
 		t.Fatalf("unmarshal: %v", err)
@@ -95,9 +145,7 @@ func TestContract_Validate(t *testing.T) {
 	if err := ValidateEnvelopeShape(env); err != nil {
 		t.Fatalf("shape: %v", err)
 	}
-	if string(b) != string(g) {
-		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(b), string(g))
-	}
+	assertJSONEqual(t, b, g)
 }
 
 func copyTree(t *testing.T, src, dst string) {
@@ -123,62 +171,58 @@ func copyTree(t *testing.T, src, dst string) {
 }
 
 func TestContract_CreateMeta(t *testing.T) {
-	repo := filepath.Join("temp", "create1_repo_contract")
-	copyTree(t, filepath.Join("testdata", "repos", "create1"), repo)
-	cfg := filepath.Join("temp", "create1_contract.cue")
-	_ = os.MkdirAll("temp", 0o755)
-	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \""+filepath.ToSlash(repo)+"\" }\n}\n"), 0o644); err != nil {
+	repoAbs := rootTempPath("create1_repo_contract")
+	repoRel := filepath.ToSlash(filepath.Join("temp", "create1_repo_contract"))
+	copyTree(t, testdataPath("repos", "create1"), repoAbs)
+	cfg := rootTempPath("create1_contract.cue")
+	_ = os.MkdirAll(rootTempPath(), 0o755)
+	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
 	_, b := runActionWithConfig(t, cfg)
-	g, _ := os.ReadFile(filepath.Join("testdata", "contracts", "create-meta.golden.json"))
+	g, _ := os.ReadFile(testdataPath("contracts", "create-meta.golden.json"))
 	var env Envelope
 	_ = json.Unmarshal(b, &env)
 	if err := ValidateEnvelopeShape(env); err != nil {
 		t.Fatalf("shape: %v", err)
 	}
-	if string(b) != string(g) {
-		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(b), string(g))
-	}
+	assertJSONEqual(t, b, g)
 }
 
 func TestContract_UpdateMeta(t *testing.T) {
-	repo := filepath.Join("temp", "update1_repo_contract")
-	copyTree(t, filepath.Join("testdata", "repos", "update1"), repo)
-	cfg := filepath.Join("temp", "update1_contract.cue")
-	_ = os.MkdirAll("temp", 0o755)
-	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \""+filepath.ToSlash(repo)+"\" }\n}\n"), 0o644); err != nil {
+	repoAbs := rootTempPath("update1_repo_contract")
+	repoRel := filepath.ToSlash(filepath.Join("temp", "update1_repo_contract"))
+	copyTree(t, testdataPath("repos", "update1"), repoAbs)
+	cfg := rootTempPath("update1_contract.cue")
+	_ = os.MkdirAll(rootTempPath(), 0o755)
+	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
 	_, b := runActionWithConfig(t, cfg)
-	g, _ := os.ReadFile(filepath.Join("testdata", "contracts", "update-meta.golden.json"))
+	g, _ := os.ReadFile(testdataPath("contracts", "update-meta.golden.json"))
 	var env Envelope
 	_ = json.Unmarshal(b, &env)
 	if err := ValidateEnvelopeShape(env); err != nil {
 		t.Fatalf("shape: %v", err)
 	}
-	if string(b) != string(g) {
-		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(b), string(g))
-	}
+	assertJSONEqual(t, b, g)
 }
 
 func TestContract_DiffMeta(t *testing.T) {
-	_, b := runActionWithConfig(t, filepath.Join("testdata", "configs", "diff1.cue"))
-	g, _ := os.ReadFile(filepath.Join("testdata", "contracts", "diff-meta.golden.json"))
+	_, b := runActionWithConfig(t, testdataPath("configs", "diff1.cue"))
+	g, _ := os.ReadFile(testdataPath("contracts", "diff-meta.golden.json"))
 	var env Envelope
 	_ = json.Unmarshal(b, &env)
 	if err := ValidateEnvelopeShape(env); err != nil {
 		t.Fatalf("shape: %v", err)
 	}
-	if string(b) != string(g) {
-		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(b), string(g))
-	}
+	assertJSONEqual(t, b, g)
 }
 
 func TestContract_Goldens_Schema(t *testing.T) {
 	files := []string{"pipeline.golden.json", "validate.golden.json", "create-meta.golden.json", "update-meta.golden.json", "diff-meta.golden.json"}
 	for _, f := range files {
-		b, err := os.ReadFile(filepath.Join("testdata", "contracts", f))
+		b, err := os.ReadFile(testdataPath("contracts", f))
 		if err != nil {
 			t.Fatalf("read %s: %v", f, err)
 		}
