@@ -362,6 +362,27 @@ func parseUpdateMetaSection(v cue.Value) (UpdateMeta, error) {
 	return u, nil
 }
 
+// parseDiffMetaSection extracts optional diffMeta.expectedPatch object.
+func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
+	var d DiffMeta
+	dv := v.LookupPath(cue.ParsePath("diffMeta"))
+	if !dv.Exists() {
+		return d, nil
+	}
+	d.HasSection = true
+	pv := dv.LookupPath(cue.ParsePath("expectedPatch"))
+	if !pv.Exists() {
+		return d, nil
+	}
+	tmp := map[string]any{}
+	if err := pv.Decode(&tmp); err != nil {
+		return DiffMeta{}, fmt.Errorf("invalid diffMeta.expectedPatch: must be object")
+	}
+	d.ExpectedPatch = tmp
+	d.HasExpectedPatch = true
+	return d, nil
+}
+
 // parseOutputSection extracts optional output.* fields.
 func parseOutputSection(v cue.Value) Output {
 	var o Output

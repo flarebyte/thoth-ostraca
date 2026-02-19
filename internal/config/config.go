@@ -54,6 +54,7 @@ type Minimal struct {
 	PostMap       PostMap
 	Reduce        Reduce
 	UpdateMeta    UpdateMeta
+	DiffMeta      DiffMeta
 	Output        Output
 	Errors        Errors
 	Workers       Workers
@@ -94,6 +95,10 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.PostMap = parsePostMapSection(v)
 	m.Reduce = parseReduceSection(v)
 	m.UpdateMeta, err = parseUpdateMetaSection(v)
+	if err != nil {
+		return Minimal{}, err
+	}
+	m.DiffMeta, err = parseDiffMetaSection(v)
 	if err != nil {
 		return Minimal{}, err
 	}
@@ -212,6 +217,13 @@ type UpdateMeta struct {
 	Patch      map[string]any
 	HasSection bool
 	HasPatch   bool
+}
+
+// DiffMeta holds optional diff-meta expected patch config.
+type DiffMeta struct {
+	ExpectedPatch    map[string]any
+	HasSection       bool
+	HasExpectedPatch bool
 }
 
 // Output holds optional output config.

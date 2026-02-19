@@ -53,9 +53,9 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	case "diff-meta":
 		stages := []string{
 			"discover-input-files",
-			"enrich-fileinfo",
-			"enrich-git",
 			"discover-meta-files",
+			"parse-validate-yaml",
+			"validate-locators",
 			"compute-meta-diff",
 			"write-output",
 		}

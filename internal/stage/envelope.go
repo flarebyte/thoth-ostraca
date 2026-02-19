@@ -42,6 +42,7 @@ type Meta struct {
 	Shell           *ShellMeta      `json:"shell,omitempty"`
 	Output          *OutputMeta     `json:"output,omitempty"`
 	UpdateMeta      *UpdateMetaMeta `json:"updateMeta,omitempty"`
+	DiffMeta        *DiffMetaMeta   `json:"diffMeta,omitempty"`
 	Reduced         any             `json:"reduced,omitempty"`
 	Errors          *ErrorsMeta     `json:"errors,omitempty"`
 	Workers         int             `json:"workers,omitempty"`
@@ -60,9 +61,22 @@ type LimitsMeta struct {
 
 // DiffReport holds a minimal diff summary for meta files.
 type DiffReport struct {
-	Orphans      []string `json:"orphans"`
-	PresentCount int      `json:"presentCount"`
-	OrphanCount  int      `json:"orphanCount"`
+	OrphanMetaFiles []string     `json:"orphanMetaFiles"`
+	PairedCount     int          `json:"pairedCount"`
+	OrphanCount     int          `json:"orphanCount"`
+	ChangedCount    int          `json:"changedCount"`
+	Details         []DiffDetail `json:"details,omitempty"`
+	Orphans         []string     `json:"orphans,omitempty"`
+	PresentCount    int          `json:"presentCount,omitempty"`
+}
+
+// DiffDetail holds a per-locator content diff summary.
+type DiffDetail struct {
+	Locator     string   `json:"locator"`
+	MetaFile    string   `json:"metaFile"`
+	AddedKeys   []string `json:"addedKeys"`
+	RemovedKeys []string `json:"removedKeys"`
+	ChangedKeys []string `json:"changedKeys"`
 }
 
 // LocatorPolicy mirrors policy flags for locator validation in meta.
@@ -163,6 +177,11 @@ type OutputMeta struct {
 // UpdateMetaMeta holds update-meta patch settings.
 type UpdateMetaMeta struct {
 	Patch map[string]any `json:"patch,omitempty"`
+}
+
+// DiffMetaMeta holds diff-meta expected patch settings.
+type DiffMetaMeta struct {
+	ExpectedPatch map[string]any `json:"expectedPatch"`
 }
 
 // ErrorsMeta holds error handling behavior.

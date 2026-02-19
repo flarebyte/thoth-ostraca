@@ -176,11 +176,27 @@ test('diff-meta: computes orphans and counts deterministically', () => {
   expect(run.status).toBe(0);
   expect(run.stderr).toBe('');
   const out = JSON.parse(run.stdout);
-  expect(out.meta.diff.presentCount).toBe(2);
+  expect(out.meta.diff.pairedCount).toBe(2);
   expect(out.meta.diff.orphanCount).toBe(1);
-  expect(JSON.stringify(out.meta.diff.orphans)).toBe(
+  expect(out.meta.diff.changedCount).toBe(0);
+  expect(JSON.stringify(out.meta.diff.orphanMetaFiles)).toBe(
     JSON.stringify(['orphan.txt.thoth.yaml']),
   );
+});
+
+test('diff-meta: content diff v2 matches golden', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/diff2.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-v2', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/diff2_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
 });
 
 test('update-meta: rewrite-stable canonical YAML (run twice, exact golden)', () => {

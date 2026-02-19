@@ -1,0 +1,9 @@
+locator: a.txt
+meta:
+  a: 1
+  obj:
+    x: 1
+    y: 2
+  arr:
+    - 1
+    - 2

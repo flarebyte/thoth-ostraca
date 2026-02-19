@@ -260,6 +260,20 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 	}
 
+	// DiffMeta
+	if min.Action == "diff-meta" {
+		if out.Meta.DiffMeta == nil {
+			out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}}
+		}
+		if min.DiffMeta.HasExpectedPatch {
+			if cp, ok := deepCopyAny(min.DiffMeta.ExpectedPatch).(map[string]any); ok {
+				out.Meta.DiffMeta.ExpectedPatch = cp
+			} else {
+				out.Meta.DiffMeta.ExpectedPatch = map[string]any{}
+			}
+		}
+	}
+
 	// Errors
 	if min.Errors.HasMode || min.Errors.HasEmbed {
 		if out.Meta.Errors == nil {

@@ -1,8 +1,8 @@
 {
   "records": [
-    { "locator": "a.txt.thoth.yaml" },
-    { "locator": "dir/b.txt.thoth.yaml" },
-    { "locator": "orphan.txt.thoth.yaml" }
+    { "locator": "a.txt" },
+    { "locator": "dir/b.txt" },
+    { "locator": "orphan.txt" }
   ],
   "meta": {
     "contractVersion": "1",
@@ -16,9 +16,29 @@
       "orphan.txt.thoth.yaml"
     ],
     "diff": {
+      "orphanMetaFiles": ["orphan.txt.thoth.yaml"],
+      "pairedCount": 2,
+      "orphanCount": 1,
+      "changedCount": 0,
+      "details": [
+        {
+          "locator": "a.txt",
+          "metaFile": "a.txt.thoth.yaml",
+          "addedKeys": [],
+          "removedKeys": [],
+          "changedKeys": []
+        },
+        {
+          "locator": "dir/b.txt",
+          "metaFile": "dir/b.txt.thoth.yaml",
+          "addedKeys": [],
+          "removedKeys": [],
+          "changedKeys": []
+        }
+      ],
       "orphans": ["orphan.txt.thoth.yaml"],
-      "presentCount": 2,
-      "orphanCount": 1
-    }
+      "presentCount": 2
+    },
+    "diffMeta": { "expectedPatch": {} }
   }
 }
