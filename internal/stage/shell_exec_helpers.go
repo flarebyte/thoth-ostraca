@@ -126,8 +126,9 @@ func renderArgs(argsT []string, mapped any, strict bool) ([]string, error) {
 }
 
 type limitedBuffer struct {
-	max int
-	buf bytes.Buffer
+	max       int
+	buf       bytes.Buffer
+	truncated bool
 }
 
 func (b *limitedBuffer) Write(p []byte) (int, error) {
@@ -142,16 +143,31 @@ func (b *limitedBuffer) Write(p []byte) (int, error) {
 		}
 		_, _ = b.buf.Write(p[:remain])
 	}
+	if len(p) > remain {
+		b.truncated = true
+	}
 	return n, nil
 }
 
 func (b *limitedBuffer) String() string { return b.buf.String() }
 
+type shellRunResult struct {
+	exitCode        int
+	stdout          *string
+	stderr          *string
+	stdoutTruncated bool
+	stderrTruncated bool
+	timedOut        bool
+	errorMsg        string
+}
+
+func strPtr(s string) *string { return &s }
+
 // runCommand executes the command with timeout/termination and returns result or error.
-func runCommand(ctx context.Context, opts shellOptions, mapped any) (stdout, stderr string, exitCode int, timedOut bool, err error) {
+func runCommand(ctx context.Context, opts shellOptions, mapped any) (shellRunResult, error) {
 	args, err := renderArgs(opts.argsT, mapped, opts.strictTemplating)
 	if err != nil {
-		return "", "", 0, false, err
+		return shellRunResult{}, err
 	}
 	cmd := exec.Command(opts.program, args...)
 	cmd.Dir = opts.workingDir
@@ -176,9 +192,9 @@ func runCommand(ctx context.Context, opts shellOptions, mapped any) (stdout, std
 	if err := cmd.Start(); err != nil {
 		var ee *exec.Error
 		if errors.As(err, &ee) {
-			return "", "", 0, false, fmt.Errorf("program %s not found", opts.program)
+			return shellRunResult{exitCode: -1, errorMsg: fmt.Sprintf("program %s not found", opts.program)}, nil
 		}
-		return "", "", 0, false, fmt.Errorf("program %s start failed", opts.program)
+		return shellRunResult{exitCode: -1, errorMsg: fmt.Sprintf("program %s start failed", opts.program)}, nil
 	}
 
 	done := make(chan error, 1)
@@ -190,6 +206,7 @@ func runCommand(ctx context.Context, opts shellOptions, mapped any) (stdout, std
 	defer timer.Stop()
 
 	var runErr error
+	timedOut := false
 	select {
 	case runErr = <-done:
 	case <-timer.C:
@@ -205,19 +222,33 @@ func runCommand(ctx context.Context, opts shellOptions, mapped any) (stdout, std
 		}
 	}
 
-	stdout = outBuf.String()
-	stderr = errBuf.String()
+	res := shellRunResult{
+		exitCode:        0,
+		stdoutTruncated: outBuf.truncated,
+		stderrTruncated: errBuf.truncated,
+		timedOut:        timedOut,
+	}
+	if opts.captureStdout {
+		res.stdout = strPtr(outBuf.String())
+	}
+	if opts.captureStderr {
+		res.stderr = strPtr(errBuf.String())
+	}
 	if timedOut {
-		return stdout, stderr, 0, true, nil
+		res.exitCode = -2
+		return res, nil
 	}
 	if runErr != nil {
 		var exitErr *exec.ExitError
 		if errors.As(runErr, &exitErr) {
-			return stdout, stderr, exitErr.ExitCode(), false, nil
+			res.exitCode = exitErr.ExitCode()
+			return res, nil
 		}
-		return stdout, stderr, 0, false, fmt.Errorf("program %s execution failed", opts.program)
+		res.exitCode = -1
+		res.errorMsg = fmt.Sprintf("program %s execution failed", opts.program)
+		return res, nil
 	}
-	return stdout, stderr, 0, false, nil
+	return res, nil
 }
 
 func signalProcess(cmd *exec.Cmd, killGroup bool, sig syscall.Signal) {
@@ -266,23 +297,48 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 	if rec.Error != nil {
 		return rec, nil, nil
 	}
-	stdout, stderr, exitCode, timedOut, err := runCommand(ctx, opts, rec.Mapped)
-	if timedOut {
+	runRes, err := runCommand(ctx, opts, rec.Mapped)
+	if err != nil {
+		if mode == "keep-going" {
+			rec.Shell = &ShellResult{
+				ExitCode:        -1,
+				Stdout:          nil,
+				Stderr:          nil,
+				StdoutTruncated: false,
+				StderrTruncated: false,
+				TimedOut:        false,
+				Error:           strPtr(err.Error()),
+			}
+			rec.Error = &RecError{Stage: shellExecStage, Message: err.Error()}
+			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: err.Error()}, nil
+		}
+		return Record{}, nil, fmt.Errorf("shell-exec: %v", err)
+	}
+	rec.Shell = &ShellResult{
+		ExitCode:        runRes.exitCode,
+		Stdout:          runRes.stdout,
+		Stderr:          runRes.stderr,
+		StdoutTruncated: runRes.stdoutTruncated,
+		StderrTruncated: runRes.stderrTruncated,
+		TimedOut:        runRes.timedOut,
+	}
+	if runRes.errorMsg != "" {
+		rec.Shell.Error = strPtr(runRes.errorMsg)
+	}
+	if runRes.timedOut {
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: shellExecStage, Message: "timeout"}
 			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: "timeout"}, nil
 		}
 		return Record{}, nil, fmt.Errorf("shell-exec: timeout")
 	}
-	if err != nil {
+	if runRes.errorMsg != "" {
 		if mode == "keep-going" {
-			rec.Error = &RecError{Stage: shellExecStage, Message: err.Error()}
-			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: err.Error()}, nil
+			rec.Error = &RecError{Stage: shellExecStage, Message: runRes.errorMsg}
+			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: runRes.errorMsg}, nil
 		}
-		return Record{}, nil, fmt.Errorf("shell-exec: %v", err)
+		return Record{}, nil, fmt.Errorf("shell-exec: %s", runRes.errorMsg)
 	}
-	sr := &ShellResult{Stdout: stdout, Stderr: stderr, ExitCode: exitCode}
-	rec.Shell = sr
 	return rec, nil, nil
 }
 

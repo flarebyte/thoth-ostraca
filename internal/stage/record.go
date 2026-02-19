@@ -15,9 +15,13 @@ type Record struct {
 
 // ShellResult captures deterministic outputs of a shell execution.
 type ShellResult struct {
-	ExitCode int    `json:"exitCode"`
-	Stdout   string `json:"stdout"`
-	Stderr   string `json:"stderr"`
+	ExitCode        int     `json:"exitCode"`
+	Stdout          *string `json:"stdout,omitempty"`
+	Stderr          *string `json:"stderr,omitempty"`
+	StdoutTruncated bool    `json:"stdoutTruncated"`
+	StderrTruncated bool    `json:"stderrTruncated"`
+	TimedOut        bool    `json:"timedOut"`
+	Error           *string `json:"error,omitempty"`
 }
 
 // RecFileInfo holds basic file metadata for a locator.

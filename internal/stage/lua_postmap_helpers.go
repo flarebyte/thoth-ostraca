@@ -46,8 +46,16 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 	if rec.Shell != nil {
 		shellMap = map[string]any{
 			"exitCode": rec.Shell.ExitCode,
-			"stdout":   rec.Shell.Stdout,
-			"stderr":   rec.Shell.Stderr,
+			"timedOut": rec.Shell.TimedOut,
+		}
+		if rec.Shell.Stdout != nil {
+			shellMap["stdout"] = *rec.Shell.Stdout
+		}
+		if rec.Shell.Stderr != nil {
+			shellMap["stderr"] = *rec.Shell.Stderr
+		}
+		if rec.Shell.Error != nil {
+			shellMap["error"] = *rec.Shell.Error
 		}
 	}
 	ret, violation, err := runLuaScriptWithSandbox(luaPostMapStage, metaCfg, rec.Locator, map[string]any{

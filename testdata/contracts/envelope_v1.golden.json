@@ -4,7 +4,14 @@
       "locator": "a",
       "meta": { "k": "v" },
       "mapped": { "x": 1 },
-      "shell": { "exitCode": 0, "stdout": "ok\n", "stderr": "" },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "ok\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
       "post": { "locator": "a" }
     }
   ],

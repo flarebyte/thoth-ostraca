@@ -28,7 +28,20 @@ func reduceItemFromRecord(rec Record) any {
 		m["mapped"] = rec.Mapped
 	}
 	if rec.Shell != nil {
-		m["shell"] = map[string]any{"exitCode": rec.Shell.ExitCode, "stdout": rec.Shell.Stdout, "stderr": rec.Shell.Stderr}
+		sm := map[string]any{
+			"exitCode": rec.Shell.ExitCode,
+			"timedOut": rec.Shell.TimedOut,
+		}
+		if rec.Shell.Stdout != nil {
+			sm["stdout"] = *rec.Shell.Stdout
+		}
+		if rec.Shell.Stderr != nil {
+			sm["stderr"] = *rec.Shell.Stderr
+		}
+		if rec.Shell.Error != nil {
+			sm["error"] = *rec.Shell.Error
+		}
+		m["shell"] = sm
 	}
 	if rec.Post != nil {
 		m["post"] = rec.Post

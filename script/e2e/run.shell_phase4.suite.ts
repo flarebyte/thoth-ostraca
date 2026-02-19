@@ -50,6 +50,17 @@ function firstShellStdout(stdout: string): string {
   return env.records?.[0]?.shell?.stdout ?? '';
 }
 
+function firstShell(stdout: string): Record<string, unknown> {
+  const env = JSON.parse(stdout) as {
+    records?: Array<{ shell?: Record<string, unknown> }>;
+  };
+  const sh = env.records?.[0]?.shell;
+  if (!sh) {
+    throw new Error('missing shell in first record');
+  }
+  return sh;
+}
+
 function shellAvailable(program: string): boolean {
   const p = spawnSync(program, ['-c', 'printf ok'], { encoding: 'utf8' });
   return !p.error;
@@ -117,6 +128,84 @@ test('phase4 shell capture truncates stdout at maxBytes', () => {
   expect(run.status).toBe(0);
   expect(run.stderr).toBe('');
   expect(firstShellStdout(run.stdout)).toBe('01234');
+  const shell = firstShell(run.stdout);
+  expect(shell.stdoutTruncated).toBe(true);
+  expect(shell.stderrTruncated).toBe(false);
+  expect(shell.timedOut).toBe(false);
+});
+
+test('phase4 shell canonical schema on success and non-zero exit', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const repo = mkShellRepo(root);
+
+  const okCfg = writeCfg(
+    root,
+    repo,
+    1,
+    '{ enabled: true, program: "sh", argsTemplate: ["-c", "printf \'ok\'"] }',
+  );
+  const okRun = runThoth(bin, ['run', '--config', okCfg], root);
+  expect(okRun.status).toBe(0);
+  expect(okRun.stderr).toBe('');
+  const okShell = firstShell(okRun.stdout);
+  expect(okShell.exitCode).toBe(0);
+  expect(okShell.timedOut).toBe(false);
+  expect(okShell.stdoutTruncated).toBe(false);
+  expect(okShell.stderrTruncated).toBe(false);
+  expect(okShell.error).toBeUndefined();
+
+  const badCfg = writeCfg(
+    root,
+    repo,
+    1,
+    '{ enabled: true, program: "sh", argsTemplate: ["-c", "printf \'bad\' >&2; exit 7"] }',
+  );
+  const badRun = runThoth(bin, ['run', '--config', badCfg], root);
+  expect(badRun.status).toBe(0);
+  expect(badRun.stderr).toBe('');
+  const badShell = firstShell(badRun.stdout);
+  expect(badShell.exitCode).toBe(7);
+  expect(badShell.timedOut).toBe(false);
+  expect(badShell.stdoutTruncated).toBe(false);
+  expect(badShell.stderrTruncated).toBe(false);
+  expect(badShell.error).toBeUndefined();
+});
+
+test('phase4 shell keep-going timeout and capture-disabled schema', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const repo = mkShellRepo(root);
+  const cfg = path.join(
+    root,
+    'temp',
+    `phase4-shell-timeout-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.cue`,
+  );
+  const body = `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${toCuePath(repo)}" }
+  workers: 1
+  errors: { mode: "keep-going", embedErrors: true }
+  shell: {
+    enabled: true
+    program: "sh"
+    timeoutMs: 30
+    termGraceMs: 10
+    capture: { stdout: false, stderr: true, maxBytes: 16 }
+    argsTemplate: ["-c", "sleep 2"]
+  }
+}`;
+  fs.writeFileSync(cfg, body, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(1);
+  expect(run.stderr.includes('keep-going: no successful records')).toBe(true);
+  const shell = firstShell(run.stdout);
+  expect(shell.exitCode).toBe(-2);
+  expect(shell.timedOut).toBe(true);
+  expect(shell.stdout).toBeUndefined();
+  expect(shell.stdoutTruncated).toBe(false);
+  expect(shell.stderrTruncated).toBe(false);
 });
 
 test('phase4 shell uses configured workingDir and env overlay', () => {
