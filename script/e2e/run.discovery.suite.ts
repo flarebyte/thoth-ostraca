@@ -7,6 +7,7 @@ import {
   projectRoot,
   runThoth,
   saveOutputs,
+  writePipelineErrorModeConfig,
 } from './helpers';
 import { writeCueConfig } from './test_utils';
 
@@ -167,15 +168,7 @@ test('thoth run discovery/parse permission errors obey keep-going and fail-fast'
     }
 
     const cfgKeep = path.join(repo, 'keep.cue');
-    writeCueConfig(
-      cfgKeep,
-      `{
-  configVersion: "v0"
-  action: "pipeline"
-  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
-  errors: { mode: "keep-going", embedErrors: true }
-}`,
-    );
+    writePipelineErrorModeConfig(cfgKeep, repo, 'keep-going', true);
     const runKeep = runThoth(bin, ['run', '--config', cfgKeep], root);
     expect(runKeep.status).toBe(0);
     expect(runKeep.stderr).toBe('');
@@ -192,15 +185,7 @@ test('thoth run discovery/parse permission errors obey keep-going and fail-fast'
     ).toBe(true);
 
     const cfgFail = path.join(repo, 'fail.cue');
-    writeCueConfig(
-      cfgFail,
-      `{
-  configVersion: "v0"
-  action: "pipeline"
-  discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
-  errors: { mode: "fail-fast" }
-}`,
-    );
+    writePipelineErrorModeConfig(cfgFail, repo, 'fail-fast');
     const runFail = runThoth(bin, ['run', '--config', cfgFail], root);
     expect(runFail.status).not.toBe(0);
     expect(runFail.stdout).toBe('');

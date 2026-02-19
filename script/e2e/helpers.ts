@@ -56,3 +56,23 @@ export function saveOutputs(
   fs.writeFileSync(path.join(tempDir, `${base}.out.txt`), run.stdout);
   fs.writeFileSync(path.join(tempDir, `${base}.err.txt`), run.stderr ?? '');
 }
+
+export function writePipelineErrorModeConfig(
+  cfgPath: string,
+  repoPath: string,
+  mode: 'keep-going' | 'fail-fast',
+  embedErrors = false,
+): void {
+  const escapedRepo = repoPath.replaceAll('\\', '\\\\');
+  const errors =
+    mode === 'keep-going'
+      ? `errors: { mode: "keep-going", embedErrors: ${embedErrors ? 'true' : 'false'} }`
+      : 'errors: { mode: "fail-fast" }';
+  const cfg = `{
+  configVersion: "v0"
+  action: "pipeline"
+  discovery: { root: "${escapedRepo}" }
+  ${errors}
+}`;
+  fs.writeFileSync(cfgPath, cfg, 'utf8');
+}
