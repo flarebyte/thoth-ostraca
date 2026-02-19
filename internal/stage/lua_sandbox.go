@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"hash/fnv"
-	"math/rand"
 	"strings"
 	"time"
 
@@ -108,7 +107,7 @@ func installDeterministicRandom(L *lua.LState, seed int64) {
 	if !ok || mathTbl == nil {
 		return
 	}
-	rng := rand.New(rand.NewSource(seed))
+	rng := newDeterministicRNG(uint64(seed))
 	mathTbl.RawSetString("random", L.NewFunction(func(L *lua.LState) int {
 		top := L.GetTop()
 		switch top {
@@ -137,6 +136,35 @@ func installDeterministicRandom(L *lua.LState, seed int64) {
 	mathTbl.RawSetString("randomseed", L.NewFunction(func(L *lua.LState) int {
 		return 0
 	}))
+}
+
+type deterministicRNG struct {
+	state uint64
+}
+
+func newDeterministicRNG(seed uint64) *deterministicRNG {
+	if seed == 0 {
+		seed = 0x9e3779b97f4a7c15
+	}
+	return &deterministicRNG{state: seed}
+}
+
+func (r *deterministicRNG) nextUint64() uint64 {
+	// SplitMix64 deterministic generator.
+	r.state += 0x9e3779b97f4a7c15
+	z := r.state
+	z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9
+	z = (z ^ (z >> 27)) * 0x94d049bb133111eb
+	return z ^ (z >> 31)
+}
+
+func (r *deterministicRNG) Float64() float64 {
+	// Match math/rand float range [0.0,1.0).
+	return float64(r.nextUint64()>>11) / (1 << 53)
+}
+
+func (r *deterministicRNG) Intn(n int) int {
+	return int(r.nextUint64() % uint64(n))
 }
 
 func instructionLimitWouldTrip(code string, instructionLimit int) bool {
