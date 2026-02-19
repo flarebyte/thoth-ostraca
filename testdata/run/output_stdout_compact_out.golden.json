@@ -1,0 +1,10 @@
+{
+  "records": [],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "v0", "action": "nop" },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "output": { "out": "-" },
+    "reduced": 0
+  }
+}

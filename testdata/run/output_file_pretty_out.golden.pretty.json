@@ -1,0 +1,18 @@
+{
+  "records": [],
+  "meta": {
+    "contractVersion": "1",
+    "config": {
+      "configVersion": "v0",
+      "action": "nop"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
+    "output": {
+      "out": "temp/out.pretty.json",
+      "pretty": true
+    },
+    "reduced": 0
+  }
+}
