@@ -235,3 +235,126 @@ meta:
   );
   expect(second).toBe(golden);
 });
+
+test('update-meta: deep-merge patch updates existing and creates missing meta', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const repo = path.join(root, 'temp', 'update_patch_repo');
+  fs.rmSync(repo, { recursive: true, force: true });
+  fs.mkdirSync(repo, { recursive: true });
+  fs.writeFileSync(path.join(repo, 'a.txt'), 'a', 'utf8');
+  fs.writeFileSync(path.join(repo, 'b.txt'), 'b', 'utf8');
+  fs.writeFileSync(
+    path.join(repo, 'a.txt.thoth.yaml'),
+    `locator: a.txt
+meta:
+  keep: 1
+  obj:
+    y: 2
+    x: 1
+  arr:
+    - 1
+    - 2
+`,
+    'utf8',
+  );
+  const cfgPath = path.join(root, 'temp', 'update_patch_tmp.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update_patch_repo').replaceAll('\\', '\\\\')}" }
+  updateMeta: {
+    patch: {
+      add: { k: 1 }
+      obj: { y: 9, z: 3 }
+      arr: [7]
+    }
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const gotA = fs.readFileSync(path.join(repo, 'a.txt.thoth.yaml'), 'utf8');
+  const gotB = fs.readFileSync(path.join(repo, 'b.txt.thoth.yaml'), 'utf8');
+  const wantA = fs.readFileSync(
+    path.join(
+      root,
+      'testdata',
+      'golden',
+      'meta',
+      'update_patch_existing_expected.thoth.yaml',
+    ),
+    'utf8',
+  );
+  const wantB = fs.readFileSync(
+    path.join(
+      root,
+      'testdata',
+      'golden',
+      'meta',
+      'update_patch_missing_expected.thoth.yaml',
+    ),
+    'utf8',
+  );
+  expect(gotA).toBe(wantA);
+  expect(gotB).toBe(wantB);
+});
+
+test('update-meta: keep-going with invalid existing meta still updates valid file with patch', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const repo = path.join(root, 'temp', 'update_patch_keep_repo');
+  fs.rmSync(repo, { recursive: true, force: true });
+  fs.mkdirSync(repo, { recursive: true });
+  fs.writeFileSync(path.join(repo, 'bad.txt'), 'bad', 'utf8');
+  fs.writeFileSync(path.join(repo, 'good.txt'), 'good', 'utf8');
+  fs.writeFileSync(
+    path.join(repo, 'bad.txt.thoth.yaml'),
+    'locator: bad.txt\n# missing meta\n',
+    'utf8',
+  );
+  const cfgPath = path.join(root, 'temp', 'update_patch_keep_tmp.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update_patch_keep_repo').replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+  updateMeta: {
+    patch: {
+      add: { k: 1 }
+      obj: { y: 9, z: 3 }
+      arr: [7]
+    }
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; error?: unknown }>;
+    errors: Array<unknown>;
+  };
+  const bad = out.records.find((r) => r.locator === 'bad.txt');
+  expect(bad?.error).toBeTruthy();
+  expect(out.errors.length).toBeGreaterThan(0);
+
+  const gotGood = fs.readFileSync(
+    path.join(repo, 'good.txt.thoth.yaml'),
+    'utf8',
+  );
+  const wantGood = fs.readFileSync(
+    path.join(
+      root,
+      'testdata',
+      'golden',
+      'meta',
+      'update_patch_keep_valid_expected.thoth.yaml',
+    ),
+    'utf8',
+  );
+  expect(gotGood).toBe(wantGood);
+});

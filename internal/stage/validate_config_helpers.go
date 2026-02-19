@@ -20,6 +20,25 @@ func sanitizeWorkers(n int) int {
 	return n
 }
 
+func deepCopyAny(v any) any {
+	switch x := v.(type) {
+	case map[string]any:
+		out := make(map[string]any, len(x))
+		for k, vv := range x {
+			out[k] = deepCopyAny(vv)
+		}
+		return out
+	case []any:
+		out := make([]any, len(x))
+		for i := range x {
+			out[i] = deepCopyAny(x[i])
+		}
+		return out
+	default:
+		return x
+	}
+}
+
 // applyMinimalToMeta mutates out.Meta to reflect values from the parsed minimal config.
 // It mirrors the original field population and presence checks exactly.
 func applyMinimalToMeta(out *Envelope, min config.Minimal) {
@@ -226,6 +245,18 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 		}
 		if min.Output.HasLines {
 			out.Meta.Output.Lines = min.Output.Lines
+		}
+	}
+
+	// UpdateMeta
+	if min.UpdateMeta.HasPatch {
+		if out.Meta.UpdateMeta == nil {
+			out.Meta.UpdateMeta = &UpdateMetaMeta{}
+		}
+		if cp, ok := deepCopyAny(min.UpdateMeta.Patch).(map[string]any); ok {
+			out.Meta.UpdateMeta.Patch = cp
+		} else {
+			out.Meta.UpdateMeta.Patch = map[string]any{}
 		}
 	}
 

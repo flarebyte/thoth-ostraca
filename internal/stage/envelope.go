@@ -41,6 +41,7 @@ type Meta struct {
 	LuaSandbox      *LuaSandboxMeta `json:"luaSandbox,omitempty"`
 	Shell           *ShellMeta      `json:"shell,omitempty"`
 	Output          *OutputMeta     `json:"output,omitempty"`
+	UpdateMeta      *UpdateMetaMeta `json:"updateMeta,omitempty"`
 	Reduced         any             `json:"reduced,omitempty"`
 	Errors          *ErrorsMeta     `json:"errors,omitempty"`
 	Workers         int             `json:"workers,omitempty"`
@@ -157,6 +158,11 @@ type OutputMeta struct {
 	Out    string `json:"out,omitempty"`
 	Pretty bool   `json:"pretty,omitempty"`
 	Lines  bool   `json:"lines,omitempty"`
+}
+
+// UpdateMetaMeta holds update-meta patch settings.
+type UpdateMetaMeta struct {
+	Patch map[string]any `json:"patch,omitempty"`
 }
 
 // ErrorsMeta holds error handling behavior.

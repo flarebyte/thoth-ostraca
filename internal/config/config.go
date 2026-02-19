@@ -53,6 +53,7 @@ type Minimal struct {
 	Shell         Shell
 	PostMap       PostMap
 	Reduce        Reduce
+	UpdateMeta    UpdateMeta
 	Output        Output
 	Errors        Errors
 	Workers       Workers
@@ -92,6 +93,10 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Shell = parseShellSection(v)
 	m.PostMap = parsePostMapSection(v)
 	m.Reduce = parseReduceSection(v)
+	m.UpdateMeta, err = parseUpdateMetaSection(v)
+	if err != nil {
+		return Minimal{}, err
+	}
 	m.Output = parseOutputSection(v)
 	m.Errors = parseErrorsSection(v)
 	m.Workers = parseWorkersSection(v)
@@ -200,6 +205,13 @@ type PostMap struct {
 type Reduce struct {
 	Inline    string
 	HasInline bool
+}
+
+// UpdateMeta holds optional update-meta patch config.
+type UpdateMeta struct {
+	Patch      map[string]any
+	HasSection bool
+	HasPatch   bool
 }
 
 // Output holds optional output config.

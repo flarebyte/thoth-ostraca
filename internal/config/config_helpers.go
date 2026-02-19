@@ -341,6 +341,27 @@ func parseReduceSection(v cue.Value) Reduce {
 	return r
 }
 
+// parseUpdateMetaSection extracts optional updateMeta.patch object.
+func parseUpdateMetaSection(v cue.Value) (UpdateMeta, error) {
+	var u UpdateMeta
+	uv := v.LookupPath(cue.ParsePath("updateMeta"))
+	if !uv.Exists() {
+		return u, nil
+	}
+	u.HasSection = true
+	pv := uv.LookupPath(cue.ParsePath("patch"))
+	if !pv.Exists() {
+		return u, nil
+	}
+	tmp := map[string]any{}
+	if err := pv.Decode(&tmp); err != nil {
+		return UpdateMeta{}, fmt.Errorf("invalid updateMeta.patch: must be object")
+	}
+	u.Patch = tmp
+	u.HasPatch = true
+	return u, nil
+}
+
 // parseOutputSection extracts optional output.* fields.
 func parseOutputSection(v cue.Value) Output {
 	var o Output
