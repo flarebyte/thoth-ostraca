@@ -94,7 +94,7 @@ test('update-meta: preserves existing meta and creates missing', () => {
   const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
   const metaB = path.join(tempRepo, 'b.txt.thoth.yaml');
   expect(fs.readFileSync(metaA, 'utf8')).toBe(
-    'locator: a.txt\nmeta: { x: 1 }\n',
+    'locator: a.txt\nmeta:\n  x: 1\n',
   );
   expect(fs.readFileSync(metaB, 'utf8')).toBe('locator: b.txt\nmeta: {}\n');
   const expectedOut = expectedJSONFromGolden(
@@ -181,4 +181,57 @@ test('diff-meta: computes orphans and counts deterministically', () => {
   expect(JSON.stringify(out.meta.diff.orphans)).toBe(
     JSON.stringify(['orphan.txt.thoth.yaml']),
   );
+});
+
+test('update-meta: rewrite-stable canonical YAML (run twice, exact golden)', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const repo = path.join(root, 'temp', 'update_rewrite_repo');
+  fs.rmSync(repo, { recursive: true, force: true });
+  fs.mkdirSync(repo, { recursive: true });
+  fs.writeFileSync(path.join(repo, 'z.txt'), 'z', 'utf8');
+  fs.writeFileSync(
+    path.join(repo, 'z.txt.thoth.yaml'),
+    `locator: z.txt
+meta:
+  z: 1
+  a:
+    d: 4
+    b: 2
+    c:
+      y: 2
+      x: 1
+`,
+    'utf8',
+  );
+  const cfgPath = path.join(root, 'temp', 'update_rewrite_tmp.cue');
+  const cfgContent = `{
+  configVersion: "v0"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update_rewrite_repo').replaceAll('\\', '\\\\')}" }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+
+  const run1 = runThoth(bin, ['run', '--config', cfgPath], root);
+  expect(run1.status).toBe(0);
+  expect(run1.stderr).toBe('');
+  const first = fs.readFileSync(path.join(repo, 'z.txt.thoth.yaml'), 'utf8');
+
+  const run2 = runThoth(bin, ['run', '--config', cfgPath], root);
+  expect(run2.status).toBe(0);
+  expect(run2.stderr).toBe('');
+  const second = fs.readFileSync(path.join(repo, 'z.txt.thoth.yaml'), 'utf8');
+
+  expect(second).toBe(first);
+  const golden = fs.readFileSync(
+    path.join(
+      root,
+      'testdata',
+      'golden',
+      'meta',
+      'update_nested_expected.thoth.yaml',
+    ),
+    'utf8',
+  );
+  expect(second).toBe(golden);
 });

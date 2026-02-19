@@ -2,43 +2,12 @@ package stage
 
 import (
 	"context"
-	"fmt"
-	"os"
 	"path/filepath"
-	"sort"
+
+	"github.com/flarebyte/thoth-ostraca/internal/metafile"
 )
 
 const writeUpdatedMetaFilesStage = "write-updated-meta-files"
-
-func yamlInlineFromMap(m map[string]any) string {
-	if len(m) == 0 {
-		return "{}"
-	}
-	// stable order
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	out := "{ "
-	first := true
-	for _, k := range keys {
-		if !first {
-			out += ", "
-		} else {
-			first = false
-		}
-		v := m[k]
-		switch vv := v.(type) {
-		case string:
-			out += fmt.Sprintf("%s: %s", k, vv)
-		default:
-			out += fmt.Sprintf("%s: %v", k, vv)
-		}
-	}
-	out += " }"
-	return out
-}
 
 func writeOneUpdated(root string, r Record) (Record, *Error, error) {
 	// Determine path
@@ -54,10 +23,6 @@ func writeOneUpdated(root string, r Record) (Record, *Error, error) {
 		_, rel = metaFilePath(root, r.Locator)
 	}
 	abs := filepath.Join(root, filepath.FromSlash(rel))
-	// Ensure dir
-	if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
-		return r, &Error{Stage: writeUpdatedMetaFilesStage, Locator: r.Locator, Message: err.Error()}, err
-	}
 	// nextMeta
 	next := map[string]any{}
 	if r.Post != nil {
@@ -67,8 +32,7 @@ func writeOneUpdated(root string, r Record) (Record, *Error, error) {
 			}
 		}
 	}
-	content := fmt.Sprintf("locator: %s\nmeta: %s\n", r.Locator, yamlInlineFromMap(next))
-	if err := os.WriteFile(abs, []byte(content), 0o644); err != nil {
+	if err := metafile.Write(abs, r.Locator, next); err != nil {
 		return r, &Error{Stage: writeUpdatedMetaFilesStage, Locator: r.Locator, Message: err.Error()}, err
 	}
 	// Attach metaPath (for output symmetry)

@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/flarebyte/thoth-ostraca/internal/metafile"
 )
 
 const writeMetaFilesStage = "write-meta-files"
@@ -20,12 +22,7 @@ func writeSingleMeta(root string, rec Record) (Record, *Error, error) {
 	if _, err := os.Stat(abs); err == nil {
 		return rec, &Error{Stage: writeMetaFilesStage, Locator: rec.Locator, Message: fmt.Sprintf("meta exists: %s", rel)}, fmt.Errorf("meta exists: %s", rel)
 	}
-	// Ensure parent dir exists
-	if err := os.MkdirAll(filepath.Dir(abs), 0o755); err != nil {
-		return rec, &Error{Stage: writeMetaFilesStage, Locator: rec.Locator, Message: err.Error()}, err
-	}
-	content := []byte("locator: " + rec.Locator + "\nmeta: {}\n")
-	if err := os.WriteFile(abs, content, 0o644); err != nil {
+	if err := metafile.Write(abs, rec.Locator, map[string]any{}); err != nil {
 		return rec, &Error{Stage: writeMetaFilesStage, Locator: rec.Locator, Message: err.Error()}, err
 	}
 	rec.Post = map[string]any{"metaPath": rel}
