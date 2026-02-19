@@ -4,12 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
 type runResult struct {
@@ -64,28 +65,6 @@ func runCmd(t *testing.T, bin string, args ...string) runResult {
 		}
 	}
 	return runResult{code: code, stdout: stdout.Bytes(), stderr: stderr.Bytes()}
-}
-
-func copyTree(t *testing.T, src, dst string) {
-	t.Helper()
-	_ = os.RemoveAll(dst)
-	if err := filepath.WalkDir(src, func(p string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return err
-		}
-		rel, _ := filepath.Rel(src, p)
-		out := filepath.Join(dst, rel)
-		if d.IsDir() {
-			return os.MkdirAll(out, 0o755)
-		}
-		b, err := os.ReadFile(p)
-		if err != nil {
-			return err
-		}
-		return os.WriteFile(out, b, 0o644)
-	}); err != nil {
-		t.Fatalf("copy: %v", err)
-	}
 }
 
 func assertStable(t *testing.T, runs []runResult) {
@@ -206,7 +185,9 @@ func assertMetaActionDeterminism(t *testing.T, bin, src, repo, cfgTemplate strin
 	t.Helper()
 	var baseOut []byte
 	for i := 0; i < 5; i++ {
-		copyTree(t, src, repo)
+		if err := testutil.CopyTree(src, repo); err != nil {
+			t.Fatalf("copy: %v", err)
+		}
 		cfg := filepath.Join(repo, "tmp.cue")
 		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
 		if err := os.WriteFile(cfg, data, 0o644); err != nil {

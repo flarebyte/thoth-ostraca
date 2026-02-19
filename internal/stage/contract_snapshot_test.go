@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
 func testdataPath(parts ...string) string {
@@ -125,19 +127,19 @@ func runActionWithConfig(t *testing.T, cfgPath string) (Envelope, []byte) {
 func TestContract_Pipeline(t *testing.T) {
 	_, b := runActionWithConfig(t, testdataPath("configs", "keep1_embed_true.cue"))
 	g, _ := os.ReadFile(testdataPath("contracts", "pipeline.golden.json"))
-	var env Envelope
-	if err := json.Unmarshal(b, &env); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	if err := ValidateEnvelopeShape(env); err != nil {
-		t.Fatalf("shape: %v", err)
-	}
+	validateContractBytes(t, b)
 	assertJSONEqual(t, b, g)
 }
 
 func TestContract_Validate(t *testing.T) {
 	_, b := runActionWithConfig(t, testdataPath("configs", "validate_only_ok.cue"))
 	g, _ := os.ReadFile(testdataPath("contracts", "validate.golden.json"))
+	validateContractBytes(t, b)
+	assertJSONEqual(t, b, g)
+}
+
+func validateContractBytes(t *testing.T, b []byte) {
+	t.Helper()
 	var env Envelope
 	if err := json.Unmarshal(b, &env); err != nil {
 		t.Fatalf("unmarshal: %v", err)
@@ -145,35 +147,14 @@ func TestContract_Validate(t *testing.T) {
 	if err := ValidateEnvelopeShape(env); err != nil {
 		t.Fatalf("shape: %v", err)
 	}
-	assertJSONEqual(t, b, g)
-}
-
-func copyTree(t *testing.T, src, dst string) {
-	t.Helper()
-	_ = os.RemoveAll(dst)
-	if err := filepath.Walk(src, func(p string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		rel, _ := filepath.Rel(src, p)
-		out := filepath.Join(dst, rel)
-		if info.IsDir() {
-			return os.MkdirAll(out, 0o755)
-		}
-		b, err := os.ReadFile(p)
-		if err != nil {
-			return err
-		}
-		return os.WriteFile(out, b, 0o644)
-	}); err != nil {
-		t.Fatalf("copy: %v", err)
-	}
 }
 
 func TestContract_CreateMeta(t *testing.T) {
 	repoAbs := rootTempPath("create1_repo_contract")
 	repoRel := filepath.ToSlash(filepath.Join("temp", "create1_repo_contract"))
-	copyTree(t, testdataPath("repos", "create1"), repoAbs)
+	if err := testutil.CopyTree(testdataPath("repos", "create1"), repoAbs); err != nil {
+		t.Fatalf("copy: %v", err)
+	}
 	cfg := rootTempPath("create1_contract.cue")
 	_ = os.MkdirAll(rootTempPath(), 0o755)
 	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
@@ -192,7 +173,9 @@ func TestContract_CreateMeta(t *testing.T) {
 func TestContract_UpdateMeta(t *testing.T) {
 	repoAbs := rootTempPath("update1_repo_contract")
 	repoRel := filepath.ToSlash(filepath.Join("temp", "update1_repo_contract"))
-	copyTree(t, testdataPath("repos", "update1"), repoAbs)
+	if err := testutil.CopyTree(testdataPath("repos", "update1"), repoAbs); err != nil {
+		t.Fatalf("copy: %v", err)
+	}
 	cfg := rootTempPath("update1_contract.cue")
 	_ = os.MkdirAll(rootTempPath(), 0o755)
 	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
