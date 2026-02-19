@@ -189,26 +189,8 @@ func TestDeterminism_CreateMeta(t *testing.T) {
 	bin := buildThoth(t)
 	src := filepath.Join(root, "testdata", "repos", "create1")
 	cfgT := "{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \"%s\" }\n}"
-	var baseOut []byte
 	repo := filepath.Join(root, "temp", "create_det_repo")
-	for i := 0; i < 5; i++ {
-		copyTree(t, src, repo)
-		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(fmtSprintf(cfgT, filepath.ToSlash(repo)))
-		if err := os.WriteFile(cfg, data, 0o644); err != nil {
-			t.Fatalf("write cfg: %v", err)
-		}
-		r := runCmd(t, bin, "run", "--config", cfg)
-		if i == 0 {
-			baseOut = r.stdout
-		}
-		if !bytes.Equal(r.stdout, baseOut) {
-			t.Fatalf("stdout drift run %d", i)
-		}
-		if r.code != 0 || len(r.stderr) != 0 {
-			t.Fatalf("unexpected status/stderr")
-		}
-	}
+	assertMetaActionDeterminism(t, bin, src, repo, cfgT)
 }
 
 func TestDeterminism_UpdateMeta(t *testing.T) {
@@ -216,12 +198,17 @@ func TestDeterminism_UpdateMeta(t *testing.T) {
 	bin := buildThoth(t)
 	src := filepath.Join(root, "testdata", "repos", "update1")
 	cfgT := "{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \"%s\" }\n}"
-	var baseOut []byte
 	repo := filepath.Join(root, "temp", "update_det_repo")
+	assertMetaActionDeterminism(t, bin, src, repo, cfgT)
+}
+
+func assertMetaActionDeterminism(t *testing.T, bin, src, repo, cfgTemplate string) {
+	t.Helper()
+	var baseOut []byte
 	for i := 0; i < 5; i++ {
 		copyTree(t, src, repo)
 		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(fmtSprintf(cfgT, filepath.ToSlash(repo)))
+		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
 		if err := os.WriteFile(cfg, data, 0o644); err != nil {
 			t.Fatalf("write cfg: %v", err)
 		}
