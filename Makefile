@@ -3,7 +3,7 @@
 ## - No dynamic variables or shell logic
 ## - Real logic lives in scripts (TypeScript/Bun, bash, Go)
 
-.PHONY: lint format test test-race gen build build-dev e2e release clean help
+.PHONY: lint format test test-race gen build build-dev e2e release clean help bench perf-smoke
 
 BIOME := npx @biomejs/biome
 BUN := bun
@@ -25,6 +25,12 @@ test: gen
 
 test-race: gen
 	$(GO) test -race ./...
+
+bench:
+	$(GO) test -bench=. -run=^$$ ./...
+
+perf-smoke:
+	$(GO) test -run TestPerfSmoke_ ./...
 
 gen:
 	true
