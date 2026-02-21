@@ -7,16 +7,6 @@ import crypto from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 
-function getBritishDate(): string {
-  const now = new Date();
-  const options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  };
-  return new Intl.DateTimeFormat('en-GB', options).format(now);
-}
-
 async function readFileSafe(p: string): Promise<string> {
   try {
     return await fs.readFile(p, 'utf8');
@@ -45,6 +35,23 @@ async function runChecked(
   }
 }
 
+async function runCapture(
+  cmd: string[],
+  opts: { cwd?: string; env?: Record<string, string | undefined> } = {},
+): Promise<string> {
+  const proc = Bun.spawn(cmd, {
+    cwd: opts.cwd,
+    env: opts.env,
+    stdout: 'pipe',
+    stderr: 'pipe',
+  });
+  const exitCode = await proc.exited;
+  if (exitCode !== 0) {
+    return '';
+  }
+  return (await new Response(proc.stdout).text()).trim();
+}
+
 async function sha256File(filePath: string): Promise<string> {
   const hash = crypto.createHash('sha256');
   const file = Bun.file(filePath);
@@ -64,11 +71,25 @@ async function main() {
 
   const currentDirectory = process.cwd();
   const folderName = path.basename(currentDirectory);
-  const projectName = `github.com/flarebyte/${folderName}`;
-  const currentDate = getBritishDate().replaceAll(' ', '-');
+  const modulePath =
+    (await runCapture(['go', 'list', '-m'], { cwd: currentDirectory })) ||
+    `github.com/flarebyte/${folderName}`;
+  const commitFromGit = await runCapture(
+    ['git', 'rev-parse', '--short=12', 'HEAD'],
+    { cwd: currentDirectory },
+  );
+  const commit = process.env.COMMIT || commitFromGit || 'unknown';
+  const currentDate =
+    process.env.DATE ?? new Date().toISOString().replace(/\.\d{3}Z$/, 'Z');
 
-  // ldflags for cli version/date
-  const ldflags = `-X ${projectName}/cli.Version=${version} -X ${projectName}/cli.Date=${currentDate}`;
+  // Keep cli.* for compatibility and set internal/buildinfo.* for `thoth version`.
+  const ldflags = [
+    `-X ${modulePath}/cli.Version=${version}`,
+    `-X ${modulePath}/cli.Date=${currentDate}`,
+    `-X ${modulePath}/internal/buildinfo.Version=${version}`,
+    `-X ${modulePath}/internal/buildinfo.Commit=${commit}`,
+    `-X ${modulePath}/internal/buildinfo.Date=${currentDate}`,
+  ].join(' ');
 
   const platforms = [
     { label: 'Linux (amd64)', os: 'linux', arch: 'amd64' },
@@ -98,7 +119,10 @@ async function main() {
     }
 
     const out = path.join('build', `${folderName}-${p.os}-${p.arch}`);
-    await runChecked(['go', 'build', '-o', out, '-ldflags', ldflags], { env });
+    await runChecked(
+      ['go', 'build', '-o', out, '-ldflags', ldflags, './cmd/thoth'],
+      { env },
+    );
     builtFiles.push(out);
   }
 
