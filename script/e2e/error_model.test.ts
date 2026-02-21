@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { writeCfg } from './config_helpers';
 import { buildBinary, projectRoot, runThoth } from './helpers';
 
 type RunEnvelope = {
@@ -11,17 +12,6 @@ type RunEnvelope = {
   errors?: Array<{ stage: string; locator?: string; message: string }>;
   meta?: Record<string, unknown>;
 };
-
-function writeCfg(
-  root: string,
-  name: string,
-  cfg: Record<string, unknown>,
-): string {
-  const p = path.join(root, 'temp', `${name}.cue`);
-  fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, `${JSON.stringify(cfg, null, 2)}\n`, 'utf8');
-  return p;
-}
 
 function isSortedErrors(
   errs: Array<{ stage: string; locator?: string; message: string }>,

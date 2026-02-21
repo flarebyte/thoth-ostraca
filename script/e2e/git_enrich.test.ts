@@ -4,25 +4,10 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { buildBinary, projectRoot, runThoth, saveOutputs } from './helpers';
+import { sh } from './shell_helpers';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-function sh(
-  cwd: string,
-  cmd: string,
-  args: string[],
-  env?: Record<string, string>,
-) {
-  const run = spawnSync(cmd, args, {
-    cwd,
-    encoding: 'utf8',
-    env: { ...process.env, ...(env ?? {}) },
-  });
-  if (run.status !== 0) {
-    throw new Error(`${cmd} ${args.join(' ')} failed: ${run.stderr}`);
-  }
-}
 
 type EnrichOut = {
   records: Array<{

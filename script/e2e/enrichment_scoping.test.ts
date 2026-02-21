@@ -1,41 +1,14 @@
 import { expect, test } from 'bun:test';
-import { spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
+import { writeCfg } from './config_helpers';
 import { buildBinary, projectRoot, runThoth } from './helpers';
+import { sh } from './shell_helpers';
 
 type RunOut = {
   records: Array<Record<string, unknown>>;
   meta?: Record<string, unknown>;
 };
-
-function sh(
-  cwd: string,
-  cmd: string,
-  args: string[],
-  env?: Record<string, string>,
-) {
-  const run = spawnSync(cmd, args, {
-    cwd,
-    encoding: 'utf8',
-    env: { ...process.env, ...(env ?? {}) },
-  });
-  if (run.status !== 0) {
-    throw new Error(`${cmd} ${args.join(' ')} failed: ${run.stderr}`);
-  }
-  return run.stdout;
-}
-
-function writeCfg(
-  root: string,
-  name: string,
-  cfg: Record<string, unknown>,
-): string {
-  const p = path.join(root, 'temp', `${name}.cue`);
-  fs.mkdirSync(path.dirname(p), { recursive: true });
-  fs.writeFileSync(p, `${JSON.stringify(cfg, null, 2)}\n`, 'utf8');
-  return p;
-}
 
 function copyTree(src: string, dest: string): string {
   fs.rmSync(dest, { recursive: true, force: true });
