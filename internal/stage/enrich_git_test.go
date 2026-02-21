@@ -7,19 +7,24 @@ import (
 	"testing"
 )
 
-func TestEnrichGit_RepoNotFound_FailFast(t *testing.T) {
+func makeRepoNotFoundInput(t *testing.T, mode string, embed bool) Envelope {
+	t.Helper()
 	root := filepath.Join(t.TempDir(), "no-repo")
 	if err := os.MkdirAll(root, 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	in := Envelope{
+	return Envelope{
 		Records: []Record{{Locator: "a.txt"}},
 		Meta: &Meta{
 			Discovery: &DiscoveryMeta{Root: root},
 			Git:       &GitMeta{Enabled: true},
-			Errors:    &ErrorsMeta{Mode: "fail-fast"},
+			Errors:    &ErrorsMeta{Mode: mode, EmbedErrors: embed},
 		},
 	}
+}
+
+func TestEnrichGit_RepoNotFound_FailFast(t *testing.T) {
+	in := makeRepoNotFoundInput(t, "fail-fast", false)
 	_, err := enrichGitRunner(context.Background(), in, Deps{})
 	if err == nil {
 		t.Fatalf("expected error")
@@ -30,18 +35,7 @@ func TestEnrichGit_RepoNotFound_FailFast(t *testing.T) {
 }
 
 func TestEnrichGit_RepoNotFound_KeepGoing(t *testing.T) {
-	root := filepath.Join(t.TempDir(), "no-repo")
-	if err := os.MkdirAll(root, 0o755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	in := Envelope{
-		Records: []Record{{Locator: "a.txt"}},
-		Meta: &Meta{
-			Discovery: &DiscoveryMeta{Root: root},
-			Git:       &GitMeta{Enabled: true},
-			Errors:    &ErrorsMeta{Mode: "keep-going", EmbedErrors: true},
-		},
-	}
+	in := makeRepoNotFoundInput(t, "keep-going", true)
 	out, err := enrichGitRunner(context.Background(), in, Deps{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)

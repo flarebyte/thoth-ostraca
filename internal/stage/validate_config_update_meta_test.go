@@ -1,9 +1,6 @@
 package stage
 
 import (
-	"context"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 
@@ -11,14 +8,8 @@ import (
 )
 
 func TestValidateConfig_ExposesUpdateMetaPatch(t *testing.T) {
-	_ = os.MkdirAll("temp", 0o755)
-	cfg := filepath.Join("temp", "update_meta_patch_validate_test.cue")
 	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { patch: { b: 2, obj: { y: 9 } } }\n}\n"
-	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
-		t.Fatalf("write cfg: %v", err)
-	}
-	in := Envelope{Records: []Record{}, Meta: &Meta{ConfigPath: cfg}}
-	out, err := Run(context.Background(), "validate-config", in, Deps{})
+	out, err := runValidateConfigWithContent(t, "update_meta_patch_validate_test.cue", content)
 	if err != nil {
 		t.Fatalf("validate-config: %v", err)
 	}
@@ -31,14 +22,8 @@ func TestValidateConfig_ExposesUpdateMetaPatch(t *testing.T) {
 }
 
 func TestValidateConfig_UpdateMetaPatchMustBeObject(t *testing.T) {
-	_ = os.MkdirAll("temp", 0o755)
-	cfg := filepath.Join("temp", "update_meta_patch_invalid_validate_test.cue")
 	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { patch: 1 }\n}\n"
-	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
-		t.Fatalf("write cfg: %v", err)
-	}
-	in := Envelope{Records: []Record{}, Meta: &Meta{ConfigPath: cfg}}
-	_, err := Run(context.Background(), "validate-config", in, Deps{})
+	_, err := runValidateConfigWithContent(t, "update_meta_patch_invalid_validate_test.cue", content)
 	if err == nil || !strings.Contains(err.Error(), "invalid updateMeta.patch") {
 		t.Fatalf("expected invalid updateMeta.patch error, got: %v", err)
 	}

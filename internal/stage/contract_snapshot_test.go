@@ -64,23 +64,10 @@ func encodeEnvelopeContract(env Envelope) ([]byte, error) {
 	return encodeJSONCompact(env)
 }
 
-func canonicalJSON(t *testing.T, b []byte) []byte {
-	t.Helper()
-	var v any
-	if err := json.Unmarshal(b, &v); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	out, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
-	return out
-}
-
 func assertJSONEqual(t *testing.T, actual, expected []byte) {
 	t.Helper()
-	a := canonicalJSON(t, actual)
-	e := canonicalJSON(t, expected)
+	a := normalizeJSON(t, actual)
+	e := normalizeJSON(t, expected)
 	if string(a) != string(e) {
 		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(actual), string(expected))
 	}
