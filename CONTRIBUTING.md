@@ -1,96 +1,97 @@
-# Contributing
+# Contributing to thoth
 
-TODO: update
+Thanks for contributing. This project prioritizes deterministic behavior, stable contracts, and small, reviewable changes.
 
-Welcome! And many thanks for taking the time to contribute!
-
-Before getting started, please read the [Technical Design
-documentation](TECHNICAL_DESIGN.md) to understand the architectural and
-coding guidelines used in this project.
-
-There are many ways you can contribute: fixing bugs, writing documentation,
-improving tests, suggesting features, or reviewing code.
-
-Please note we have a [Code of Conduct](CODE_OF_CONDUCT.md); please follow it
-in all your interactions with the project.
-
-## Build the project locally
-
-Make sure you have Go installed (preferably the latest stable version). Clone
-the repository and build from the root:
+## Getting Started
+- Prerequisites:
+  - Go (use the version from `go.mod`)
+  - Bun/Node only if you run E2E TypeScript tests
+- Build local binary:
 
 ```bash
-git clone https://github.com/flarebyte/clingy-code-detective.git
-cd clingy-code-detective
-go build ./...
+go build -o .e2e-bin/thoth ./cmd/thoth
 ```
 
-The following commands should get you started:
-
-Setup an alias:
+- Run core tests:
 
 ```bash
-alias broth='npx baldrick-broth'
+go test ./...
 ```
 
-or if you prefer to always use the latest version:
+- Optional full checks:
 
 ```bash
-alias broth='npx baldrick-broth@latest'
+make test
+make test-race
+make bench
 ```
 
-Run the unit tests:
+## Development Workflow
+- Keep PRs small and focused (one behavior change per PR when possible).
+- Prefer adding tests first or with the change.
+- Avoid unrelated refactors in behavior PRs.
+- When changing output behavior, update fixtures/goldens intentionally and explain why.
+- Never rely on map iteration order, current time, random values, or worker scheduling for output fields.
+- If a change affects user-facing contract, add/adjust contract snapshot tests.
+
+## Testing Commands
+- Unit/integration tests:
 
 ```bash
-broth test unit
+go test ./...
 ```
 
-A list of [most used commands](MAINTENANCE.md) is available:
+- Race detector:
 
 ```bash
-broth
+make test-race
 ```
 
-Please keep an eye on test coverage, bundle size and documentation.
-When you are ready for a pull request:
+- Benchmarks:
 
 ```bash
-broth release ready
+make bench
 ```
 
-You can also simulate [Github actions](https://docs.github.com/en/actions)
-locally with [act](https://github.com/nektos/act).
-You will need to setup `.actrc` with the node.js docker image `-P
-ubuntu-latest=node:16-buster`
-
-To run the pipeline:
+- Optional perf smoke:
 
 ```bash
-broth github act
+make perf-smoke
 ```
 
-## Pull Request Process
+## Golden and Fixture Policy
+- Repos/fixtures:
+  - Add scenario repos under `testdata/repos/<name>/`.
+  - Keep fixtures minimal and purpose-specific.
+  - Prefer deterministic file names and contents.
+- Config fixtures:
+  - Add or update configs under `testdata/configs/`.
+- Goldens:
+  - Store run outputs under `testdata/run/*.golden.json` (or `.golden.ndjson`).
+  - Update only when behavior change is intentional.
+  - Validate by rerunning tests, not by manual editing alone.
+- Determinism requirement:
+  - Output must be byte-identical across reruns.
+  - Output must be byte-identical for equivalent runs with different workers (e.g. `workers=1` vs `workers=8`) unless explicitly documented otherwise.
 
-1.  Make sure that an issue describing the intended code change exists and
-    that this issue has been accepted.
+## Code Style Expectations
+- Keep stages small and single-purpose.
+- Prefer explicit, readable helpers over large monolithic functions.
+- Errors must be short, single-line, and deterministic.
+- Include locator/path in errors when available.
+- Do not introduce nondeterministic fields into envelope/record output.
+- Keep machine-oriented defaults stable (stdout JSON contract first).
 
-When you are about to do a pull-request:
+## PR Checklist
+- [ ] Change scope is small and focused.
+- [ ] Added/updated tests for behavior change.
+- [ ] `go test ./...` passes.
+- [ ] If relevant: `make test-race` passes.
+- [ ] If relevant: `make bench` compiles/runs.
+- [ ] Goldens updated intentionally and reviewed.
+- [ ] Output remains deterministic (rerun + workers comparison).
+- [ ] Error messages remain short, stable, and deterministic.
 
-```bash
-broth release ready -pr
-```
-
-Then you can create the pull-request:
-
-```bash
-broth release pr
-```
-
-## Publishing the library
-
-This would be done by the main maintainers of the project. Locally for now as
-updates are pretty infrequent, and some of tests have to be done manually.
-
-```bash
-broth release publish
-```
+## Notes
+- Use `.e2e-bin/thoth` for tests and local verification.
+- Do not commit built binaries.
