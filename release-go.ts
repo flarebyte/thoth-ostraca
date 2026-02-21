@@ -16,7 +16,9 @@ async function readFileSafe(p: string): Promise<string> {
   }
 }
 
-async function readVersionFromProjectYAML(p = 'main.project.yaml'): Promise<string> {
+async function readVersionFromProjectYAML(
+  p = 'main.project.yaml',
+): Promise<string> {
   const raw = await readFileSafe(p);
   if (!raw) return '';
   const lines = raw.split(/\r?\n/);
@@ -32,15 +34,27 @@ async function readVersionFromProjectYAML(p = 'main.project.yaml'): Promise<stri
     const m = line.match(/^\s*version\s*:\s*(.+)\s*$/);
     if (m) {
       let v = m[1].trim();
-      if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+      if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+      )
+        v = v.slice(1, -1);
       return v;
     }
   }
   return '';
 }
 
-async function runChecked(cmd: string[], opts: { cwd?: string; env?: Record<string, string | undefined> } = {}) {
-  const proc = Bun.spawn(cmd, { cwd: opts.cwd, env: opts.env, stdout: 'inherit', stderr: 'inherit' });
+async function runChecked(
+  cmd: string[],
+  opts: { cwd?: string; env?: Record<string, string | undefined> } = {},
+) {
+  const proc = Bun.spawn(cmd, {
+    cwd: opts.cwd,
+    env: opts.env,
+    stdout: 'inherit',
+    stderr: 'inherit',
+  });
   const code = await proc.exited;
   if (code !== 0) throw new Error(`Command failed (${code}): ${cmd.join(' ')}`);
 }
@@ -53,7 +67,16 @@ async function ensureGhAvailable() {
 async function listBuildArtifacts(dir = 'build'): Promise<string[]> {
   try {
     const items = await fs.readdir(dir);
-    return items.map((f) => path.join(dir, f));
+    const files: string[] = [];
+    for (const item of items) {
+      const fullPath = path.join(dir, item);
+      const st = await fs.stat(fullPath);
+      if (st.isFile()) {
+        files.push(fullPath);
+      }
+    }
+    files.sort();
+    return files;
   } catch {
     return [];
   }
@@ -67,11 +90,14 @@ async function main() {
     await ensureGhAvailable();
   }
   const version = (await readVersionFromProjectYAML()).trim();
-  if (!version) throw new Error('version not found in main.project.yaml (tags.version)');
+  if (!version)
+    throw new Error('version not found in main.project.yaml (tags.version)');
 
   if (dryRun) {
     console.log(`[dry-run] Would build binaries via: bun run build-go.ts`);
-    console.log(`[dry-run] Would create GitHub release v${version} from ./build/*`);
+    console.log(
+      `[dry-run] Would create GitHub release v${version} from ./build/*`,
+    );
     return;
   }
 
@@ -85,7 +111,14 @@ async function main() {
   if (!artifacts.length) throw new Error('no build artifacts found');
 
   console.log(`Creating GitHub release v${version}`);
-  await runChecked(['gh', 'release', 'create', `v${version}`, ...artifacts, '--generate-notes']);
+  await runChecked([
+    'gh',
+    'release',
+    'create',
+    `v${version}`,
+    ...artifacts,
+    '--generate-notes',
+  ]);
 }
 
 main().catch((err) => {

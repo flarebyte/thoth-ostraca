@@ -221,3 +221,7 @@ output: {
 - `testdata/repos/`: input/meta repositories for scenarios.
 - `testdata/run/`: golden JSON outputs.
 - `testdata/contracts/`: contract snapshot goldens.
+
+## Release
+- Release flow and commands: `docs/RELEASING.md`
+- Planned package distribution: `https://github.com/flarebyte/homebrew-tap`

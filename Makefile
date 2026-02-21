@@ -1,6 +1,7 @@
 ## Makefile: thin wrappers for local/dev/release commands.
 ## Keep target behavior explicit and deterministic.
-## Release artifacts are produced under ./build by build-go.ts.
+## Build artifacts are produced under ./build by build-go.ts.
+## Release publishing is handled by release-go.ts.
 
 .PHONY: lint format test test-race gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
 
@@ -48,7 +49,7 @@ build-dev:
 e2e:
 	cd script/e2e && $(BUN) test
 
-release: build
+release: release-check
 	$(BUN) run release-go.ts
 
 release-check: lint test contract-snapshots
@@ -81,7 +82,7 @@ help:
 	@printf "  build              Build release binaries into ./build.\n"
 	@printf "  build-dev          Build local dev binary into .e2e-bin/.\n"
 	@printf "  e2e                Run Bun-powered end-to-end tests.\n"
-	@printf "  release            Build release artifacts and checksums.\n"
+	@printf "  release            Run release checks, build artifacts, publish GitHub release.\n"
 	@printf "  clean              Remove build artifacts.\n"
 	@printf "  complexity         Show top file complexity (Go/TS).\n"
 	@printf "  sec                Run security scan (semgrep).\n"
