@@ -1,10 +1,6 @@
 package run
 
-import (
-	"fmt"
-
-	"github.com/flarebyte/thoth-ostraca/internal/stage"
-)
+import "github.com/flarebyte/thoth-ostraca/internal/stage"
 
 const (
 	exitCodeSuccess = 0
@@ -110,5 +106,5 @@ func evaluateRunExit(env stage.Envelope) error {
 	if hasMeaningfulAggregateOutput(env) {
 		return nil
 	}
-	return runExitError{code: exitCodeExecErr, msg: fmt.Sprintf("keep-going: no successful records")}
+	return runExitError{code: exitCodeExecErr, msg: "keep-going: no successful records"}
 }

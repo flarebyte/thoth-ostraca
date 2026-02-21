@@ -102,11 +102,14 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Format != "" {
 			format = in.Meta.DiffMeta.Format
 		}
-		s := diffMetaMapsV3(existing, expectedPerLocator)
-		if format == "detailed" {
+		var s diffSummary
+		switch format {
+		case "detailed":
 			s = diffMetaMapsV3Detailed(existing, expectedPerLocator)
-		} else if format == "json-patch" {
+		case "json-patch":
 			s = diffMetaMapsV3JSONPatch(existing, expectedPerLocator)
+		default:
+			s = diffMetaMapsV3(existing, expectedPerLocator)
 		}
 		details = append(details, DiffDetail{
 			Locator:         loc,
