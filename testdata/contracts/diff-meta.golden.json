@@ -54,7 +54,8 @@
     },
     "diffMeta": {
       "expectedPatch": {},
-      "format": "summary"
+      "format": "summary",
+      "failOnChange": false
     }
   }
 }

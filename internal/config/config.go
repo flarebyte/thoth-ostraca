@@ -236,9 +236,11 @@ type UpdateMeta struct {
 type DiffMeta struct {
 	ExpectedPatch    map[string]any
 	Format           string
+	FailOnChange     bool
 	HasSection       bool
 	HasExpectedPatch bool
 	HasFormat        bool
+	HasFailOnChange  bool
 }
 
 // Output holds optional output config.

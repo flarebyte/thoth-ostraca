@@ -80,6 +80,15 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 		d.Format = f
 		d.HasFormat = true
 	}
+	focv := dv.LookupPath(cue.ParsePath("failOnChange"))
+	if focv.Exists() {
+		var foc bool
+		if err := focv.Decode(&foc); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.failOnChange: must be boolean")
+		}
+		d.FailOnChange = foc
+		d.HasFailOnChange = true
+	}
 	pv := dv.LookupPath(cue.ParsePath("expectedPatch"))
 	if !pv.Exists() {
 		return d, nil

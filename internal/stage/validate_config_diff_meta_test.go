@@ -19,13 +19,16 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Default(t *testing.T) {
 	if out.Meta.DiffMeta.Format != "summary" {
 		t.Fatalf("expected default format=summary, got: %q", out.Meta.DiffMeta.Format)
 	}
+	if out.Meta.DiffMeta.FailOnChange {
+		t.Fatalf("expected default failOnChange=false")
+	}
 	if len(out.Meta.DiffMeta.ExpectedPatch) != 0 {
 		t.Fatalf("expected empty default patch, got: %+v", out.Meta.DiffMeta.ExpectedPatch)
 	}
 }
 
 func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
-	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"detailed\", expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"detailed\", failOnChange: true, expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
 	out, err := runValidateConfigWithContent(t, "diff_meta_expected_patch_validate_test.cue", content)
 	if err != nil {
 		t.Fatalf("validate-config: %v", err)
@@ -35,6 +38,9 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
 	}
 	if out.Meta.DiffMeta.Format != "detailed" {
 		t.Fatalf("expected format=detailed, got: %q", out.Meta.DiffMeta.Format)
+	}
+	if !out.Meta.DiffMeta.FailOnChange {
+		t.Fatalf("expected failOnChange=true")
 	}
 	if out.Meta.DiffMeta.ExpectedPatch["b"] != int64(2) && out.Meta.DiffMeta.ExpectedPatch["b"] != 2 {
 		t.Fatalf("unexpected patch value: %+v", out.Meta.DiffMeta.ExpectedPatch)
@@ -68,5 +74,13 @@ func TestValidateConfig_DiffMetaFormatJSONPatch(t *testing.T) {
 	}
 	if out.Meta.DiffMeta.Format != "json-patch" {
 		t.Fatalf("expected format=json-patch, got: %q", out.Meta.DiffMeta.Format)
+	}
+}
+
+func TestValidateConfig_DiffMetaFailOnChangeMustBeBoolean(t *testing.T) {
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { failOnChange: \"yes\" }\n}\n"
+	_, err := runValidateConfigWithContent(t, "diff_meta_fail_on_change_invalid_validate_test.cue", content)
+	if err == nil || !strings.Contains(err.Error(), "invalid diffMeta.failOnChange") {
+		t.Fatalf("expected invalid diffMeta.failOnChange error, got: %v", err)
 	}
 }

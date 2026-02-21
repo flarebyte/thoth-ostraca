@@ -140,7 +140,8 @@
         ],
         "value": "1"
       },
-      "format": "detailed"
+      "format": "detailed",
+      "failOnChange": false
     }
   }
 }

@@ -307,6 +307,146 @@ test('diff-meta: json-patch deterministic workers=1 vs workers=8', () => {
   );
 });
 
+test('diff-meta: failOnChange=true returns exit 2 with full diff output', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_fail_on_change1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-fail-on-change-v1', run);
+  expect(run.status).toBe(2);
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_fail_on_change1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('diff-meta: failOnChange=true exits 0 when no paired drift exists', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(
+    root,
+    'temp',
+    'p5_diff_fail_on_change_no_drift.cue',
+  );
+  fs.mkdirSync(path.join(root, 'temp'), { recursive: true });
+  fs.writeFileSync(
+    cfgPath,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "testdata/repos/diff1" }
+  diffMeta: { failOnChange: true }
+}`,
+    'utf8',
+  );
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-diff-meta-fail-on-change-no-drift', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+});
+
+test('diff-meta: failOnChange=true with keep-going parse errors exits 1', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const src = path.join(root, 'testdata', 'repos', 'diff1');
+  const repo = path.join(
+    root,
+    'temp',
+    'p5_diff_fail_on_change_with_errors_repo',
+  );
+  fs.rmSync(repo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(repo), { recursive: true });
+  fs.cpSync(src, repo, { recursive: true });
+  fs.writeFileSync(
+    path.join(repo, 'bad.thoth.yaml'),
+    'locator: bad\nmeta:\n  -\n',
+    'utf8',
+  );
+  const cfgPath = path.join(
+    root,
+    'temp',
+    'p5_diff_fail_on_change_with_errors.cue',
+  );
+  fs.writeFileSync(
+    cfgPath,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "${path.join('temp', 'p5_diff_fail_on_change_with_errors_repo').replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+  diffMeta: { failOnChange: true }
+}`,
+    'utf8',
+  );
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-diff-meta-fail-on-change-errors', run);
+  expect(run.status).toBe(1);
+  const out = JSON.parse(run.stdout) as { meta?: { diff?: unknown } };
+  expect(!!out.meta?.diff).toBe(true);
+});
+
+test('diff-meta: failOnChange deterministic workers=1 vs workers=8', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg1Path = path.join(
+    root,
+    'temp',
+    'p5_diff_fail_on_change_workers1.cue',
+  );
+  const cfg8Path = path.join(
+    root,
+    'temp',
+    'p5_diff_fail_on_change_workers8.cue',
+  );
+  fs.mkdirSync(path.join(root, 'temp'), { recursive: true });
+  fs.writeFileSync(
+    cfg1Path,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "testdata/repos/diff2" }
+  workers: 1
+  diffMeta: {
+    failOnChange: true
+    expectedPatch: {
+      a: "1"
+      arr: [1, 2, 3]
+      obj: { y: 9, z: 3 }
+    }
+  }
+}`,
+    'utf8',
+  );
+  fs.writeFileSync(
+    cfg8Path,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "testdata/repos/diff2" }
+  workers: 8
+  diffMeta: {
+    failOnChange: true
+    expectedPatch: {
+      a: "1"
+      arr: [1, 2, 3]
+      obj: { y: 9, z: 3 }
+    }
+  }
+}`,
+    'utf8',
+  );
+  const run1 = runThoth(bin, ['run', '--config', cfg1Path], root);
+  const run8 = runThoth(bin, ['run', '--config', cfg8Path], root);
+  saveOutputs(root, 'run-diff-meta-fail-on-change-workers1', run1);
+  saveOutputs(root, 'run-diff-meta-fail-on-change-workers8', run8);
+  expect(run1.status).toBe(2);
+  expect(run8.status).toBe(2);
+  expect(normalizeWorkersJSON(run1.stdout)).toBe(
+    normalizeWorkersJSON(run8.stdout),
+  );
+});
+
 test('update-meta: rewrite-stable canonical YAML (run twice, exact golden)', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

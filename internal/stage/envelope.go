@@ -211,6 +211,7 @@ type UpdateMetaMeta struct {
 type DiffMetaMeta struct {
 	ExpectedPatch map[string]any `json:"expectedPatch"`
 	Format        string         `json:"format,omitempty"`
+	FailOnChange  bool           `json:"failOnChange"`
 }
 
 // ErrorsMeta holds error handling behavior.

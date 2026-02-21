@@ -53,32 +53,6 @@
               "path": "arr",
               "addedIndices": [2]
             }
-          ],
-          "patch": [
-            {
-              "op": "replace",
-              "path": "/a",
-              "value": "1"
-            },
-            {
-              "op": "replace",
-              "path": "/arr",
-              "value": [1, 2, 3]
-            },
-            {
-              "op": "remove",
-              "path": "/obj/x"
-            },
-            {
-              "op": "replace",
-              "path": "/obj/y",
-              "value": 9
-            },
-            {
-              "op": "add",
-              "path": "/obj/z",
-              "value": 3
-            }
           ]
         },
         {
@@ -86,31 +60,7 @@
           "metaFile": "b.txt.thoth.yaml",
           "addedKeys": ["a", "arr", "obj"],
           "removedKeys": ["only"],
-          "changedKeys": [],
-          "patch": [
-            {
-              "op": "add",
-              "path": "/a",
-              "value": "1"
-            },
-            {
-              "op": "add",
-              "path": "/arr",
-              "value": [1, 2, 3]
-            },
-            {
-              "op": "add",
-              "path": "/obj",
-              "value": {
-                "y": 9,
-                "z": 3
-              }
-            },
-            {
-              "op": "remove",
-              "path": "/only"
-            }
-          ]
+          "changedKeys": []
         }
       ],
       "orphans": ["orphan.thoth.yaml"],
@@ -125,8 +75,8 @@
           "z": 3
         }
       },
-      "format": "json-patch",
-      "failOnChange": false
+      "format": "summary",
+      "failOnChange": true
     }
   }
 }

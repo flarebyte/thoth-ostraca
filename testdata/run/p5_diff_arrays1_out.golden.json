@@ -105,7 +105,8 @@
         ],
         "value": "1"
       },
-      "format": "summary"
+      "format": "summary",
+      "failOnChange": false
     }
   }
 }
