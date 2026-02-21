@@ -1,0 +1,10 @@
+name: github/flarebyte/thoth-ostraca
+role: dev
+description: |-
+    CLI for metadata management in repositories
+notes: |-
+    Project for dev role
+tags:
+    org: flarebyte
+    source: github
+    version: 1.0.0

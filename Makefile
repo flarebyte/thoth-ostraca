@@ -49,7 +49,7 @@ e2e:
 	cd script/e2e && $(BUN) test
 
 release: build
-	@printf "Artifacts in ./build (checksums.txt included)\n"
+	$(BUN) run release-go.ts
 
 release-check: lint test contract-snapshots
 
