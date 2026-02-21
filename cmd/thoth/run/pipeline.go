@@ -22,42 +22,10 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	switch action {
 	case "pipeline", "nop":
 		return executeMetaPipeline(ctx, out)
-	case "validate":
-		stages := []string{
-			"discover-meta-files",
-			"parse-validate-yaml",
-			"validate-locators",
-			"write-output",
-		}
-		return runStages(ctx, out, stages)
-	case "create-meta":
-		stages := []string{
-			"discover-input-files",
-			"enrich-fileinfo",
-			"enrich-git",
-			"write-meta-files",
-			"write-output",
-		}
-		return runStages(ctx, out, stages)
-	case "update-meta":
-		stages := []string{
-			"discover-input-files",
-			"enrich-fileinfo",
-			"enrich-git",
-			"load-existing-meta",
-			"merge-meta",
-			"write-updated-meta-files",
-			"write-output",
-		}
-		return runStages(ctx, out, stages)
-	case "diff-meta":
-		stages := []string{
-			"discover-input-files",
-			"discover-meta-files",
-			"parse-validate-yaml",
-			"validate-locators",
-			"compute-meta-diff",
-			"write-output",
+	case "validate", "create-meta", "update-meta", "diff-meta":
+		stages, err := PreparedActionStages(action, out.Meta)
+		if err != nil {
+			return stage.Envelope{}, err
 		}
 		return runStages(ctx, out, stages)
 	default:
@@ -69,11 +37,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 // output is handled by the write-output stage.
 
 func executeMetaPipeline(ctx context.Context, in stage.Envelope) (stage.Envelope, error) {
-	preStages := []string{
-		"discover-meta-files",
-		"parse-validate-yaml",
-		"validate-locators",
-	}
+	preStages := []string{"discover-meta-files", "parse-validate-yaml", "validate-locators"}
 	out, err := runStages(ctx, in, preStages)
 	if err != nil {
 		return stage.Envelope{}, err
@@ -90,14 +54,7 @@ func executeMetaPipeline(ctx context.Context, in stage.Envelope) (stage.Envelope
 		if streamingRequested && reduceEnabled {
 			forceBufferedOutput(&out)
 		}
-		stages := []string{
-			"lua-filter",
-			"lua-map",
-			"shell-exec",
-			"lua-postmap",
-			"lua-reduce",
-			"write-output",
-		}
+		stages := []string{"lua-filter", "lua-map", "shell-exec", "lua-postmap", "lua-reduce", "write-output"}
 		return runStages(ctx, out, stages)
 	}
 
