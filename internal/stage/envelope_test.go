@@ -45,7 +45,7 @@ func TestEnvelopeContractSnapshotV1(t *testing.T) {
 			},
 			Post: map[string]any{"locator": "a"},
 		}},
-		Meta: &Meta{ContractVersion: "1", Stage: "echo", Config: &ConfigMeta{ConfigVersion: "v0", Action: "nop"}},
+		Meta: &Meta{ContractVersion: "1", Stage: "echo", Config: &ConfigMeta{ConfigVersion: "1", Action: "nop"}},
 	}
 	if err := ValidateEnvelope(env); err != nil {
 		t.Fatalf("ValidateEnvelope failed: %v", err)

@@ -2,6 +2,8 @@ import { type SpawnSyncReturns, spawnSync } from 'node:child_process';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
+export const CONFIG_VERSION = '1';
+
 export function projectRoot(): string {
   // helpers.ts lives in script/e2e; project root is two levels up
   return path.resolve(__dirname, '../..');
@@ -69,7 +71,7 @@ export function writePipelineErrorModeConfig(
       ? `errors: { mode: "keep-going", embedErrors: ${embedErrors ? 'true' : 'false'} }`
       : 'errors: { mode: "fail-fast" }';
   const cfg = `{
-  configVersion: "v0"
+  configVersion: "${CONFIG_VERSION}"
   action: "pipeline"
   discovery: { root: "${escapedRepo}" }
   ${errors}

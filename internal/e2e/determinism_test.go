@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/flarebyte/thoth-ostraca/internal/config"
 	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
@@ -120,7 +121,7 @@ func TestDeterminism_Pipeline_Workers(t *testing.T) {
 	// Generate workers=8 config
 	cfg8 := filepath.Join(root, "temp", "workers8_tmp.cue")
 	_ = os.MkdirAll(filepath.Join(root, "temp"), 0o755)
-	content := "{\n  configVersion: \"v0\"\n  action: \"nop\"\n  discovery: { root: \"testdata/repos/keep1\" }\n  errors: { mode: \"keep-going\", embedErrors: true }\n  workers: 8\n  filter: { inline: \"return true\" }\n  map: { inline: \"if (meta and meta.name) == \\\"LuaErr\\\" then error(\\\"boom\\\") end; return { locator = locator, name = meta and meta.name }\" }\n}"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"nop\"\n  discovery: { root: \"testdata/repos/keep1\" }\n  errors: { mode: \"keep-going\", embedErrors: true }\n  workers: 8\n  filter: { inline: \"return true\" }\n  map: { inline: \"if (meta and meta.name) == \\\"LuaErr\\\" then error(\\\"boom\\\") end; return { locator = locator, name = meta and meta.name }\" }\n}"
 	if err := os.WriteFile(cfg8, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg8: %v", err)
 	}
@@ -167,7 +168,7 @@ func TestDeterminism_CreateMeta(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)
 	src := filepath.Join(root, "testdata", "repos", "create1")
-	cfgT := "{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \"%s\" }\n}"
+	cfgT := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"create-meta\"\n  discovery: { root: \"%s\" }\n}"
 	repo := filepath.Join(root, "temp", "create_det_repo")
 	assertMetaActionDeterminism(t, bin, src, repo, cfgT)
 }
@@ -176,7 +177,7 @@ func TestDeterminism_UpdateMeta(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)
 	src := filepath.Join(root, "testdata", "repos", "update1")
-	cfgT := "{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \"%s\" }\n}"
+	cfgT := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  discovery: { root: \"%s\" }\n}"
 	repo := filepath.Join(root, "temp", "update_det_repo")
 	assertMetaActionDeterminism(t, bin, src, repo, cfgT)
 }

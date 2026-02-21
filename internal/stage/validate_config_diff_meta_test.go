@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/config"
 )
 
 func TestValidateConfig_ExposesDiffMetaExpectedPatch_Default(t *testing.T) {
 	_ = os.MkdirAll("temp", 0o755)
 	cfg := filepath.Join("temp", "diff_meta_expected_patch_default_validate_test.cue")
-	content := "{\n  configVersion: \"v0\"\n  action: \"diff-meta\"\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n}\n"
 	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
@@ -31,7 +33,7 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Default(t *testing.T) {
 func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
 	_ = os.MkdirAll("temp", 0o755)
 	cfg := filepath.Join("temp", "diff_meta_expected_patch_validate_test.cue")
-	content := "{\n  configVersion: \"v0\"\n  action: \"diff-meta\"\n  diffMeta: { expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
 	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
@@ -51,7 +53,7 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
 func TestValidateConfig_DiffMetaExpectedPatchMustBeObject(t *testing.T) {
 	_ = os.MkdirAll("temp", 0o755)
 	cfg := filepath.Join("temp", "diff_meta_expected_patch_invalid_validate_test.cue")
-	content := "{\n  configVersion: \"v0\"\n  action: \"diff-meta\"\n  diffMeta: { expectedPatch: 1 }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { expectedPatch: 1 }\n}\n"
 	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}

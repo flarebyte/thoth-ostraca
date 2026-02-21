@@ -1,6 +1,8 @@
 package buildinfo
 
 import (
+	"strings"
+
 	"github.com/flarebyte/thoth-ostraca/cli"
 )
 
@@ -28,8 +30,25 @@ func Summary() string {
 	if v == "" {
 		v = "dev"
 	}
-	if len(Commit) >= 7 {
-		v += " (" + Commit[:7] + ")"
+
+	d := Date
+	if d == "" {
+		d = cli.Date
+	}
+
+	parts := make([]string, 0, 2)
+	if Commit != "" {
+		c := Commit
+		if len(c) > 7 {
+			c = c[:7]
+		}
+		parts = append(parts, "commit="+c)
+	}
+	if d != "" {
+		parts = append(parts, "date="+d)
+	}
+	if len(parts) > 0 {
+		v += " (" + strings.Join(parts, ", ") + ")"
 	}
 	return v
 }

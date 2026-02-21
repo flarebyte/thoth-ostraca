@@ -33,7 +33,7 @@ function writeCfg(
     `phase4-shell-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.cue`,
   );
   const body = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${toCuePath(repo)}" }
   workers: ${workers}
@@ -182,7 +182,7 @@ test('phase4 shell keep-going timeout and capture-disabled schema', () => {
     `phase4-shell-timeout-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.cue`,
   );
   const body = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${toCuePath(repo)}" }
   workers: 1

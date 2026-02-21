@@ -32,7 +32,7 @@ function writeStreamingCfg(
     `phase4-stream-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.cue`,
   );
   const body = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${toCuePath(repo)}" }
   output: { lines: ${lines} }

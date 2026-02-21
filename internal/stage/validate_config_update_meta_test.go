@@ -6,12 +6,14 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/config"
 )
 
 func TestValidateConfig_ExposesUpdateMetaPatch(t *testing.T) {
 	_ = os.MkdirAll("temp", 0o755)
 	cfg := filepath.Join("temp", "update_meta_patch_validate_test.cue")
-	content := "{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  updateMeta: { patch: { b: 2, obj: { y: 9 } } }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { patch: { b: 2, obj: { y: 9 } } }\n}\n"
 	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
@@ -31,7 +33,7 @@ func TestValidateConfig_ExposesUpdateMetaPatch(t *testing.T) {
 func TestValidateConfig_UpdateMetaPatchMustBeObject(t *testing.T) {
 	_ = os.MkdirAll("temp", 0o755)
 	cfg := filepath.Join("temp", "update_meta_patch_invalid_validate_test.cue")
-	content := "{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  updateMeta: { patch: 1 }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { patch: 1 }\n}\n"
 	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}

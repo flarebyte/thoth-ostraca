@@ -71,7 +71,7 @@ test('error model keep-going+embedErrors for pipeline produces partial success a
   );
 
   const cfg = writeCfg(root, 'err-model-pipeline-keep', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'pipeline',
     discovery: { root: repo },
     errors: { mode: 'keep-going', embedErrors: true },
@@ -112,7 +112,7 @@ test('error model fail-fast for pipeline aborts with non-zero exit', () => {
   );
 
   const cfg = writeCfg(root, 'err-model-pipeline-failfast', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'pipeline',
     discovery: { root: repo },
     errors: { mode: 'fail-fast', embedErrors: true },
@@ -141,7 +141,7 @@ test('error model keep-going with shell missing program records shell errors and
   );
 
   const cfg = writeCfg(root, 'err-model-pipeline-shell-missing', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'pipeline',
     discovery: { root: repo },
     errors: { mode: 'keep-going', embedErrors: true },
@@ -169,7 +169,7 @@ test('error model keep-going+embedErrors for update-meta keeps successes and rec
   fs.mkdirSync(path.join(repo, 'a.txt.thoth.yaml'), { recursive: true });
 
   const cfg = writeCfg(root, 'err-model-update-keep', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'update-meta',
     discovery: { root: repo },
     errors: { mode: 'keep-going', embedErrors: true },
@@ -209,7 +209,7 @@ test('error model fail-fast for update-meta aborts with non-zero exit', () => {
   fs.mkdirSync(path.join(repo, 'a.txt.thoth.yaml'), { recursive: true });
 
   const cfg = writeCfg(root, 'err-model-update-failfast', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'update-meta',
     discovery: { root: repo },
     errors: { mode: 'fail-fast', embedErrors: true },
@@ -241,7 +241,7 @@ test('error model keep-going for diff-meta returns valid output with sorted erro
   );
 
   const cfg = writeCfg(root, 'err-model-diff-keep', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'diff-meta',
     discovery: { root: repo },
     errors: { mode: 'keep-going', embedErrors: true },

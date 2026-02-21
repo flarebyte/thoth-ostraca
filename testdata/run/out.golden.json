@@ -3,7 +3,7 @@
   "meta": {
     "contractVersion": "1",
     "config": {
-      "configVersion": "v0",
+      "configVersion": "1",
       "action": "nop"
     },
     "limits": {

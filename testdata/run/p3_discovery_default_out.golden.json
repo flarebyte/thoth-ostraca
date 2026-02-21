@@ -30,7 +30,7 @@
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "v0", "action": "pipeline" },
+    "config": { "configVersion": "1", "action": "pipeline" },
     "discovery": { "root": "testdata/repos/p3_discovery1" },
     "limits": { "maxRecordsInMemory": 10000 },
     "reduced": 3

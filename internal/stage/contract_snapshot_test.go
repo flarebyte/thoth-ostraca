@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/flarebyte/thoth-ostraca/internal/config"
 	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
@@ -157,7 +158,7 @@ func TestContract_CreateMeta(t *testing.T) {
 	}
 	cfg := rootTempPath("create1_contract.cue")
 	_ = os.MkdirAll(rootTempPath(), 0o755)
-	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \""+config.CurrentConfigVersion+"\"\n  action: \"create-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
 	_, b := runActionWithConfig(t, cfg)
@@ -178,7 +179,7 @@ func TestContract_UpdateMeta(t *testing.T) {
 	}
 	cfg := rootTempPath("update1_contract.cue")
 	_ = os.MkdirAll(rootTempPath(), 0o755)
-	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \""+config.CurrentConfigVersion+"\"\n  action: \"update-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
 	_, b := runActionWithConfig(t, cfg)

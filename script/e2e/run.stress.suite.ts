@@ -40,7 +40,7 @@ test('stress ingestion determinism at scale is byte-identical across runs and wo
     writeCueConfig(
       cfg,
       `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   errors: { mode: "fail-fast" }
@@ -139,7 +139,7 @@ test('stress mixed failures keep-going is deterministic with expected errors', (
   writeCueConfig(
     cfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   errors: { mode: "keep-going", embedErrors: true }

@@ -183,7 +183,7 @@ test('parse-validate-yaml determinism: many files workers=1 equals workers=8', (
   writeCueConfig(
     cfg1,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   workers: 1
@@ -198,7 +198,7 @@ test('parse-validate-yaml determinism: many files workers=1 equals workers=8', (
   writeCueConfig(
     cfg8,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   workers: 8
@@ -237,7 +237,7 @@ test('parse-validate-yaml maxYAMLBytes keep-going collects size error and fail-f
   writeCueConfig(
     keepCfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   errors: { mode: "keep-going", embedErrors: true }
@@ -276,7 +276,7 @@ test('parse-validate-yaml maxYAMLBytes keep-going collects size error and fail-f
   writeCueConfig(
     failCfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   errors: { mode: "fail-fast" }

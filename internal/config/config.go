@@ -23,6 +23,14 @@ func LoadAndValidate(path string) error {
 	if err := requireStringField(v, "action"); err != nil {
 		return err
 	}
+	mv := v.LookupPath(cue.ParsePath("configVersion"))
+	var configVersion string
+	if err := mv.Decode(&configVersion); err != nil {
+		return fmt.Errorf("invalid value for configVersion: %v", err)
+	}
+	if !IsSupportedConfigVersion(configVersion) {
+		return fmt.Errorf("unsupported configVersion: %q (supported: %s)", configVersion, SupportedConfigVersionsCSV())
+	}
 	return nil
 }
 
@@ -78,6 +86,9 @@ func ParseMinimal(path string) (Minimal, error) {
 	var m Minimal
 	if err := mv.Decode(&m.ConfigVersion); err != nil {
 		return Minimal{}, fmt.Errorf("invalid value for configVersion: %v", err)
+	}
+	if !IsSupportedConfigVersion(m.ConfigVersion) {
+		return Minimal{}, fmt.Errorf("unsupported configVersion: %q (supported: %s)", m.ConfigVersion, SupportedConfigVersionsCSV())
 	}
 	if err := av.Decode(&m.Action); err != nil {
 		return Minimal{}, fmt.Errorf("invalid value for action: %v", err)

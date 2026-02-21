@@ -1,5 +1,5 @@
 {
-  configVersion: "v0"
+  configVersion: "1"
   action: "validate"
   discovery: { root: "testdata/repos/yaml1" }
 }

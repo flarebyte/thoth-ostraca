@@ -17,7 +17,7 @@ test('phase4 ux progress writes to stderr and keeps stdout deterministic', () =>
   fs.writeFileSync(
     cfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   discovery: { root: "testdata/repos/yaml1" }
   ui: { progress: true, progressIntervalMs: 1 }
@@ -47,7 +47,7 @@ test('phase4 ux validate-config rejects workers<1', () => {
   fs.writeFileSync(
     cfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   workers: 0
 }
@@ -68,7 +68,7 @@ test('phase4 ux validate-config rejects maxRecordsInMemory<1', () => {
   fs.writeFileSync(
     cfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   limits: { maxRecordsInMemory: 0 }
 }
@@ -91,7 +91,7 @@ test('phase4 ux validate-config rejects shell enabled without argsTemplate', () 
   fs.writeFileSync(
     cfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   shell: { enabled: true }
 }
@@ -114,7 +114,7 @@ test('phase4 ux output.out empty string is treated as stdout', () => {
   fs.writeFileSync(
     cfg,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   discovery: { root: "testdata/repos/yaml1" }
   output: { out: "" }

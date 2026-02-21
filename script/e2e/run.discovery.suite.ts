@@ -94,7 +94,7 @@ test('thoth run discovery followSymlinks handles symlink dirs and loops determin
   writeCueConfig(
     cfgNoFollow,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: { root: "${repo.replaceAll('\\', '\\\\')}" }
   errors: { mode: "keep-going", embedErrors: true }
@@ -112,7 +112,7 @@ test('thoth run discovery followSymlinks handles symlink dirs and loops determin
   writeCueConfig(
     cfgFollow,
     `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "pipeline"
   discovery: {
     root: "${repo.replaceAll('\\', '\\\\')}"

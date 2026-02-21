@@ -98,7 +98,7 @@ test('no-enrichment contract across pipeline/validate/create-meta/update-meta/di
     {
       name: 'scoping-pipeline',
       cfg: {
-        configVersion: 'v0',
+        configVersion: '1',
         action: 'pipeline',
         discovery: { root: 'testdata/repos/yaml1' },
         fileInfo: { enabled: false },
@@ -108,7 +108,7 @@ test('no-enrichment contract across pipeline/validate/create-meta/update-meta/di
     {
       name: 'scoping-validate',
       cfg: {
-        configVersion: 'v0',
+        configVersion: '1',
         action: 'validate',
         discovery: { root: 'testdata/repos/yaml1' },
         fileInfo: { enabled: false },
@@ -118,7 +118,7 @@ test('no-enrichment contract across pipeline/validate/create-meta/update-meta/di
     {
       name: 'scoping-create',
       cfg: {
-        configVersion: 'v0',
+        configVersion: '1',
         action: 'create-meta',
         discovery: {
           root: copyTree(
@@ -133,7 +133,7 @@ test('no-enrichment contract across pipeline/validate/create-meta/update-meta/di
     {
       name: 'scoping-update',
       cfg: {
-        configVersion: 'v0',
+        configVersion: '1',
         action: 'update-meta',
         discovery: {
           root: copyTree(
@@ -148,7 +148,7 @@ test('no-enrichment contract across pipeline/validate/create-meta/update-meta/di
     {
       name: 'scoping-diff',
       cfg: {
-        configVersion: 'v0',
+        configVersion: '1',
         action: 'diff-meta',
         discovery: {
           root: copyTree(diffSrc, path.join(root, 'temp', 'scoping-diff-copy')),
@@ -176,7 +176,7 @@ test('positive scoping: create-meta and update-meta include fileInfo/git only wh
   );
 
   const createFileInfoCfg = writeCfg(root, 'scoping-create-fileinfo', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'create-meta',
     discovery: { root: createFileInfoRepo },
     fileInfo: { enabled: true },
@@ -200,7 +200,7 @@ test('positive scoping: create-meta and update-meta include fileInfo/git only wh
     path.join(root, 'temp', 'scoping-create-git-repo'),
   );
   const createGitCfg = writeCfg(root, 'scoping-create-git', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'create-meta',
     discovery: { root: createGitRepo },
     fileInfo: { enabled: false },
@@ -218,7 +218,7 @@ test('positive scoping: create-meta and update-meta include fileInfo/git only wh
     path.join(root, 'temp', 'scoping-update-fileinfo-repo'),
   );
   const updateFileInfoCfg = writeCfg(root, 'scoping-update-fileinfo', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'update-meta',
     discovery: { root: updateFileInfoRepo },
     fileInfo: { enabled: true },
@@ -242,7 +242,7 @@ test('positive scoping: create-meta and update-meta include fileInfo/git only wh
     path.join(root, 'temp', 'scoping-update-git-repo'),
   );
   const updateGitCfg = writeCfg(root, 'scoping-update-git', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'update-meta',
     discovery: { root: updateGitRepo },
     fileInfo: { enabled: false },
@@ -266,7 +266,7 @@ test('determinism with fileInfo+git enabled: workers=1 vs workers=8', () => {
   const workRepo = path.join(root, 'temp', 'scoping-det-git-repo-work');
 
   const cfg1 = writeCfg(root, 'scoping-det-workers-1', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'update-meta',
     discovery: { root: workRepo },
     fileInfo: { enabled: true },
@@ -274,7 +274,7 @@ test('determinism with fileInfo+git enabled: workers=1 vs workers=8', () => {
     workers: 1,
   });
   const cfg8 = writeCfg(root, 'scoping-det-workers-8', {
-    configVersion: 'v0',
+    configVersion: '1',
     action: 'update-meta',
     discovery: { root: workRepo },
     fileInfo: { enabled: true },

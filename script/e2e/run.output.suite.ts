@@ -172,7 +172,7 @@ test('write-output determinism: lines stdout workers=1 and workers=8 are byte-id
   const cfg1 = path.join(root, 'temp', 'output-lines-workers1.cue');
   const cfg8 = path.join(root, 'temp', 'output-lines-workers8.cue');
   const body = (workers: number): string => `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   discovery: {
     root: "testdata/repos/yaml1"
