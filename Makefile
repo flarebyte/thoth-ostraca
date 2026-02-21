@@ -39,7 +39,7 @@ gen:
 	true
 
 build:
-	$(BUN) run build-go.mts
+	$(BUN) run build-go.ts
 
 build-dev:
 	mkdir -p .e2e-bin
