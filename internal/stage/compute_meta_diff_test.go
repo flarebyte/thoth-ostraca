@@ -212,3 +212,73 @@ func TestComputeMetaDiffRunner_DetailedIncludesChanges(t *testing.T) {
 		t.Fatalf("unexpected changes order/path: %#v", changes)
 	}
 }
+
+func TestEscapeJSONPointer(t *testing.T) {
+	got := joinJSONPointer("/obj", "a~/b")
+	want := "/obj/a~0~1b"
+	if got != want {
+		t.Fatalf("pointer mismatch: got %q want %q", got, want)
+	}
+}
+
+func TestDiffMetaJSONPatch_OrderingStable(t *testing.T) {
+	existing := map[string]any{
+		"b": map[string]any{"x": 1},
+		"a": 1,
+	}
+	expected := map[string]any{
+		"b": map[string]any{"x": 2, "y": 3},
+		"a": 2,
+	}
+	got := diffMetaJSONPatch(existing, expected)
+	want := []DiffOp{
+		{Op: "replace", Path: "/a", Value: 2},
+		{Op: "replace", Path: "/b/x", Value: 2},
+		{Op: "add", Path: "/b/y", Value: 3},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ops mismatch:\n got: %#v\nwant: %#v", got, want)
+	}
+}
+
+func TestDiffMetaJSONPatch_ArrayReplaceSingleOp(t *testing.T) {
+	existing := map[string]any{"arr": []any{1, 2, 3}}
+	expected := map[string]any{"arr": []any{1, 9}}
+	got := diffMetaJSONPatch(existing, expected)
+	want := []DiffOp{
+		{Op: "replace", Path: "/arr", Value: []any{1, 9}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("ops mismatch:\n got: %#v\nwant: %#v", got, want)
+	}
+}
+
+func TestComputeMetaDiffRunner_JSONPatchIncludesPatch(t *testing.T) {
+	in := Envelope{
+		Records: []Record{
+			{Locator: "a.txt", Meta: map[string]any{"arr": []any{1, 2}, "t": 1}},
+		},
+		Meta: &Meta{
+			Inputs:    []string{"a.txt"},
+			MetaFiles: []string{"a.txt.thoth.yaml"},
+			DiffMeta: &DiffMetaMeta{
+				Format:        "json-patch",
+				ExpectedPatch: map[string]any{"arr": []any{1, 9}, "t": "1"},
+			},
+		},
+	}
+	out, err := computeMetaDiffRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("compute-meta-diff: %v", err)
+	}
+	if out.Meta == nil || out.Meta.Diff == nil || len(out.Meta.Diff.Details) != 1 {
+		t.Fatalf("missing details")
+	}
+	patch := out.Meta.Diff.Details[0].Patch
+	if len(patch) == 0 {
+		t.Fatalf("expected json patch ops")
+	}
+	if patch[0].Path != "/arr" || patch[0].Op != "replace" {
+		t.Fatalf("unexpected patch ordering/content: %#v", patch)
+	}
+}

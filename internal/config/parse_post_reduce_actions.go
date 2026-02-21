@@ -72,10 +72,10 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 	if fv.Exists() {
 		var f string
 		if err := fv.Decode(&f); err != nil {
-			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary' or 'detailed'")
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary', 'detailed', or 'json-patch'")
 		}
-		if f != "summary" && f != "detailed" {
-			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary' or 'detailed'")
+		if f != "summary" && f != "detailed" && f != "json-patch" {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary', 'detailed', or 'json-patch'")
 		}
 		d.Format = f
 		d.HasFormat = true

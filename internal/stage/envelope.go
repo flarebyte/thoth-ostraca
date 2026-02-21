@@ -81,6 +81,7 @@ type DiffDetail struct {
 	TypeChangedKeys []string     `json:"typeChangedKeys,omitempty"`
 	Arrays          []ArrayDiff  `json:"arrays,omitempty"`
 	Changes         []DiffChange `json:"changes,omitempty"`
+	Patch           []DiffOp     `json:"patch,omitempty"`
 }
 
 // ArrayDiff holds index-based array differences at a specific path.
@@ -97,6 +98,13 @@ type DiffChange struct {
 	Kind     string `json:"kind"`
 	OldValue any    `json:"oldValue,omitempty"`
 	NewValue any    `json:"newValue,omitempty"`
+}
+
+// DiffOp holds one RFC 6902 JSON Patch operation.
+type DiffOp struct {
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value any    `json:"value,omitempty"`
 }
 
 // LocatorPolicy mirrors policy flags for locator validation in meta.

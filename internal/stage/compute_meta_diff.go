@@ -67,9 +67,15 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		if !ok {
 			continue
 		}
+		format := "summary"
+		if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Format != "" {
+			format = in.Meta.DiffMeta.Format
+		}
 		s := diffMetaMapsV3(existing, expected)
-		if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Format == "detailed" {
+		if format == "detailed" {
 			s = diffMetaMapsV3Detailed(existing, expected)
+		} else if format == "json-patch" {
+			s = diffMetaMapsV3JSONPatch(existing, expected)
 		}
 		details = append(details, DiffDetail{
 			Locator:         loc,
@@ -80,13 +86,14 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 			TypeChangedKeys: s.typeChanged,
 			Arrays:          s.arrays,
 			Changes:         s.changes,
+			Patch:           s.patch,
 		})
 	}
 	sort.Slice(details, func(i, j int) bool { return details[i].Locator < details[j].Locator })
 
 	changedCount := 0
 	for _, d := range details {
-		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 || len(d.Arrays) > 0 || len(d.Changes) > 0 {
+		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 || len(d.Arrays) > 0 || len(d.Changes) > 0 || len(d.Patch) > 0 {
 			changedCount++
 		}
 	}
@@ -118,6 +125,7 @@ type diffSummary struct {
 	typeChanged []string
 	arrays      []ArrayDiff
 	changes     []DiffChange
+	patch       []DiffOp
 }
 
 type diffCollector struct {
@@ -153,6 +161,12 @@ func diffMetaMapsV3Detailed(existing, expected map[string]any) diffSummary {
 		arrays:      normalizeArrayDiffs(c.arrays),
 		changes:     sortDiffChanges(c.changes),
 	}
+}
+
+func diffMetaMapsV3JSONPatch(existing, expected map[string]any) diffSummary {
+	s := diffMetaMapsV3(existing, expected)
+	s.patch = diffMetaJSONPatch(existing, expected)
+	return s
 }
 
 func (c *diffCollector) compareMaps(prefix string, existing, expected map[string]any) {
@@ -282,6 +296,82 @@ func sortDiffChanges(in []DiffChange) []DiffChange {
 		return out[i].Kind < out[j].Kind
 	})
 	return out
+}
+
+func diffMetaJSONPatch(existing, expected map[string]any) []DiffOp {
+	ops := make([]DiffOp, 0)
+	collectDiffMetaJSONPatchOps("", existing, expected, &ops)
+	if len(ops) == 0 {
+		return nil
+	}
+	sort.Slice(ops, func(i, j int) bool {
+		if ops[i].Path != ops[j].Path {
+			return ops[i].Path < ops[j].Path
+		}
+		return ops[i].Op < ops[j].Op
+	})
+	return ops
+}
+
+func collectDiffMetaJSONPatchOps(base string, existing, expected map[string]any, ops *[]DiffOp) {
+	keys := map[string]struct{}{}
+	for k := range existing {
+		keys[k] = struct{}{}
+	}
+	for k := range expected {
+		keys[k] = struct{}{}
+	}
+	all := make([]string, 0, len(keys))
+	for k := range keys {
+		all = append(all, k)
+	}
+	sort.Strings(all)
+
+	for _, k := range all {
+		path := joinJSONPointer(base, k)
+		ev, inExisting := existing[k]
+		pv, inExpected := expected[k]
+		if !inExisting && inExpected {
+			*ops = append(*ops, DiffOp{Op: "add", Path: path, Value: deepCopyAny(pv)})
+			continue
+		}
+		if inExisting && !inExpected {
+			*ops = append(*ops, DiffOp{Op: "remove", Path: path})
+			continue
+		}
+
+		em, emOK := asStringMap(ev)
+		pm, pmOK := asStringMap(pv)
+		if emOK && pmOK {
+			collectDiffMetaJSONPatchOps(path, em, pm, ops)
+			continue
+		}
+
+		ea, eaOK := ev.([]any)
+		pa, paOK := pv.([]any)
+		if eaOK && paOK {
+			if !metaScalarEqual(ea, pa) {
+				*ops = append(*ops, DiffOp{Op: "replace", Path: path, Value: deepCopyAny(pv)})
+			}
+			continue
+		}
+
+		if !metaScalarEqual(ev, pv) {
+			*ops = append(*ops, DiffOp{Op: "replace", Path: path, Value: deepCopyAny(pv)})
+		}
+	}
+}
+
+func joinJSONPointer(base, segment string) string {
+	if base == "" {
+		return "/" + escapeJSONPointer(segment)
+	}
+	return base + "/" + escapeJSONPointer(segment)
+}
+
+func escapeJSONPointer(s string) string {
+	s = strings.ReplaceAll(s, "~", "~0")
+	return strings.ReplaceAll(s, "/", "~1")
 }
 
 func jsonType(v any) string {

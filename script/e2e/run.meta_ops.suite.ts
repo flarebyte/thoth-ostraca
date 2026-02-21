@@ -9,6 +9,14 @@ import {
   saveOutputs,
 } from './helpers';
 
+function normalizeWorkersJSON(raw: string): string {
+  const out = JSON.parse(raw) as { meta?: { workers?: number } };
+  if (out.meta) {
+    delete out.meta.workers;
+  }
+  return `${JSON.stringify(out)}\n`;
+}
+
 test('create-meta: creates .thoth.yaml files and prints expected envelope', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -227,6 +235,76 @@ test('diff-meta: detailed format includes deterministic changes with old/new val
     'testdata/run/p5_diff_detailed1_out.golden.json',
   );
   expect(run.stdout).toBe(expectedOut);
+});
+
+test('diff-meta: json-patch format includes deterministic RFC6902 patch ops', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_jsonpatch1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-jsonpatch-v1', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_jsonpatch1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('diff-meta: json-patch deterministic workers=1 vs workers=8', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg1Path = path.join(root, 'temp', 'p5_diff_jsonpatch_workers1.cue');
+  const cfg8Path = path.join(root, 'temp', 'p5_diff_jsonpatch_workers8.cue');
+  fs.mkdirSync(path.join(root, 'temp'), { recursive: true });
+  fs.writeFileSync(
+    cfg1Path,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "testdata/repos/diff2" }
+  workers: 1
+  diffMeta: {
+    format: "json-patch"
+    expectedPatch: {
+      a: "1"
+      arr: [1, 2, 3]
+      obj: { y: 9, z: 3 }
+    }
+  }
+}`,
+    'utf8',
+  );
+  fs.writeFileSync(
+    cfg8Path,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "testdata/repos/diff2" }
+  workers: 8
+  diffMeta: {
+    format: "json-patch"
+    expectedPatch: {
+      a: "1"
+      arr: [1, 2, 3]
+      obj: { y: 9, z: 3 }
+    }
+  }
+}`,
+    'utf8',
+  );
+  const run1 = runThoth(bin, ['run', '--config', cfg1Path], root);
+  const run8 = runThoth(bin, ['run', '--config', cfg8Path], root);
+  saveOutputs(root, 'run-diff-meta-jsonpatch-workers1', run1);
+  saveOutputs(root, 'run-diff-meta-jsonpatch-workers8', run8);
+  expect(run1.status).toBe(0);
+  expect(run8.status).toBe(0);
+  expect(run1.stderr).toBe('');
+  expect(run8.stderr).toBe('');
+  expect(normalizeWorkersJSON(run1.stdout)).toBe(
+    normalizeWorkersJSON(run8.stdout),
+  );
 });
 
 test('update-meta: rewrite-stable canonical YAML (run twice, exact golden)', () => {

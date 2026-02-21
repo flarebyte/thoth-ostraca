@@ -56,3 +56,17 @@ func TestValidateConfig_DiffMetaFormatMustBeKnown(t *testing.T) {
 		t.Fatalf("expected invalid diffMeta.format error, got: %v", err)
 	}
 }
+
+func TestValidateConfig_DiffMetaFormatJSONPatch(t *testing.T) {
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"json-patch\" }\n}\n"
+	out, err := runValidateConfigWithContent(t, "diff_meta_format_jsonpatch_validate_test.cue", content)
+	if err != nil {
+		t.Fatalf("validate-config: %v", err)
+	}
+	if out.Meta == nil || out.Meta.DiffMeta == nil {
+		t.Fatalf("missing meta.diffMeta")
+	}
+	if out.Meta.DiffMeta.Format != "json-patch" {
+		t.Fatalf("expected format=json-patch, got: %q", out.Meta.DiffMeta.Format)
+	}
+}
