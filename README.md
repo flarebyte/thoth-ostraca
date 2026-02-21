@@ -1,70 +1,223 @@
-# thoth-ostraca
+# thoth
 
-Thoth OSTRACA is a fast, scriptable CLI that discovers, validates, transforms, and aggregates metadata files in a repository. It reads a small CUE configuration and runs a deterministic pipeline over your project’s “ostraca” (metadata shards), producing clean JSON output for downstream tools.
+## What is thoth?
+`thoth` is a Go CLI for metadata management in repositories. It discovers files, reads/writes `*.thoth.yaml` metadata, and runs deterministic pipelines for validate/create/update/diff workflows.
 
-## Overview
+It also supports programmable file intelligence with Lua. You can derive expected metadata per locator, transform records, and run controlled shell/Lua stages while keeping machine-friendly JSON outputs stable across runs.
 
-The `thoth` CLI processes files that end with `.thoth.yaml` using a fixed pipeline you control via a CUE config (`--config path/to/config.cue`). The pipeline can:
+![thoth-ostraca](./thoth-ostraca.png)
 
-- Discover candidate files (gitignore-aware by default)
-- Parse and validate each YAML record (expects `{ locator, meta }`)
-- Optionally filter and map records with Lua
-- Optionally run a shell command per record (with JSON templating)
-- Optionally post-process with Lua and reduce to a final value
-- Render either a single JSON envelope or NDJSON lines
+## Quickstart
+Build locally:
 
-The CLI favors determinism and clear error reporting. You choose whether to stop at the first error or keep going and collect errors alongside successful records.
+```bash
+go build -o .e2e-bin/thoth ./cmd/thoth
+```
 
-## Features
+First run (validate existing meta files):
 
-- Git-aware discovery
-  - Walks from a configured root; respects `.gitignore` by default
-  - Optional `noGitignore` in config to include ignored files
+```bash
+cat > config.cue <<'CUE'
+{
+  configVersion: "1"
+  action: "validate"
+  discovery: { root: "./repo" }
+}
+CUE
 
-- YAML parsing + minimal validation
-  - Each file must contain a mapping with `locator: string` and `meta: object`
-  - Clear, succinct error messages on invalid input
+./.e2e-bin/thoth run --config config.cue
+```
 
-- Lua-powered transforms (optional)
-  - `filter`: keep or drop records based on an expression or snippet
-  - `map`: transform records into new objects
-  - `postMap`: enrich mapped records (e.g., include shell results)
-  - `reduce`: fold all records into a single value
-  - Snippets can be concise expressions; `return` is added automatically when omitted
+## Concepts
+- `locator`: canonical path/id for an input file (for example `src/a.txt`).
+- `meta file`: YAML sidecar at `<locator>.thoth.yaml` with shape `{ locator, meta }`.
+- `actions`:
+  - `pipeline`: discover + parse + validate + optional Lua/shell pipeline.
+  - `validate`: parse/validate locators only.
+  - `create-meta`: create missing meta files.
+  - `update-meta`: merge updates into meta files.
+  - `diff-meta`: compare existing meta vs expected baseline.
+- `stage pipeline`: each action maps to an ordered list of stages.
+- `deterministic outputs`: stable sorting and canonical JSON/YAML to keep outputs byte-identical across reruns/workers.
 
-- Shell integration (optional)
-  - Run a program per record with a timeout
-  - Simple argument templating: `{json}` is replaced by the record’s mapped JSON
-  - Captures `stdout`, `stderr`, and exit codes
+## Common Workflows
+### Validate meta files
+```cue
+// validate.cue
+{
+  configVersion: "1"
+  action: "validate"
+  discovery: { root: "./repo" }
+}
+```
 
-- Error handling modes
-  - `keep-going`: continue processing and report errors in the envelope
-  - `embedErrors`: when true, include per-record errors inside each record
+```bash
+./.e2e-bin/thoth run --config validate.cue
+```
 
-- Output formats
-  - Full JSON envelope (records + meta + errors)
-  - NDJSON lines (`output.lines: true`) for easy streaming/grep
+### Create meta files
+```cue
+// create.cue
+{
+  configVersion: "1"
+  action: "create-meta"
+  discovery: { root: "./repo" }
+}
+```
 
-- Concurrency with determinism
-  - Optional `workers` to parallelize stages
-  - Output ordering remains deterministic to match golden results
+```bash
+./.e2e-bin/thoth run --config create.cue
+```
 
-- Diagnostics
-  - `thoth diagnose --stage <name>` runs a single stage
-  - Optional `--dump-in` / `--dump-out` to capture inputs/outputs
+### Update meta files (global patch)
+```cue
+// update_patch.cue
+{
+  configVersion: "1"
+  action: "update-meta"
+  discovery: { root: "./repo" }
+  updateMeta: {
+    patch: {
+      owner: "team-a"
+      tags: ["managed"]
+      nested: { reviewed: true }
+    }
+  }
+}
+```
 
-## Quick Glimpse
+```bash
+./.e2e-bin/thoth run --config update_patch.cue
+```
 
-- Run the full pipeline:
-  - `thoth run --config path/to/config.cue`
+### Update meta files (per-locator Lua expected)
+```cue
+// update_lua.cue
+{
+  configVersion: "1"
+  action: "update-meta"
+  discovery: { root: "./repo" }
+  updateMeta: {
+    expectedLua: {
+      inline: '''
+return function(locator, existingMeta)
+  if locator == "a.txt" then
+    return { priority = "high" }
+  end
+  return { priority = "normal" }
+end
+'''
+    }
+  }
+}
+```
 
-- Diagnose a single stage (example):
-  - `thoth diagnose --stage validate-config --config path/to/config.cue`
+```bash
+./.e2e-bin/thoth run --config update_lua.cue
+```
 
-Outputs are written to `stdout`. On failure, a short, actionable message is written to `stderr`.
+### Diff meta files (summary / detailed / json-patch)
+Summary + drift exit code (`2`) when changed:
 
-## Notes
+```cue
+// diff_summary.cue
+{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "./repo" }
+  diffMeta: {
+    format: "summary"
+    failOnChange: true
+    expectedPatch: { owner: "team-a" }
+  }
+}
+```
 
-- Configuration is provided as a CUE file (`.cue`).
-- File discovery targets `*.thoth.yaml` files.
-- The CLI is designed to be predictable: default behavior favors clarity and reproducibility.
+Detailed:
+
+```cue
+// diff_detailed.cue
+{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "./repo" }
+  diffMeta: {
+    format: "detailed"
+    expectedPatch: { owner: "team-a" }
+  }
+}
+```
+
+JSON Patch (RFC 6902):
+
+```cue
+// diff_jsonpatch.cue
+{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "./repo" }
+  diffMeta: {
+    format: "json-patch"
+    expectedPatch: { owner: "team-a" }
+  }
+}
+```
+
+```bash
+./.e2e-bin/thoth run --config diff_summary.cue
+./.e2e-bin/thoth run --config diff_detailed.cue
+./.e2e-bin/thoth run --config diff_jsonpatch.cue
+```
+
+### Diagnose a stage with prepared input
+Run the same routed pipeline as `run`, but stop at an intermediate stage:
+
+```bash
+./.e2e-bin/thoth diagnose \
+  --prepare-pipeline diff-meta \
+  --until-stage compute-meta-diff \
+  --config diff_summary.cue
+```
+
+## Output Modes
+Default: compact JSON envelope to `stdout`.
+
+```cue
+output: {
+  out: "-"      // stdout
+  pretty: false  // compact JSON
+  lines: false   // envelope mode
+}
+```
+
+NDJSON record streaming:
+
+```cue
+output: {
+  out: "-"
+  lines: true
+}
+```
+
+Write to file + pretty JSON:
+
+```cue
+output: {
+  out: "./out.json"
+  pretty: true
+}
+```
+
+## Safety Notes
+- Lua runs inside a sandbox with configurable limits (`meta.luaSandbox`): timeout, instruction limit, memory limit, deterministic random.
+- Shell execution is opt-in (`shell.enabled=true`); treat configs as code. Use strict templating and timeouts for safer runs.
+- Keep default machine output on `stdout`; diagnostics/progress/summary are emitted to `stderr` only when enabled.
+
+## Repository Layout
+- `cmd/thoth/`: CLI entrypoints (`run`, `diagnose`, `version`).
+- `internal/stage/`: pipeline stages and stage tests.
+- `script/e2e/`: end-to-end tests (TypeScript).
+- `testdata/configs/`: config fixtures used in tests.
+- `testdata/repos/`: input/meta repositories for scenarios.
+- `testdata/run/`: golden JSON outputs.
+- `testdata/contracts/`: contract snapshot goldens.
