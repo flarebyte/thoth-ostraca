@@ -46,6 +46,7 @@ type Meta struct {
 	Reduced         any             `json:"reduced,omitempty"`
 	Errors          *ErrorsMeta     `json:"errors,omitempty"`
 	Workers         int             `json:"workers,omitempty"`
+	UI              *UIMeta         `json:"ui,omitempty"`
 }
 
 // ValidationMeta controls strictness for top-level YAML fields.
@@ -198,4 +199,10 @@ type FileInfoMeta struct {
 // GitMeta controls git enrichment behavior.
 type GitMeta struct {
 	Enabled bool `json:"enabled"`
+}
+
+// UIMeta holds optional runtime UI settings.
+type UIMeta struct {
+	Progress           bool `json:"progress"`
+	ProgressIntervalMs int  `json:"progressIntervalMs"`
 }

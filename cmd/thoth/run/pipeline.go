@@ -3,6 +3,7 @@ package run
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/flarebyte/thoth-ostraca/internal/stage"
 )
@@ -15,6 +16,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	if err != nil {
 		return stage.Envelope{}, err
 	}
+	ctx = withProgressReporter(ctx, newProgressReporter(out.Meta, os.Stderr))
 	action := "pipeline"
 	if out.Meta != nil && out.Meta.Config != nil && out.Meta.Config.Action != "" {
 		action = out.Meta.Config.Action
@@ -72,7 +74,7 @@ func runStreamingNDJSONPipeline(ctx context.Context, in stage.Envelope) (stage.E
 	}
 	writeDone := make(chan writeResult, 1)
 	go func() {
-		out, err := stage.Run(ctx, "write-output", streamIn, stage.Deps{RecordStream: stream})
+		out, err := runStage(ctx, "write-output", streamIn, stage.Deps{RecordStream: stream})
 		writeDone <- writeResult{out: out, err: err}
 	}()
 
@@ -86,7 +88,7 @@ func runStreamingNDJSONPipeline(ctx context.Context, in stage.Envelope) (stage.E
 		}
 		var err error
 		for _, name := range perRecordStages {
-			recEnv, err = stage.Run(ctx, name, recEnv, stage.Deps{})
+			recEnv, err = runStage(ctx, name, recEnv, stage.Deps{})
 			if err != nil {
 				close(stream)
 				<-writeDone

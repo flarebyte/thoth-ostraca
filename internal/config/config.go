@@ -58,6 +58,7 @@ type Minimal struct {
 	Output        Output
 	Errors        Errors
 	Workers       Workers
+	UI            UI
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -105,6 +106,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Output = parseOutputSection(v)
 	m.Errors = parseErrorsSection(v)
 	m.Workers = parseWorkersSection(v)
+	m.UI = parseUISection(v)
 	return m, nil
 }
 
@@ -248,6 +250,15 @@ type Errors struct {
 type Workers struct {
 	Count    int
 	HasCount bool
+}
+
+// UI holds optional ui config.
+type UI struct {
+	Progress           bool
+	ProgressIntervalMs int
+	HasSection         bool
+	HasProgress        bool
+	HasIntervalMs      bool
 }
 
 // FileInfo holds optional fileInfo config.

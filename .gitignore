@@ -43,6 +43,7 @@ node_modules/
 
 # Dev-only binaries
 .e2e-bin/
+/thoth
 
 # Go cache
 .gocache/

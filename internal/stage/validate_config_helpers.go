@@ -11,14 +11,7 @@ const defaultShellWorkingDir = "."
 const defaultShellTimeoutMs = 60000
 const defaultShellCaptureMaxBytes = 1048576
 const defaultShellTermGraceMs = 2000
-
-// sanitizeWorkers ensures a minimum of 1 worker when present.
-func sanitizeWorkers(n int) int {
-	if n < 1 {
-		return 1
-	}
-	return n
-}
+const defaultUIProgressIntervalMs = 500
 
 func deepCopyAny(v any) any {
 	switch x := v.(type) {
@@ -61,5 +54,6 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	applyFileInfoMeta(out, min)
 	applyGitMeta(out, min)
 	applyWorkersMeta(out, min)
+	applyUIMeta(out, min)
 	applyLocatorPolicyMeta(out, min)
 }

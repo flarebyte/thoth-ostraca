@@ -68,7 +68,25 @@ func applyGitMeta(out *Envelope, min config.Minimal) {
 
 func applyWorkersMeta(out *Envelope, min config.Minimal) {
 	if min.Workers.HasCount {
-		out.Meta.Workers = sanitizeWorkers(min.Workers.Count)
+		out.Meta.Workers = min.Workers.Count
+	}
+}
+
+func applyUIMeta(out *Envelope, min config.Minimal) {
+	if !min.UI.HasSection {
+		return
+	}
+	if out.Meta.UI == nil {
+		out.Meta.UI = &UIMeta{Progress: false, ProgressIntervalMs: defaultUIProgressIntervalMs}
+	}
+	if min.UI.HasProgress {
+		out.Meta.UI.Progress = min.UI.Progress
+	}
+	if min.UI.HasIntervalMs {
+		out.Meta.UI.ProgressIntervalMs = min.UI.ProgressIntervalMs
+	}
+	if out.Meta.UI.ProgressIntervalMs <= 0 {
+		out.Meta.UI.ProgressIntervalMs = defaultUIProgressIntervalMs
 	}
 }
 

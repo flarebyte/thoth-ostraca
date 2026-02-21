@@ -36,13 +36,6 @@ func applyLimitsMeta(out *Envelope, min config.Minimal) {
 		out.Meta.Limits.MaxYAMLBytes = min.Limits.MaxYAMLBytes
 	}
 	if min.Limits.HasMaxRecordsInMemory {
-		if min.Limits.MaxRecordsInMemory < 1 {
-			out.Meta.Limits.MaxRecordsInMemory = 1
-		} else {
-			out.Meta.Limits.MaxRecordsInMemory = min.Limits.MaxRecordsInMemory
-		}
-	}
-	if out.Meta.Limits.MaxRecordsInMemory < 1 {
-		out.Meta.Limits.MaxRecordsInMemory = defaultMaxRecordsInMemory
+		out.Meta.Limits.MaxRecordsInMemory = min.Limits.MaxRecordsInMemory
 	}
 }

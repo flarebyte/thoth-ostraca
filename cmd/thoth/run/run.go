@@ -30,5 +30,5 @@ var Cmd = &cobra.Command{
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&cfgPath, "config", "c", "", "Path to config file (.cue)")
+	Cmd.Flags().StringVarP(&cfgPath, "config", "c", "", "Config file path (.cue, required)")
 }

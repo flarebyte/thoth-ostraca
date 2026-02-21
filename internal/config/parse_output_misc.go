@@ -58,6 +58,27 @@ func parseWorkersSection(v cue.Value) Workers {
 	return w
 }
 
+// parseUISection extracts optional ui.* fields.
+func parseUISection(v cue.Value) UI {
+	var u UI
+	uv := v.LookupPath(cue.ParsePath("ui"))
+	if !uv.Exists() {
+		return u
+	}
+	u.HasSection = true
+	pv := uv.LookupPath(cue.ParsePath("progress"))
+	if pv.Exists() && pv.Kind() == cue.BoolKind {
+		_ = pv.Decode(&u.Progress)
+		u.HasProgress = true
+	}
+	iv := uv.LookupPath(cue.ParsePath("progressIntervalMs"))
+	if iv.Exists() && iv.Kind() == cue.IntKind {
+		_ = iv.Decode(&u.ProgressIntervalMs)
+		u.HasIntervalMs = true
+	}
+	return u
+}
+
 // parseFileInfoSection extracts optional fileInfo.enabled.
 func parseFileInfoSection(v cue.Value) FileInfo {
 	var fi FileInfo

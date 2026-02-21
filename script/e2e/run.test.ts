@@ -8,3 +8,4 @@ import './run.shell_phase4.suite';
 import './run.output.suite';
 import './run.meta_ops.suite';
 import './run.stress.suite';
+import './run.ux_phase4.suite';
