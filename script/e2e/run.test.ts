@@ -6,6 +6,7 @@ import './run.streaming_phase4.suite';
 import './run.lua_phase4.suite';
 import './run.shell_phase4.suite';
 import './run.output.suite';
-import './run.meta_ops.suite';
+import './run.meta_ops.diff.suite';
+import './run.meta_ops.update.suite';
 import './run.stress.suite';
 import './run.ux_phase4.suite';
