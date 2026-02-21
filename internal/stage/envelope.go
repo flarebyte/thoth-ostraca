@@ -73,11 +73,21 @@ type DiffReport struct {
 
 // DiffDetail holds a per-locator content diff summary.
 type DiffDetail struct {
-	Locator     string   `json:"locator"`
-	MetaFile    string   `json:"metaFile"`
-	AddedKeys   []string `json:"addedKeys"`
-	RemovedKeys []string `json:"removedKeys"`
-	ChangedKeys []string `json:"changedKeys"`
+	Locator         string      `json:"locator"`
+	MetaFile        string      `json:"metaFile"`
+	AddedKeys       []string    `json:"addedKeys"`
+	RemovedKeys     []string    `json:"removedKeys"`
+	ChangedKeys     []string    `json:"changedKeys"`
+	TypeChangedKeys []string    `json:"typeChangedKeys,omitempty"`
+	Arrays          []ArrayDiff `json:"arrays,omitempty"`
+}
+
+// ArrayDiff holds index-based array differences at a specific path.
+type ArrayDiff struct {
+	Path           string `json:"path"`
+	AddedIndices   []int  `json:"addedIndices,omitempty"`
+	RemovedIndices []int  `json:"removedIndices,omitempty"`
+	ChangedIndices []int  `json:"changedIndices,omitempty"`
 }
 
 // LocatorPolicy mirrors policy flags for locator validation in meta.

@@ -2,16 +2,37 @@
   "records": [
     {
       "locator": "a.txt",
-      "meta": { "a": 1, "arr": [1, 2], "obj": { "x": 1, "y": 2 } }
+      "meta": {
+        "a": 1,
+        "arr": [1, 2],
+        "obj": {
+          "x": 1,
+          "y": 2
+        }
+      }
     },
-    { "locator": "b.txt", "meta": { "only": true } },
-    { "locator": "orphan" }
+    {
+      "locator": "b.txt",
+      "meta": {
+        "only": true
+      }
+    },
+    {
+      "locator": "orphan"
+    }
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "1", "action": "diff-meta" },
-    "discovery": { "root": "testdata/repos/diff2" },
-    "limits": { "maxRecordsInMemory": 10000 },
+    "config": {
+      "configVersion": "1",
+      "action": "diff-meta"
+    },
+    "discovery": {
+      "root": "testdata/repos/diff2"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
     "inputs": ["a.txt", "b.txt"],
     "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"],
     "diff": {
@@ -25,7 +46,13 @@
           "metaFile": "a.txt.thoth.yaml",
           "addedKeys": ["obj.z"],
           "removedKeys": ["obj.x"],
-          "changedKeys": ["arr", "obj.y"]
+          "changedKeys": ["obj.y"],
+          "arrays": [
+            {
+              "path": "arr",
+              "addedIndices": [2]
+            }
+          ]
         },
         {
           "locator": "b.txt",
@@ -42,7 +69,10 @@
       "expectedPatch": {
         "a": 1,
         "arr": [1, 2, 3],
-        "obj": { "y": 9, "z": 3 }
+        "obj": {
+          "y": 9,
+          "z": 3
+        }
       }
     }
   }

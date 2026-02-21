@@ -46,8 +46,8 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		}
 	}
 
-	var orphans []string
-	var details []DiffDetail
+	orphans := make([]string, 0)
+	details := make([]DiffDetail, 0)
 	sort.Strings(orphans)
 
 	for _, m := range metas {
@@ -67,20 +67,22 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		if !ok {
 			continue
 		}
-		added, removed, changed := diffMetaMaps(existing, expected)
+		s := diffMetaMapsV3(existing, expected)
 		details = append(details, DiffDetail{
-			Locator:     loc,
-			MetaFile:    metaFile,
-			AddedKeys:   added,
-			RemovedKeys: removed,
-			ChangedKeys: changed,
+			Locator:         loc,
+			MetaFile:        metaFile,
+			AddedKeys:       s.added,
+			RemovedKeys:     s.removed,
+			ChangedKeys:     s.changed,
+			TypeChangedKeys: s.typeChanged,
+			Arrays:          s.arrays,
 		})
 	}
 	sort.Slice(details, func(i, j int) bool { return details[i].Locator < details[j].Locator })
 
 	changedCount := 0
 	for _, d := range details {
-		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 {
+		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 || len(d.Arrays) > 0 {
 			changedCount++
 		}
 	}
@@ -101,17 +103,39 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 func init() { Register(computeMetaDiffStage, computeMetaDiffRunner) }
 
 func diffMetaMaps(existing, expected map[string]any) ([]string, []string, []string) {
-	added := make([]string, 0)
-	removed := make([]string, 0)
-	changed := make([]string, 0)
-	diffMetaAtPath(existing, expected, "", &added, &removed, &changed)
-	sort.Strings(added)
-	sort.Strings(removed)
-	sort.Strings(changed)
-	return added, removed, changed
+	s := diffMetaMapsV3(existing, expected)
+	return s.added, s.removed, s.changed
 }
 
-func diffMetaAtPath(existing, expected map[string]any, prefix string, added, removed, changed *[]string) {
+type diffSummary struct {
+	added       []string
+	removed     []string
+	changed     []string
+	typeChanged []string
+	arrays      []ArrayDiff
+}
+
+type diffCollector struct {
+	added       []string
+	removed     []string
+	changed     []string
+	typeChanged []string
+	arrays      []ArrayDiff
+}
+
+func diffMetaMapsV3(existing, expected map[string]any) diffSummary {
+	c := &diffCollector{}
+	c.compareMaps("", existing, expected)
+	return diffSummary{
+		added:       uniqueSortedStrings(c.added),
+		removed:     uniqueSortedStrings(c.removed),
+		changed:     uniqueSortedStrings(c.changed),
+		typeChanged: uniqueSortedStrings(c.typeChanged),
+		arrays:      normalizeArrayDiffs(c.arrays),
+	}
+}
+
+func (c *diffCollector) compareMaps(prefix string, existing, expected map[string]any) {
 	keys := map[string]struct{}{}
 	for k := range existing {
 		keys[k] = struct{}{}
@@ -133,23 +157,149 @@ func diffMetaAtPath(existing, expected map[string]any, prefix string, added, rem
 		ev, inExisting := existing[k]
 		pv, inExpected := expected[k]
 		if !inExisting && inExpected {
-			*added = append(*added, path)
+			c.added = append(c.added, path)
 			continue
 		}
 		if inExisting && !inExpected {
-			*removed = append(*removed, path)
+			c.removed = append(c.removed, path)
 			continue
 		}
-		em, eok := asStringMap(ev)
-		pm, pok := asStringMap(pv)
-		if eok && pok {
-			diffMetaAtPath(em, pm, path, added, removed, changed)
+		c.compareValues(path, ev, pv)
+	}
+}
+
+func (c *diffCollector) compareValues(path string, existing, expected any) {
+	em, eok := asStringMap(existing)
+	pm, pok := asStringMap(expected)
+	if eok && pok {
+		c.compareMaps(path, em, pm)
+		return
+	}
+	ea, eok := existing.([]any)
+	pa, pok := expected.([]any)
+	if eok && pok {
+		c.compareArrays(path, ea, pa)
+		return
+	}
+	if jsonType(existing) != jsonType(expected) {
+		c.typeChanged = append(c.typeChanged, path)
+		c.changed = append(c.changed, path)
+		return
+	}
+	if !metaScalarEqual(existing, expected) {
+		c.changed = append(c.changed, path)
+	}
+}
+
+func (c *diffCollector) compareArrays(path string, existing, expected []any) {
+	diff := ArrayDiff{Path: path}
+	n := len(existing)
+	if len(expected) < n {
+		n = len(expected)
+	}
+	for i := 0; i < n; i++ {
+		if metaScalarEqual(existing[i], expected[i]) {
 			continue
 		}
-		if !metaScalarEqual(ev, pv) {
-			*changed = append(*changed, path)
+		diff.ChangedIndices = append(diff.ChangedIndices, i)
+		c.compareValues(fmt.Sprintf("%s[%d]", path, i), existing[i], expected[i])
+	}
+	for i := n; i < len(expected); i++ {
+		diff.AddedIndices = append(diff.AddedIndices, i)
+	}
+	for i := n; i < len(existing); i++ {
+		diff.RemovedIndices = append(diff.RemovedIndices, i)
+	}
+	diff.AddedIndices = uniqueSortedInts(diff.AddedIndices)
+	diff.RemovedIndices = uniqueSortedInts(diff.RemovedIndices)
+	diff.ChangedIndices = uniqueSortedInts(diff.ChangedIndices)
+	if len(diff.AddedIndices) > 0 || len(diff.RemovedIndices) > 0 || len(diff.ChangedIndices) > 0 {
+		c.arrays = append(c.arrays, diff)
+	}
+}
+
+func jsonType(v any) string {
+	if v == nil {
+		return "null"
+	}
+	if _, ok := asStringMap(v); ok {
+		return "object"
+	}
+	if _, ok := v.([]any); ok {
+		return "array"
+	}
+	if _, ok := toFloat64(v); ok {
+		return "number"
+	}
+	switch v.(type) {
+	case string:
+		return "string"
+	case bool:
+		return "boolean"
+	default:
+		return fmt.Sprintf("%T", v)
+	}
+}
+
+func uniqueSortedStrings(in []string) []string {
+	if len(in) == 0 {
+		return []string{}
+	}
+	sort.Strings(in)
+	out := make([]string, 0, len(in))
+	for _, s := range in {
+		if len(out) == 0 || out[len(out)-1] != s {
+			out = append(out, s)
 		}
 	}
+	return out
+}
+
+func uniqueSortedInts(in []int) []int {
+	if len(in) == 0 {
+		return []int{}
+	}
+	sort.Ints(in)
+	out := make([]int, 0, len(in))
+	for _, v := range in {
+		if len(out) == 0 || out[len(out)-1] != v {
+			out = append(out, v)
+		}
+	}
+	return out
+}
+
+func normalizeArrayDiffs(in []ArrayDiff) []ArrayDiff {
+	if len(in) == 0 {
+		return nil
+	}
+	sort.Slice(in, func(i, j int) bool { return in[i].Path < in[j].Path })
+	out := make([]ArrayDiff, 0, len(in))
+	for _, d := range in {
+		d.AddedIndices = uniqueSortedInts(d.AddedIndices)
+		d.RemovedIndices = uniqueSortedInts(d.RemovedIndices)
+		d.ChangedIndices = uniqueSortedInts(d.ChangedIndices)
+		if len(out) == 0 || out[len(out)-1].Path != d.Path {
+			out = append(out, d)
+			continue
+		}
+		last := &out[len(out)-1]
+		last.AddedIndices = uniqueSortedInts(append(last.AddedIndices, d.AddedIndices...))
+		last.RemovedIndices = uniqueSortedInts(append(last.RemovedIndices, d.RemovedIndices...))
+		last.ChangedIndices = uniqueSortedInts(append(last.ChangedIndices, d.ChangedIndices...))
+	}
+	for i := range out {
+		if len(out[i].AddedIndices) == 0 {
+			out[i].AddedIndices = nil
+		}
+		if len(out[i].RemovedIndices) == 0 {
+			out[i].RemovedIndices = nil
+		}
+		if len(out[i].ChangedIndices) == 0 {
+			out[i].ChangedIndices = nil
+		}
+	}
+	return out
 }
 
 func metaScalarEqual(a, b any) bool {
