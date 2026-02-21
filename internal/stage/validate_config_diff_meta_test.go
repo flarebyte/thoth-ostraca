@@ -28,7 +28,7 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Default(t *testing.T) {
 }
 
 func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
-	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"detailed\", failOnChange: true, expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"detailed\", failOnChange: true, expectedLua: { inline: \"return function(locator, existingMeta) return {} end\" }, expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
 	out, err := runValidateConfigWithContent(t, "diff_meta_expected_patch_validate_test.cue", content)
 	if err != nil {
 		t.Fatalf("validate-config: %v", err)
@@ -41,6 +41,9 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
 	}
 	if !out.Meta.DiffMeta.FailOnChange {
 		t.Fatalf("expected failOnChange=true")
+	}
+	if out.Meta.DiffMeta.ExpectedLuaInline == "" {
+		t.Fatalf("expected expectedLuaInline")
 	}
 	if out.Meta.DiffMeta.ExpectedPatch["b"] != int64(2) && out.Meta.DiffMeta.ExpectedPatch["b"] != 2 {
 		t.Fatalf("unexpected patch value: %+v", out.Meta.DiffMeta.ExpectedPatch)
@@ -82,5 +85,13 @@ func TestValidateConfig_DiffMetaFailOnChangeMustBeBoolean(t *testing.T) {
 	_, err := runValidateConfigWithContent(t, "diff_meta_fail_on_change_invalid_validate_test.cue", content)
 	if err == nil || !strings.Contains(err.Error(), "invalid diffMeta.failOnChange") {
 		t.Fatalf("expected invalid diffMeta.failOnChange error, got: %v", err)
+	}
+}
+
+func TestValidateConfig_DiffMetaExpectedLuaMustBeString(t *testing.T) {
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { expectedLua: { inline: 1 } }\n}\n"
+	_, err := runValidateConfigWithContent(t, "diff_meta_expected_lua_invalid_validate_test.cue", content)
+	if err == nil || !strings.Contains(err.Error(), "invalid diffMeta.expectedLua.inline") {
+		t.Fatalf("expected invalid diffMeta.expectedLua.inline error, got: %v", err)
 	}
 }

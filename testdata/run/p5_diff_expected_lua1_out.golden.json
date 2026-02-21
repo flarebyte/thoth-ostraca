@@ -1,0 +1,75 @@
+{
+  "records": [
+    {
+      "locator": "a.txt",
+      "meta": {
+        "a": 1,
+        "arr": [1, 2],
+        "obj": {
+          "x": 1,
+          "y": 2
+        }
+      }
+    },
+    {
+      "locator": "b.txt",
+      "meta": {
+        "only": true
+      }
+    },
+    {
+      "locator": "orphan"
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": {
+      "configVersion": "1",
+      "action": "diff-meta"
+    },
+    "discovery": {
+      "root": "testdata/repos/diff2"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
+    "inputs": ["a.txt", "b.txt"],
+    "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"],
+    "diff": {
+      "orphanMetaFiles": ["orphan.thoth.yaml"],
+      "pairedCount": 2,
+      "orphanCount": 1,
+      "changedCount": 2,
+      "details": [
+        {
+          "locator": "a.txt",
+          "metaFile": "a.txt.thoth.yaml",
+          "addedKeys": ["obj.z"],
+          "removedKeys": ["obj.x"],
+          "changedKeys": [],
+          "arrays": [
+            {
+              "path": "arr",
+              "addedIndices": [2]
+            }
+          ]
+        },
+        {
+          "locator": "b.txt",
+          "metaFile": "b.txt.thoth.yaml",
+          "addedKeys": ["extra"],
+          "removedKeys": [],
+          "changedKeys": []
+        }
+      ],
+      "orphans": ["orphan.thoth.yaml"],
+      "presentCount": 2
+    },
+    "diffMeta": {
+      "expectedPatch": {},
+      "expectedLuaInline": "return function(locator, existingMeta)\n  if locator == \"a.txt\" then\n    return {\n      a = 1,\n      obj = { y = 2, z = 3 },\n      arr = { 1, 2, 3 },\n    }\n  end\n  return {\n    only = true,\n    extra = { k = 1 },\n  }\nend",
+      "format": "summary",
+      "failOnChange": false
+    }
+  }
+}

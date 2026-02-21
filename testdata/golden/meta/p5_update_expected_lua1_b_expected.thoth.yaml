@@ -1,0 +1,5 @@
+locator: b.txt
+meta:
+  fromLua: b.txt
+  nested:
+    created: 1

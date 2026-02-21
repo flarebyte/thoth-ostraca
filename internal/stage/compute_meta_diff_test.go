@@ -282,3 +282,38 @@ func TestComputeMetaDiffRunner_JSONPatchIncludesPatch(t *testing.T) {
 		t.Fatalf("unexpected patch ordering/content: %#v", patch)
 	}
 }
+
+func TestComputeMetaDiffRunner_UsesExpectedLuaPerLocator(t *testing.T) {
+	in := Envelope{
+		Records: []Record{
+			{Locator: "a.txt", Meta: map[string]any{"x": 1}},
+			{Locator: "b.txt", Meta: map[string]any{"x": 2}},
+		},
+		Meta: &Meta{
+			Inputs:    []string{"a.txt", "b.txt"},
+			MetaFiles: []string{"a.txt.thoth.yaml", "b.txt.thoth.yaml"},
+			DiffMeta: &DiffMetaMeta{
+				ExpectedPatch: map[string]any{"ignored": true},
+				ExpectedLuaInline: `return function(locator, existingMeta)
+  if locator == "a.txt" then
+    return { x = 1 }
+  end
+  return { x = 9 }
+end`,
+			},
+		},
+	}
+	out, err := computeMetaDiffRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("compute-meta-diff: %v", err)
+	}
+	if out.Meta == nil || out.Meta.Diff == nil || len(out.Meta.Diff.Details) != 2 {
+		t.Fatalf("missing details")
+	}
+	if len(out.Meta.Diff.Details[0].ChangedKeys) != 0 {
+		t.Fatalf("a.txt should be unchanged: %+v", out.Meta.Diff.Details[0])
+	}
+	if !reflect.DeepEqual(out.Meta.Diff.Details[1].ChangedKeys, []string{"x"}) {
+		t.Fatalf("b.txt should be changed: %+v", out.Meta.Diff.Details[1])
+	}
+}

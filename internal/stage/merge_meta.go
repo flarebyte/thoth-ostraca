@@ -3,11 +3,18 @@ package stage
 import "context"
 
 const mergeMetaStage = "merge-meta"
+const updateMetaExpectedLuaStage = "update-meta-expectedLua"
 
 func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	out := in
+	mode, embed := errorMode(in.Meta)
+	var envErrs []Error
 	derived := map[string]any{}
-	if in.Meta != nil && in.Meta.UpdateMeta != nil && in.Meta.UpdateMeta.Patch != nil {
+	expectedLuaInline := ""
+	if in.Meta != nil && in.Meta.UpdateMeta != nil {
+		expectedLuaInline = in.Meta.UpdateMeta.ExpectedLuaInline
+	}
+	if expectedLuaInline == "" && in.Meta != nil && in.Meta.UpdateMeta != nil && in.Meta.UpdateMeta.Patch != nil {
 		if cp, ok := deepCopyAny(in.Meta.UpdateMeta.Patch).(map[string]any); ok {
 			derived = cp
 		}
@@ -24,7 +31,36 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 				}
 			}
 		}
-		next := deepMerge(existing, derived)
+		derivedPerRecord := derived
+		if expectedLuaInline != "" {
+			next, violation, err := runExpectedLuaInline(updateMetaExpectedLuaStage, in.Meta, r.Locator, existing, expectedLuaInline)
+			if err != nil {
+				msg := sanitizeErrorMessage(err.Error())
+				if mode == "keep-going" {
+					rr, envE := recordFailure(r, updateMetaExpectedLuaStage, msg, embed)
+					out.Records[i] = rr
+					if envE != nil {
+						envErrs = append(envErrs, *envE)
+					}
+					continue
+				}
+				return Envelope{}, luaViolationFailFast(updateMetaExpectedLuaStage, msg)
+			}
+			if violation != "" {
+				msg := sanitizeErrorMessage(violation)
+				if mode == "keep-going" {
+					rr, envE := recordFailure(r, updateMetaExpectedLuaStage, msg, embed)
+					out.Records[i] = rr
+					if envE != nil {
+						envErrs = append(envErrs, *envE)
+					}
+					continue
+				}
+				return Envelope{}, luaViolationFailFast(updateMetaExpectedLuaStage, msg)
+			}
+			derivedPerRecord = next
+		}
+		next := deepMerge(existing, derivedPerRecord)
 		m := map[string]any{"nextMeta": next}
 		if r.Post != nil {
 			if pm, ok := r.Post.(map[string]any); ok {
@@ -36,6 +72,7 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 		r.Post = m
 		out.Records[i] = r
 	}
+	appendSanitizedErrors(&out, envErrs)
 	return out, nil
 }
 

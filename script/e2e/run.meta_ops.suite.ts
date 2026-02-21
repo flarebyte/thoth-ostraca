@@ -447,6 +447,133 @@ test('diff-meta: failOnChange deterministic workers=1 vs workers=8', () => {
   );
 });
 
+test('diff-meta: expectedLua derives per-locator expected meta (golden)', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_expected_lua1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-expected-lua-v1', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_expected_lua1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('update-meta: expectedLua derives per-locator patch and merges (golden)', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/p5_update_expected_lua1');
+  const tempRepo = path.join(root, 'temp', 'p5_update_expected_lua1_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'p5_update_expected_lua1.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'p5_update_expected_lua1_repo').replaceAll('\\', '\\\\')}" }
+  updateMeta: {
+    expectedLua: {
+      inline: """
+return function(locator, existingMeta)
+  if locator == "a.txt" then
+    return {
+      x = 9,
+      nested = { add = "ok" },
+      fromLua = true,
+    }
+  end
+  return {
+    nested = { created = 1 },
+    fromLua = locator,
+  }
+end
+"""
+    }
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta-expected-lua-v1', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_update_expected_lua1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+  expect(fs.readFileSync(path.join(tempRepo, 'a.txt.thoth.yaml'), 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/p5_update_expected_lua1_a_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+  expect(fs.readFileSync(path.join(tempRepo, 'b.txt.thoth.yaml'), 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/p5_update_expected_lua1_b_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+});
+
+test('update-meta: expectedLua keep-going continues when one locator fails', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/p5_update_expected_lua1');
+  const tempRepo = path.join(root, 'temp', 'p5_update_expected_lua1_keep_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'p5_update_expected_lua1_keep.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'p5_update_expected_lua1_keep_repo').replaceAll('\\', '\\\\')}" }
+  errors: { mode: "keep-going", embedErrors: true }
+  updateMeta: {
+    expectedLua: {
+      inline: """
+return function(locator, existingMeta)
+  if locator == "a.txt" then
+    error("boom")
+  end
+  return { fromLua = true }
+end
+"""
+    }
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta-expected-lua-keep', run);
+  expect(run.status).toBe(0);
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; error?: { stage?: string } }>;
+    errors: Array<{ stage: string; locator?: string }>;
+  };
+  expect(
+    out.records.some(
+      (r) =>
+        r.locator === 'a.txt' && r.error?.stage === 'update-meta-expectedLua',
+    ),
+  ).toBe(true);
+  expect(
+    out.errors.some(
+      (e) => e.stage === 'update-meta-expectedLua' && e.locator === 'a.txt',
+    ),
+  ).toBe(true);
+  expect(fs.existsSync(path.join(tempRepo, 'b.txt.thoth.yaml'))).toBe(true);
+});
+
 test('update-meta: rewrite-stable canonical YAML (run twice, exact golden)', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

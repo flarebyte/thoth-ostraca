@@ -1,0 +1,7 @@
+locator: a.txt
+meta:
+  fromLua: true
+  nested:
+    add: ok
+    keep: true
+  x: 9

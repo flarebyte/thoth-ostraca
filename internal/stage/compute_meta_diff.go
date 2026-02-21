@@ -9,6 +9,7 @@ import (
 )
 
 const computeMetaDiffStage = "compute-meta-diff"
+const diffMetaExpectedLuaStage = "diff-meta-expectedLua"
 
 func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	if in.Meta == nil {
@@ -30,6 +31,7 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 	}
 
 	existingByLocator := map[string]map[string]any{}
+	recordIdxByLocator := map[string]int{}
 	for _, r := range in.Records {
 		if r.Error != nil || r.Meta == nil {
 			continue
@@ -38,9 +40,20 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 			existingByLocator[r.Locator] = cp
 		}
 	}
+	for i := range in.Records {
+		if in.Records[i].Error == nil {
+			recordIdxByLocator[in.Records[i].Locator] = i
+		}
+	}
 
 	expected := map[string]any{}
-	if in.Meta.DiffMeta != nil && in.Meta.DiffMeta.ExpectedPatch != nil {
+	expectedLuaInline := ""
+	mode, embed := errorMode(in.Meta)
+	var envErrs []Error
+	if in.Meta.DiffMeta != nil {
+		expectedLuaInline = in.Meta.DiffMeta.ExpectedLuaInline
+	}
+	if expectedLuaInline == "" && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.ExpectedPatch != nil {
 		if cp, ok := deepCopyAny(in.Meta.DiffMeta.ExpectedPatch).(map[string]any); ok {
 			expected = cp
 		}
@@ -67,15 +80,52 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		if !ok {
 			continue
 		}
+		expectedPerLocator := expected
+		if expectedLuaInline != "" {
+			next, violation, err := runExpectedLuaInline(diffMetaExpectedLuaStage, in.Meta, loc, existing, expectedLuaInline)
+			if err != nil {
+				msg := sanitizeErrorMessage(err.Error())
+				if mode == "keep-going" {
+					if idx, ok := recordIdxByLocator[loc]; ok {
+						rr, envE := recordFailure(outRecordFallback(in.Records[idx], loc), diffMetaExpectedLuaStage, msg, embed)
+						in.Records[idx] = rr
+						if envE != nil {
+							envErrs = append(envErrs, *envE)
+						}
+					} else {
+						envErrs = append(envErrs, Error{Stage: diffMetaExpectedLuaStage, Locator: loc, Message: msg})
+					}
+					continue
+				}
+				return Envelope{}, luaViolationFailFast(diffMetaExpectedLuaStage, msg)
+			}
+			if violation != "" {
+				msg := sanitizeErrorMessage(violation)
+				if mode == "keep-going" {
+					if idx, ok := recordIdxByLocator[loc]; ok {
+						rr, envE := recordFailure(outRecordFallback(in.Records[idx], loc), diffMetaExpectedLuaStage, msg, embed)
+						in.Records[idx] = rr
+						if envE != nil {
+							envErrs = append(envErrs, *envE)
+						}
+					} else {
+						envErrs = append(envErrs, Error{Stage: diffMetaExpectedLuaStage, Locator: loc, Message: msg})
+					}
+					continue
+				}
+				return Envelope{}, luaViolationFailFast(diffMetaExpectedLuaStage, msg)
+			}
+			expectedPerLocator = next
+		}
 		format := "summary"
 		if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Format != "" {
 			format = in.Meta.DiffMeta.Format
 		}
-		s := diffMetaMapsV3(existing, expected)
+		s := diffMetaMapsV3(existing, expectedPerLocator)
 		if format == "detailed" {
-			s = diffMetaMapsV3Detailed(existing, expected)
+			s = diffMetaMapsV3Detailed(existing, expectedPerLocator)
 		} else if format == "json-patch" {
-			s = diffMetaMapsV3JSONPatch(existing, expected)
+			s = diffMetaMapsV3JSONPatch(existing, expectedPerLocator)
 		}
 		details = append(details, DiffDetail{
 			Locator:         loc,
@@ -108,7 +158,15 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		Orphans:         orphans,
 		PresentCount:    len(details),
 	}
+	appendSanitizedErrors(&out, envErrs)
 	return out, nil
+}
+
+func outRecordFallback(r Record, locator string) Record {
+	if r.Locator == "" {
+		r.Locator = locator
+	}
+	return r
 }
 
 func init() { Register(computeMetaDiffStage, computeMetaDiffRunner) }

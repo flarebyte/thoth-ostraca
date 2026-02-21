@@ -227,20 +227,24 @@ type Reduce struct {
 
 // UpdateMeta holds optional update-meta patch config.
 type UpdateMeta struct {
-	Patch      map[string]any
-	HasSection bool
-	HasPatch   bool
+	Patch              map[string]any
+	ExpectedLuaInline  string
+	HasSection         bool
+	HasPatch           bool
+	HasExpectedLuaCode bool
 }
 
 // DiffMeta holds optional diff-meta expected patch config.
 type DiffMeta struct {
-	ExpectedPatch    map[string]any
-	Format           string
-	FailOnChange     bool
-	HasSection       bool
-	HasExpectedPatch bool
-	HasFormat        bool
-	HasFailOnChange  bool
+	ExpectedPatch      map[string]any
+	ExpectedLuaInline  string
+	Format             string
+	FailOnChange       bool
+	HasSection         bool
+	HasExpectedPatch   bool
+	HasExpectedLuaCode bool
+	HasFormat          bool
+	HasFailOnChange    bool
 }
 
 // Output holds optional output config.

@@ -1,0 +1,54 @@
+{
+  "records": [
+    {
+      "locator": "a.txt",
+      "post": {
+        "existingMeta": {
+          "nested": {
+            "keep": true
+          },
+          "x": 1
+        },
+        "existingMetaPath": "a.txt.thoth.yaml",
+        "metaPath": "a.txt.thoth.yaml",
+        "nextMeta": {
+          "fromLua": true,
+          "nested": {
+            "add": "ok",
+            "keep": true
+          },
+          "x": 9
+        }
+      }
+    },
+    {
+      "locator": "b.txt",
+      "post": {
+        "existingMetaPath": "b.txt.thoth.yaml",
+        "metaPath": "b.txt.thoth.yaml",
+        "nextMeta": {
+          "fromLua": "b.txt",
+          "nested": {
+            "created": 1
+          }
+        }
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": {
+      "configVersion": "1",
+      "action": "update-meta"
+    },
+    "discovery": {
+      "root": "temp/p5_update_expected_lua1_repo"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
+    "updateMeta": {
+      "expectedLuaInline": "return function(locator, existingMeta)\n  if locator == \"a.txt\" then\n    return {\n      x = 9,\n      nested = { add = \"ok\" },\n      fromLua = true,\n    }\n  end\n  return {\n    nested = { created = 1 },\n    fromLua = locator,\n  }\nend"
+    }
+  }
+}

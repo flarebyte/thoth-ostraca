@@ -204,14 +204,16 @@ type OutputMeta struct {
 
 // UpdateMetaMeta holds update-meta patch settings.
 type UpdateMetaMeta struct {
-	Patch map[string]any `json:"patch,omitempty"`
+	Patch             map[string]any `json:"patch,omitempty"`
+	ExpectedLuaInline string         `json:"expectedLuaInline,omitempty"`
 }
 
 // DiffMetaMeta holds diff-meta expected patch settings.
 type DiffMetaMeta struct {
-	ExpectedPatch map[string]any `json:"expectedPatch"`
-	Format        string         `json:"format,omitempty"`
-	FailOnChange  bool           `json:"failOnChange"`
+	ExpectedPatch     map[string]any `json:"expectedPatch"`
+	ExpectedLuaInline string         `json:"expectedLuaInline,omitempty"`
+	Format            string         `json:"format,omitempty"`
+	FailOnChange      bool           `json:"failOnChange"`
 }
 
 // ErrorsMeta holds error handling behavior.

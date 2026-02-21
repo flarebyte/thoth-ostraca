@@ -46,6 +46,16 @@ func parseUpdateMetaSection(v cue.Value) (UpdateMeta, error) {
 		return u, nil
 	}
 	u.HasSection = true
+	lv := uv.LookupPath(cue.ParsePath("expectedLua.inline"))
+	if lv.Exists() {
+		if lv.Kind() != cue.StringKind {
+			return UpdateMeta{}, fmt.Errorf("invalid updateMeta.expectedLua.inline: must be string")
+		}
+		if err := lv.Decode(&u.ExpectedLuaInline); err != nil {
+			return UpdateMeta{}, fmt.Errorf("invalid updateMeta.expectedLua.inline: must be string")
+		}
+		u.HasExpectedLuaCode = true
+	}
 	pv := uv.LookupPath(cue.ParsePath("patch"))
 	if !pv.Exists() {
 		return u, nil
@@ -88,6 +98,16 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 		}
 		d.FailOnChange = foc
 		d.HasFailOnChange = true
+	}
+	elv := dv.LookupPath(cue.ParsePath("expectedLua.inline"))
+	if elv.Exists() {
+		if elv.Kind() != cue.StringKind {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.expectedLua.inline: must be string")
+		}
+		if err := elv.Decode(&d.ExpectedLuaInline); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.expectedLua.inline: must be string")
+		}
+		d.HasExpectedLuaCode = true
 	}
 	pv := dv.LookupPath(cue.ParsePath("expectedPatch"))
 	if !pv.Exists() {
