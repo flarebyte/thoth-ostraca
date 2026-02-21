@@ -168,8 +168,48 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		Orphans:         orphans,
 		PresentCount:    len(details),
 	}
+	if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Summary && deps.Stderr != nil {
+		emitDiffSummary(deps.Stderr, out.Meta.Diff)
+	}
 	appendSanitizedErrors(&out, envErrs)
 	return out, nil
+}
+
+func emitDiffSummary(w interface{ Write([]byte) (int, error) }, report *DiffReport) {
+	if report == nil {
+		return
+	}
+	_, _ = fmt.Fprintf(w, "diff-summary paired=%d changed=%d orphans=%d\n", report.PairedCount, report.ChangedCount, report.OrphanCount)
+	changed := make([]DiffDetail, 0, len(report.Details))
+	for _, d := range report.Details {
+		if detailHasChanges(d) {
+			changed = append(changed, d)
+		}
+	}
+	sort.Slice(changed, func(i, j int) bool { return changed[i].Locator < changed[j].Locator })
+	for _, d := range changed {
+		arraysCount := 0
+		for _, ad := range d.Arrays {
+			if arrayDiffHasChanges(ad) {
+				arraysCount++
+			}
+		}
+		_, _ = fmt.Fprintf(
+			w,
+			"changed locator=%s added=%d removed=%d changed=%d typeChanged=%d arrays=%d\n",
+			d.Locator,
+			len(d.AddedKeys),
+			len(d.RemovedKeys),
+			len(d.ChangedKeys),
+			len(d.TypeChangedKeys),
+			arraysCount,
+		)
+	}
+	orphans := append([]string(nil), report.OrphanMetaFiles...)
+	sort.Strings(orphans)
+	for _, orphan := range orphans {
+		_, _ = fmt.Fprintf(w, "orphan metaFile=%s\n", orphan)
+	}
 }
 
 func filterDiffDetails(details []DiffDetail, only string) []DiffDetail {

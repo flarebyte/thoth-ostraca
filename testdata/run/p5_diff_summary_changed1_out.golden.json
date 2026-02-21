@@ -1,0 +1,69 @@
+{
+  "records": [
+    {
+      "locator": "a.txt",
+      "meta": {
+        "kind": { "k": 1 },
+        "rules": [{ "tags": ["a", "b"] }, { "tags": ["x"] }],
+        "value": 1
+      }
+    },
+    {
+      "locator": "b.txt",
+      "meta": {
+        "kind": [],
+        "rules": [
+          { "tags": ["a", "c"] },
+          { "tags": ["x", "y"] },
+          { "tags": [] }
+        ],
+        "value": "1"
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "1", "action": "diff-meta" },
+    "discovery": { "root": "testdata/repos/p5_diff_arrays1" },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "inputs": ["a.txt", "b.txt"],
+    "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml"],
+    "diff": {
+      "orphanMetaFiles": [],
+      "pairedCount": 1,
+      "orphanCount": 0,
+      "changedCount": 1,
+      "details": [
+        {
+          "locator": "a.txt",
+          "metaFile": "a.txt.thoth.yaml",
+          "addedKeys": [],
+          "removedKeys": [],
+          "changedKeys": ["kind", "rules[0].tags[1]", "value"],
+          "typeChangedKeys": ["kind", "value"],
+          "arrays": [
+            { "path": "rules", "addedIndices": [2], "changedIndices": [0, 1] },
+            { "path": "rules[0].tags", "changedIndices": [1] },
+            { "path": "rules[1].tags", "addedIndices": [1] }
+          ]
+        }
+      ],
+      "presentCount": 1
+    },
+    "diffMeta": {
+      "expectedPatch": {
+        "kind": [],
+        "rules": [
+          { "tags": ["a", "c"] },
+          { "tags": ["x", "y"] },
+          { "tags": [] }
+        ],
+        "value": "1"
+      },
+      "format": "summary",
+      "only": "changed",
+      "summary": true,
+      "failOnChange": false
+    }
+  }
+}

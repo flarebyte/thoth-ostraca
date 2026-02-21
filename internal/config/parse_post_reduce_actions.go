@@ -103,6 +103,15 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 		d.Only = only
 		d.HasOnly = true
 	}
+	sv := dv.LookupPath(cue.ParsePath("summary"))
+	if sv.Exists() {
+		var summary bool
+		if err := sv.Decode(&summary); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.summary: must be boolean")
+		}
+		d.Summary = summary
+		d.HasSummary = true
+	}
 	focv := dv.LookupPath(cue.ParsePath("failOnChange"))
 	if focv.Exists() {
 		var foc bool

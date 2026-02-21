@@ -497,6 +497,48 @@ test('diff-meta: only=orphans omits paired details and keeps sorted orphans', ()
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('diff-meta: summary=true emits deterministic stderr summary and keeps stdout golden', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_summary1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-summary1', run);
+  expect(run.status).toBe(0);
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_summary1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+  expect(run.stderr).toBe(
+    `${[
+      'diff-summary paired=2 changed=2 orphans=1',
+      'changed locator=a.txt added=1 removed=1 changed=2 typeChanged=1 arrays=1',
+      'changed locator=b.txt added=3 removed=1 changed=0 typeChanged=0 arrays=0',
+      'orphan metaFile=orphan.thoth.yaml',
+    ].join('\n')}\n`,
+  );
+});
+
+test('diff-meta: only=changed + summary=true reflects filtered report counts', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_summary_changed1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-summary-changed1', run);
+  expect(run.status).toBe(0);
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_summary_changed1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+  expect(run.stderr).toBe(
+    `${[
+      'diff-summary paired=1 changed=1 orphans=0',
+      'changed locator=a.txt added=0 removed=0 changed=3 typeChanged=2 arrays=3',
+    ].join('\n')}\n`,
+  );
+});
+
 test('diff-meta: expectedLua derives per-locator expected meta (golden)', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

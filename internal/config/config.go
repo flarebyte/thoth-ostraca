@@ -240,12 +240,14 @@ type DiffMeta struct {
 	ExpectedLuaInline  string
 	Format             string
 	Only               string
+	Summary            bool
 	FailOnChange       bool
 	HasSection         bool
 	HasExpectedPatch   bool
 	HasExpectedLuaCode bool
 	HasFormat          bool
 	HasOnly            bool
+	HasSummary         bool
 	HasFailOnChange    bool
 }
 

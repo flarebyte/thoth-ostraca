@@ -214,6 +214,7 @@ type DiffMetaMeta struct {
 	ExpectedLuaInline string         `json:"expectedLuaInline,omitempty"`
 	Format            string         `json:"format,omitempty"`
 	Only              string         `json:"only,omitempty"`
+	Summary           bool           `json:"summary,omitempty"`
 	FailOnChange      bool           `json:"failOnChange"`
 }
 
