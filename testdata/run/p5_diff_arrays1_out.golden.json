@@ -3,17 +3,8 @@
     {
       "locator": "a.txt",
       "meta": {
-        "kind": {
-          "k": 1
-        },
-        "rules": [
-          {
-            "tags": ["a", "b"]
-          },
-          {
-            "tags": ["x"]
-          }
-        ],
+        "kind": { "k": 1 },
+        "rules": [{ "tags": ["a", "b"] }, { "tags": ["x"] }],
         "value": 1
       }
     },
@@ -22,15 +13,9 @@
       "meta": {
         "kind": [],
         "rules": [
-          {
-            "tags": ["a", "c"]
-          },
-          {
-            "tags": ["x", "y"]
-          },
-          {
-            "tags": []
-          }
+          { "tags": ["a", "c"] },
+          { "tags": ["x", "y"] },
+          { "tags": [] }
         ],
         "value": "1"
       }
@@ -38,16 +23,9 @@
   ],
   "meta": {
     "contractVersion": "1",
-    "config": {
-      "configVersion": "1",
-      "action": "diff-meta"
-    },
-    "discovery": {
-      "root": "testdata/repos/p5_diff_arrays1"
-    },
-    "limits": {
-      "maxRecordsInMemory": 10000
-    },
+    "config": { "configVersion": "1", "action": "diff-meta" },
+    "discovery": { "root": "testdata/repos/p5_diff_arrays1" },
+    "limits": { "maxRecordsInMemory": 10000 },
     "inputs": ["a.txt", "b.txt"],
     "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml"],
     "diff": {
@@ -64,19 +42,9 @@
           "changedKeys": ["kind", "rules[0].tags[1]", "value"],
           "typeChangedKeys": ["kind", "value"],
           "arrays": [
-            {
-              "path": "rules",
-              "addedIndices": [2],
-              "changedIndices": [0, 1]
-            },
-            {
-              "path": "rules[0].tags",
-              "changedIndices": [1]
-            },
-            {
-              "path": "rules[1].tags",
-              "addedIndices": [1]
-            }
+            { "path": "rules", "addedIndices": [2], "changedIndices": [0, 1] },
+            { "path": "rules[0].tags", "changedIndices": [1] },
+            { "path": "rules[1].tags", "addedIndices": [1] }
           ]
         },
         {
@@ -93,19 +61,14 @@
       "expectedPatch": {
         "kind": [],
         "rules": [
-          {
-            "tags": ["a", "c"]
-          },
-          {
-            "tags": ["x", "y"]
-          },
-          {
-            "tags": []
-          }
+          { "tags": ["a", "c"] },
+          { "tags": ["x", "y"] },
+          { "tags": [] }
         ],
         "value": "1"
       },
       "format": "summary",
+      "only": "all",
       "failOnChange": false
     }
   }

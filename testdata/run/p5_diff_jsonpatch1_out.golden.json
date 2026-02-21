@@ -2,37 +2,16 @@
   "records": [
     {
       "locator": "a.txt",
-      "meta": {
-        "a": 1,
-        "arr": [1, 2],
-        "obj": {
-          "x": 1,
-          "y": 2
-        }
-      }
+      "meta": { "a": 1, "arr": [1, 2], "obj": { "x": 1, "y": 2 } }
     },
-    {
-      "locator": "b.txt",
-      "meta": {
-        "only": true
-      }
-    },
-    {
-      "locator": "orphan"
-    }
+    { "locator": "b.txt", "meta": { "only": true } },
+    { "locator": "orphan" }
   ],
   "meta": {
     "contractVersion": "1",
-    "config": {
-      "configVersion": "1",
-      "action": "diff-meta"
-    },
-    "discovery": {
-      "root": "testdata/repos/diff2"
-    },
-    "limits": {
-      "maxRecordsInMemory": 10000
-    },
+    "config": { "configVersion": "1", "action": "diff-meta" },
+    "discovery": { "root": "testdata/repos/diff2" },
+    "limits": { "maxRecordsInMemory": 10000 },
     "inputs": ["a.txt", "b.txt"],
     "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"],
     "diff": {
@@ -48,37 +27,13 @@
           "removedKeys": ["obj.x"],
           "changedKeys": ["a", "obj.y"],
           "typeChangedKeys": ["a"],
-          "arrays": [
-            {
-              "path": "arr",
-              "addedIndices": [2]
-            }
-          ],
+          "arrays": [{ "path": "arr", "addedIndices": [2] }],
           "patch": [
-            {
-              "op": "replace",
-              "path": "/a",
-              "value": "1"
-            },
-            {
-              "op": "replace",
-              "path": "/arr",
-              "value": [1, 2, 3]
-            },
-            {
-              "op": "remove",
-              "path": "/obj/x"
-            },
-            {
-              "op": "replace",
-              "path": "/obj/y",
-              "value": 9
-            },
-            {
-              "op": "add",
-              "path": "/obj/z",
-              "value": 3
-            }
+            { "op": "replace", "path": "/a", "value": "1" },
+            { "op": "replace", "path": "/arr", "value": [1, 2, 3] },
+            { "op": "remove", "path": "/obj/x" },
+            { "op": "replace", "path": "/obj/y", "value": 9 },
+            { "op": "add", "path": "/obj/z", "value": 3 }
           ]
         },
         {
@@ -88,28 +43,10 @@
           "removedKeys": ["only"],
           "changedKeys": [],
           "patch": [
-            {
-              "op": "add",
-              "path": "/a",
-              "value": "1"
-            },
-            {
-              "op": "add",
-              "path": "/arr",
-              "value": [1, 2, 3]
-            },
-            {
-              "op": "add",
-              "path": "/obj",
-              "value": {
-                "y": 9,
-                "z": 3
-              }
-            },
-            {
-              "op": "remove",
-              "path": "/only"
-            }
+            { "op": "add", "path": "/a", "value": "1" },
+            { "op": "add", "path": "/arr", "value": [1, 2, 3] },
+            { "op": "add", "path": "/obj", "value": { "y": 9, "z": 3 } },
+            { "op": "remove", "path": "/only" }
           ]
         }
       ],
@@ -120,12 +57,10 @@
       "expectedPatch": {
         "a": "1",
         "arr": [1, 2, 3],
-        "obj": {
-          "y": 9,
-          "z": 3
-        }
+        "obj": { "y": 9, "z": 3 }
       },
       "format": "json-patch",
+      "only": "all",
       "failOnChange": false
     }
   }

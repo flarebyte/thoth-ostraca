@@ -26,13 +26,17 @@ func applyDiffMeta(out *Envelope, min config.Minimal) {
 		return
 	}
 	if out.Meta.DiffMeta == nil {
-		out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}, Format: "summary", FailOnChange: false}
+		out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}, Format: "summary", Only: "all", FailOnChange: false}
 	}
 	out.Meta.DiffMeta.Format = "summary"
+	out.Meta.DiffMeta.Only = "all"
 	out.Meta.DiffMeta.FailOnChange = false
 	out.Meta.DiffMeta.ExpectedLuaInline = ""
 	if min.DiffMeta.HasFormat {
 		out.Meta.DiffMeta.Format = min.DiffMeta.Format
+	}
+	if min.DiffMeta.HasOnly {
+		out.Meta.DiffMeta.Only = min.DiffMeta.Only
 	}
 	if min.DiffMeta.HasFailOnChange {
 		out.Meta.DiffMeta.FailOnChange = min.DiffMeta.FailOnChange

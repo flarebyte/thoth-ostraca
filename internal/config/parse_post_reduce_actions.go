@@ -78,6 +78,7 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 	}
 	d.HasSection = true
 	d.Format = "summary"
+	d.Only = "all"
 	fv := dv.LookupPath(cue.ParsePath("format"))
 	if fv.Exists() {
 		var f string
@@ -89,6 +90,18 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 		}
 		d.Format = f
 		d.HasFormat = true
+	}
+	ov := dv.LookupPath(cue.ParsePath("only"))
+	if ov.Exists() {
+		var only string
+		if err := ov.Decode(&only); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.only: must be 'all', 'changed', 'unchanged', or 'orphans'")
+		}
+		if only != "all" && only != "changed" && only != "unchanged" && only != "orphans" {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.only: must be 'all', 'changed', 'unchanged', or 'orphans'")
+		}
+		d.Only = only
+		d.HasOnly = true
 	}
 	focv := dv.LookupPath(cue.ParsePath("failOnChange"))
 	if focv.Exists() {

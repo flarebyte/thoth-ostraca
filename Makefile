@@ -21,7 +21,8 @@ format:
 	$(BIOME) check --unsafe --write
 
 test: gen
-	$(GO) test ./...
+	$(GO) test -coverprofile=coverage.out ./...
+	$(GO) tool cover -func=coverage.out
 
 test-race: gen
 	$(GO) test -race ./...

@@ -213,6 +213,7 @@ type DiffMetaMeta struct {
 	ExpectedPatch     map[string]any `json:"expectedPatch"`
 	ExpectedLuaInline string         `json:"expectedLuaInline,omitempty"`
 	Format            string         `json:"format,omitempty"`
+	Only              string         `json:"only,omitempty"`
 	FailOnChange      bool           `json:"failOnChange"`
 }
 

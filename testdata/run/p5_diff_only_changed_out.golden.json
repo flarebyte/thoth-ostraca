@@ -25,14 +25,15 @@
           "metaFile": "a.txt.thoth.yaml",
           "addedKeys": ["obj.z"],
           "removedKeys": ["obj.x"],
-          "changedKeys": [],
+          "changedKeys": ["a", "obj.y"],
+          "typeChangedKeys": ["a"],
           "arrays": [{ "path": "arr", "addedIndices": [2] }]
         },
         {
           "locator": "b.txt",
           "metaFile": "b.txt.thoth.yaml",
-          "addedKeys": ["extra"],
-          "removedKeys": [],
+          "addedKeys": ["a", "arr", "obj"],
+          "removedKeys": ["only"],
           "changedKeys": []
         }
       ],
@@ -40,10 +41,13 @@
       "presentCount": 2
     },
     "diffMeta": {
-      "expectedPatch": {},
-      "expectedLuaInline": "return function(locator, existingMeta)\n  if locator == \"a.txt\" then\n    return {\n      a = 1,\n      obj = { y = 2, z = 3 },\n      arr = { 1, 2, 3 },\n    }\n  end\n  return {\n    only = true,\n    extra = { k = 1 },\n  }\nend",
+      "expectedPatch": {
+        "a": "1",
+        "arr": [1, 2, 3],
+        "obj": { "y": 9, "z": 3 }
+      },
       "format": "summary",
-      "only": "all",
+      "only": "changed",
       "failOnChange": false
     }
   }

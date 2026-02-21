@@ -239,11 +239,13 @@ type DiffMeta struct {
 	ExpectedPatch      map[string]any
 	ExpectedLuaInline  string
 	Format             string
+	Only               string
 	FailOnChange       bool
 	HasSection         bool
 	HasExpectedPatch   bool
 	HasExpectedLuaCode bool
 	HasFormat          bool
+	HasOnly            bool
 	HasFailOnChange    bool
 }
 

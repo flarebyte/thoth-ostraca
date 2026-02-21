@@ -141,25 +141,79 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 	}
 	sort.Slice(details, func(i, j int) bool { return details[i].Locator < details[j].Locator })
 
+	only := "all"
+	if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Only != "" {
+		only = in.Meta.DiffMeta.Only
+	}
+	details = filterDiffDetails(details, only)
+
 	changedCount := 0
 	for _, d := range details {
-		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 || len(d.Arrays) > 0 || len(d.Changes) > 0 || len(d.Patch) > 0 {
+		if detailHasChanges(d) {
 			changedCount++
 		}
 	}
 
 	out := in
+	var outDetails []DiffDetail
+	if only != "orphans" {
+		outDetails = details
+	}
 	out.Meta.Diff = &DiffReport{
 		OrphanMetaFiles: orphans,
 		PairedCount:     len(details),
 		OrphanCount:     len(orphans),
 		ChangedCount:    changedCount,
-		Details:         details,
+		Details:         outDetails,
 		Orphans:         orphans,
 		PresentCount:    len(details),
 	}
 	appendSanitizedErrors(&out, envErrs)
 	return out, nil
+}
+
+func filterDiffDetails(details []DiffDetail, only string) []DiffDetail {
+	switch only {
+	case "changed":
+		out := make([]DiffDetail, 0, len(details))
+		for _, d := range details {
+			if detailHasChanges(d) {
+				out = append(out, d)
+			}
+		}
+		return out
+	case "unchanged":
+		out := make([]DiffDetail, 0, len(details))
+		for _, d := range details {
+			if !detailHasChanges(d) {
+				out = append(out, d)
+			}
+		}
+		return out
+	case "orphans":
+		return nil
+	default:
+		return details
+	}
+}
+
+func detailHasChanges(d DiffDetail) bool {
+	if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 {
+		return true
+	}
+	if len(d.Changes) > 0 || len(d.Patch) > 0 {
+		return true
+	}
+	for _, ad := range d.Arrays {
+		if arrayDiffHasChanges(ad) {
+			return true
+		}
+	}
+	return false
+}
+
+func arrayDiffHasChanges(d ArrayDiff) bool {
+	return len(d.AddedIndices) > 0 || len(d.RemovedIndices) > 0 || len(d.ChangedIndices) > 0
 }
 
 func outRecordFallback(r Record, locator string) Record {

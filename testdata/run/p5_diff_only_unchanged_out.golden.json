@@ -16,33 +16,19 @@
     "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"],
     "diff": {
       "orphanMetaFiles": ["orphan.thoth.yaml"],
-      "pairedCount": 2,
+      "pairedCount": 0,
       "orphanCount": 1,
-      "changedCount": 2,
-      "details": [
-        {
-          "locator": "a.txt",
-          "metaFile": "a.txt.thoth.yaml",
-          "addedKeys": ["obj.z"],
-          "removedKeys": ["obj.x"],
-          "changedKeys": ["obj.y"],
-          "arrays": [{ "path": "arr", "addedIndices": [2] }]
-        },
-        {
-          "locator": "b.txt",
-          "metaFile": "b.txt.thoth.yaml",
-          "addedKeys": ["a", "arr", "obj"],
-          "removedKeys": ["only"],
-          "changedKeys": []
-        }
-      ],
-      "orphans": ["orphan.thoth.yaml"],
-      "presentCount": 2
+      "changedCount": 0,
+      "orphans": ["orphan.thoth.yaml"]
     },
     "diffMeta": {
-      "expectedPatch": { "a": 1, "arr": [1, 2, 3], "obj": { "y": 9, "z": 3 } },
+      "expectedPatch": {
+        "a": "1",
+        "arr": [1, 2, 3],
+        "obj": { "y": 9, "z": 3 }
+      },
       "format": "summary",
-      "only": "all",
+      "only": "unchanged",
       "failOnChange": false
     }
   }

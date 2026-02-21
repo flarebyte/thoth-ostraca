@@ -3,17 +3,8 @@
     {
       "locator": "a.txt",
       "meta": {
-        "kind": {
-          "k": 1
-        },
-        "rules": [
-          {
-            "tags": ["a", "b"]
-          },
-          {
-            "tags": ["x"]
-          }
-        ],
+        "kind": { "k": 1 },
+        "rules": [{ "tags": ["a", "b"] }, { "tags": ["x"] }],
         "value": 1
       }
     },
@@ -22,15 +13,9 @@
       "meta": {
         "kind": [],
         "rules": [
-          {
-            "tags": ["a", "c"]
-          },
-          {
-            "tags": ["x", "y"]
-          },
-          {
-            "tags": []
-          }
+          { "tags": ["a", "c"] },
+          { "tags": ["x", "y"] },
+          { "tags": [] }
         ],
         "value": "1"
       }
@@ -38,16 +23,9 @@
   ],
   "meta": {
     "contractVersion": "1",
-    "config": {
-      "configVersion": "1",
-      "action": "diff-meta"
-    },
-    "discovery": {
-      "root": "testdata/repos/p5_diff_arrays1"
-    },
-    "limits": {
-      "maxRecordsInMemory": 10000
-    },
+    "config": { "configVersion": "1", "action": "diff-meta" },
+    "discovery": { "root": "testdata/repos/p5_diff_arrays1" },
+    "limits": { "maxRecordsInMemory": 10000 },
     "inputs": ["a.txt", "b.txt"],
     "metaFiles": ["a.txt.thoth.yaml", "b.txt.thoth.yaml"],
     "diff": {
@@ -64,48 +42,28 @@
           "changedKeys": ["kind", "value"],
           "typeChangedKeys": ["kind", "value"],
           "arrays": [
-            {
-              "path": "rules",
-              "addedIndices": [2],
-              "changedIndices": [0, 1]
-            }
+            { "path": "rules", "addedIndices": [2], "changedIndices": [0, 1] }
           ],
           "changes": [
             {
               "path": "kind",
               "kind": "type-changed",
-              "oldValue": {
-                "k": 1
-              },
+              "oldValue": { "k": 1 },
               "newValue": []
             },
             {
               "path": "rules[0]",
               "kind": "array-index-changed",
-              "oldValue": {
-                "tags": ["a", "b"]
-              },
-              "newValue": {
-                "tags": ["a", "c"]
-              }
+              "oldValue": { "tags": ["a", "b"] },
+              "newValue": { "tags": ["a", "c"] }
             },
             {
               "path": "rules[1]",
               "kind": "array-index-changed",
-              "oldValue": {
-                "tags": ["x"]
-              },
-              "newValue": {
-                "tags": ["x", "y"]
-              }
+              "oldValue": { "tags": ["x"] },
+              "newValue": { "tags": ["x", "y"] }
             },
-            {
-              "path": "rules[2]",
-              "kind": "added",
-              "newValue": {
-                "tags": []
-              }
-            },
+            { "path": "rules[2]", "kind": "added", "newValue": { "tags": [] } },
             {
               "path": "value",
               "kind": "type-changed",
@@ -128,19 +86,14 @@
       "expectedPatch": {
         "kind": [],
         "rules": [
-          {
-            "tags": ["a", "c"]
-          },
-          {
-            "tags": ["x", "y"]
-          },
-          {
-            "tags": []
-          }
+          { "tags": ["a", "c"] },
+          { "tags": ["x", "y"] },
+          { "tags": [] }
         ],
         "value": "1"
       },
       "format": "detailed",
+      "only": "all",
       "failOnChange": false
     }
   }

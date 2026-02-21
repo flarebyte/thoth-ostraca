@@ -317,3 +317,96 @@ end`,
 		t.Fatalf("b.txt should be changed: %+v", out.Meta.Diff.Details[1])
 	}
 }
+
+func TestComputeMetaDiffRunner_FilterOnlyChanged(t *testing.T) {
+	in := Envelope{
+		Records: []Record{
+			{Locator: "a.txt", Meta: map[string]any{"x": 1}},
+			{Locator: "b.txt", Meta: map[string]any{"x": 2}},
+		},
+		Meta: &Meta{
+			Inputs:    []string{"a.txt", "b.txt"},
+			MetaFiles: []string{"a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"},
+			DiffMeta: &DiffMetaMeta{
+				Only:          "changed",
+				ExpectedPatch: map[string]any{"x": 1},
+			},
+		},
+	}
+	out, err := computeMetaDiffRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("compute-meta-diff: %v", err)
+	}
+	if out.Meta == nil || out.Meta.Diff == nil {
+		t.Fatalf("missing diff")
+	}
+	if out.Meta.Diff.PairedCount != 1 || out.Meta.Diff.ChangedCount != 1 {
+		t.Fatalf("unexpected counts: %+v", out.Meta.Diff)
+	}
+	if len(out.Meta.Diff.Details) != 1 || out.Meta.Diff.Details[0].Locator != "b.txt" {
+		t.Fatalf("unexpected details: %+v", out.Meta.Diff.Details)
+	}
+}
+
+func TestComputeMetaDiffRunner_FilterOnlyUnchanged(t *testing.T) {
+	in := Envelope{
+		Records: []Record{
+			{Locator: "a.txt", Meta: map[string]any{"x": 1}},
+			{Locator: "b.txt", Meta: map[string]any{"x": 2}},
+		},
+		Meta: &Meta{
+			Inputs:    []string{"a.txt", "b.txt"},
+			MetaFiles: []string{"a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"},
+			DiffMeta: &DiffMetaMeta{
+				Only:          "unchanged",
+				ExpectedPatch: map[string]any{"x": 1},
+			},
+		},
+	}
+	out, err := computeMetaDiffRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("compute-meta-diff: %v", err)
+	}
+	if out.Meta == nil || out.Meta.Diff == nil {
+		t.Fatalf("missing diff")
+	}
+	if out.Meta.Diff.PairedCount != 1 || out.Meta.Diff.ChangedCount != 0 {
+		t.Fatalf("unexpected counts: %+v", out.Meta.Diff)
+	}
+	if len(out.Meta.Diff.Details) != 1 || out.Meta.Diff.Details[0].Locator != "a.txt" {
+		t.Fatalf("unexpected details: %+v", out.Meta.Diff.Details)
+	}
+}
+
+func TestComputeMetaDiffRunner_FilterOnlyOrphans(t *testing.T) {
+	in := Envelope{
+		Records: []Record{
+			{Locator: "a.txt", Meta: map[string]any{"x": 1}},
+			{Locator: "b.txt", Meta: map[string]any{"x": 2}},
+		},
+		Meta: &Meta{
+			Inputs:    []string{"a.txt", "b.txt"},
+			MetaFiles: []string{"a.txt.thoth.yaml", "b.txt.thoth.yaml", "orphan.thoth.yaml"},
+			DiffMeta: &DiffMetaMeta{
+				Only:          "orphans",
+				ExpectedPatch: map[string]any{"x": 1},
+			},
+		},
+	}
+	out, err := computeMetaDiffRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("compute-meta-diff: %v", err)
+	}
+	if out.Meta == nil || out.Meta.Diff == nil {
+		t.Fatalf("missing diff")
+	}
+	if out.Meta.Diff.PairedCount != 0 || out.Meta.Diff.ChangedCount != 0 {
+		t.Fatalf("unexpected counts: %+v", out.Meta.Diff)
+	}
+	if len(out.Meta.Diff.Details) != 0 {
+		t.Fatalf("expected no details: %+v", out.Meta.Diff.Details)
+	}
+	if !reflect.DeepEqual(out.Meta.Diff.OrphanMetaFiles, []string{"orphan.thoth.yaml"}) {
+		t.Fatalf("unexpected orphans: %+v", out.Meta.Diff.OrphanMetaFiles)
+	}
+}

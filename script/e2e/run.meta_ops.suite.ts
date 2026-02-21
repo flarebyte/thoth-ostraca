@@ -447,6 +447,56 @@ test('diff-meta: failOnChange deterministic workers=1 vs workers=8', () => {
   );
 });
 
+test('diff-meta: only=changed filters details deterministically', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_only_changed.cue');
+  const run1 = runThoth(bin, ['run', '--config', cfg], root);
+  const run2 = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-only-changed-1', run1);
+  saveOutputs(root, 'run-diff-meta-only-changed-2', run2);
+  expect(run1.status).toBe(0);
+  expect(run2.status).toBe(0);
+  expect(run1.stderr).toBe('');
+  expect(run2.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_only_changed_out.golden.json',
+  );
+  expect(run1.stdout).toBe(expectedOut);
+  expect(run1.stdout).toBe(run2.stdout);
+});
+
+test('diff-meta: only=unchanged filters details', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_only_unchanged.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-only-unchanged', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_only_unchanged_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('diff-meta: only=orphans omits paired details and keeps sorted orphans', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_only_orphans.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-only-orphans', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_only_orphans_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('diff-meta: expectedLua derives per-locator expected meta (golden)', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

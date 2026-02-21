@@ -19,6 +19,9 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Default(t *testing.T) {
 	if out.Meta.DiffMeta.Format != "summary" {
 		t.Fatalf("expected default format=summary, got: %q", out.Meta.DiffMeta.Format)
 	}
+	if out.Meta.DiffMeta.Only != "all" {
+		t.Fatalf("expected default only=all, got: %q", out.Meta.DiffMeta.Only)
+	}
 	if out.Meta.DiffMeta.FailOnChange {
 		t.Fatalf("expected default failOnChange=false")
 	}
@@ -28,7 +31,7 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Default(t *testing.T) {
 }
 
 func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
-	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"detailed\", failOnChange: true, expectedLua: { inline: \"return function(locator, existingMeta) return {} end\" }, expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { format: \"detailed\", only: \"changed\", failOnChange: true, expectedLua: { inline: \"return function(locator, existingMeta) return {} end\" }, expectedPatch: { b: 2, obj: { y: 9 } } }\n}\n"
 	out, err := runValidateConfigWithContent(t, "diff_meta_expected_patch_validate_test.cue", content)
 	if err != nil {
 		t.Fatalf("validate-config: %v", err)
@@ -38,6 +41,9 @@ func TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured(t *testing.T) {
 	}
 	if out.Meta.DiffMeta.Format != "detailed" {
 		t.Fatalf("expected format=detailed, got: %q", out.Meta.DiffMeta.Format)
+	}
+	if out.Meta.DiffMeta.Only != "changed" {
+		t.Fatalf("expected only=changed, got: %q", out.Meta.DiffMeta.Only)
 	}
 	if !out.Meta.DiffMeta.FailOnChange {
 		t.Fatalf("expected failOnChange=true")
@@ -63,6 +69,14 @@ func TestValidateConfig_DiffMetaFormatMustBeKnown(t *testing.T) {
 	_, err := runValidateConfigWithContent(t, "diff_meta_format_invalid_validate_test.cue", content)
 	if err == nil || !strings.Contains(err.Error(), "invalid diffMeta.format") {
 		t.Fatalf("expected invalid diffMeta.format error, got: %v", err)
+	}
+}
+
+func TestValidateConfig_DiffMetaOnlyMustBeKnown(t *testing.T) {
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"diff-meta\"\n  diffMeta: { only: \"drift\" }\n}\n"
+	_, err := runValidateConfigWithContent(t, "diff_meta_only_invalid_validate_test.cue", content)
+	if err == nil || !strings.Contains(err.Error(), "invalid diffMeta.only") {
+		t.Fatalf("expected invalid diffMeta.only error, got: %v", err)
 	}
 }
 

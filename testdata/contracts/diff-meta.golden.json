@@ -55,6 +55,7 @@
     "diffMeta": {
       "expectedPatch": {},
       "format": "summary",
+      "only": "all",
       "failOnChange": false
     }
   }
