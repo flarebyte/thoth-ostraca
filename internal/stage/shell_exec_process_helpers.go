@@ -12,6 +12,7 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 	}
 	runRes, err := runCommand(ctx, opts, rec.Mapped)
 	if err != nil {
+		msg := sanitizeErrorMessage(err.Error())
 		if mode == "keep-going" {
 			rec.Shell = &ShellResult{
 				ExitCode:        -1,
@@ -20,12 +21,12 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 				StdoutTruncated: false,
 				StderrTruncated: false,
 				TimedOut:        false,
-				Error:           strPtr(err.Error()),
+				Error:           strPtr(msg),
 			}
-			rec.Error = &RecError{Stage: shellExecStage, Message: err.Error()}
-			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: err.Error()}, nil
+			rec.Error = &RecError{Stage: shellExecStage, Message: msg}
+			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: msg}, nil
 		}
-		return Record{}, nil, fmt.Errorf("shell-exec: %v", err)
+		return Record{}, nil, fmt.Errorf("shell-exec: %s", msg)
 	}
 	rec.Shell = &ShellResult{
 		ExitCode:        runRes.exitCode,
@@ -36,7 +37,9 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 		TimedOut:        runRes.timedOut,
 	}
 	if runRes.errorMsg != "" {
-		rec.Shell.Error = strPtr(runRes.errorMsg)
+		msg := sanitizeErrorMessage(runRes.errorMsg)
+		rec.Shell.Error = strPtr(msg)
+		runRes.errorMsg = msg
 	}
 	if runRes.timedOut {
 		if mode == "keep-going" {

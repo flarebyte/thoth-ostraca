@@ -63,20 +63,22 @@ func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 	root := determineRoot(in)
 	repoRoot, err := repoRootFor(root)
 	if err != nil {
-		msg := enrichGitError(err)
+		msg := sanitizeErrorMessage(enrichGitError(err))
 		if mode == "keep-going" {
 			out := in
 			out.Errors = append(out.Errors, Error{Stage: enrichGitStage, Message: msg})
+			SortEnvelopeErrors(&out)
 			return out, nil
 		}
 		return Envelope{}, fmt.Errorf("%s: %s", enrichGitStage, msg)
 	}
 	ctx, err := newGitContext(root, repoRoot)
 	if err != nil {
-		msg := enrichGitError(err)
+		msg := sanitizeErrorMessage(enrichGitError(err))
 		if mode == "keep-going" {
 			out := in
 			out.Errors = append(out.Errors, Error{Stage: enrichGitStage, Message: msg})
+			SortEnvelopeErrors(&out)
 			return out, nil
 		}
 		return Envelope{}, fmt.Errorf("%s: %s", enrichGitStage, msg)
@@ -91,7 +93,7 @@ func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 		rr := r
 		recGit, err := ctx.recGitFor(r.Locator)
 		if err != nil {
-			msg := enrichGitError(err)
+			msg := sanitizeErrorMessage(enrichGitError(err))
 			envErrs = append(envErrs, Error{Stage: enrichGitStage, Locator: r.Locator, Message: msg})
 			if mode == "keep-going" {
 				if embed {
@@ -107,6 +109,7 @@ func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 	}
 	if len(envErrs) > 0 {
 		out.Errors = append(out.Errors, envErrs...)
+		SortEnvelopeErrors(&out)
 	}
 	return out, nil
 }

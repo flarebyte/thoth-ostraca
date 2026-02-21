@@ -89,12 +89,12 @@ func addDiscoveryError(envErrs *[]Error, absRoot string, p string, err error) {
 	*envErrs = append(*envErrs, Error{
 		Stage:   "discover-meta-files",
 		Locator: displayDiscoveryPath(absRoot, p),
-		Message: err.Error(),
+		Message: sanitizeErrorMessage(err.Error()),
 	})
 }
 
 func discoveryFatal(absRoot string, p string, err error) error {
-	return fmt.Errorf("discover-meta-files: %s: %v", displayDiscoveryPath(absRoot, p), err)
+	return fmt.Errorf("discover-meta-files: %s: %s", displayDiscoveryPath(absRoot, p), sanitizeErrorMessage(err.Error()))
 }
 
 func shouldIgnore(absRoot, rel string, isDir bool, noGitignore bool) bool {

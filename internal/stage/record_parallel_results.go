@@ -12,7 +12,7 @@ func mergeRecordParallelResults(out Envelope, results []recordParallelRes) (Enve
 	var firstErr error
 	for _, rr := range results {
 		if rr.envE != nil {
-			envErrs = append(envErrs, *rr.envE)
+			envErrs = append(envErrs, sanitizedError(*rr.envE))
 		}
 		if rr.fatal != nil && firstErr == nil {
 			firstErr = rr.fatal
@@ -24,6 +24,7 @@ func mergeRecordParallelResults(out Envelope, results []recordParallelRes) (Enve
 	}
 	if len(envErrs) > 0 {
 		out.Errors = append(out.Errors, envErrs...)
+		SortEnvelopeErrors(&out)
 	}
 	return out, nil
 }

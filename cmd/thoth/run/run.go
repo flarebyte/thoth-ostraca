@@ -21,8 +21,11 @@ var Cmd = &cobra.Command{
 		if cfgPath == "" {
 			return fmt.Errorf("missing required flag: --config")
 		}
-		_, err := executePipeline(context.Background(), cfgPath)
-		return err
+		out, err := executePipeline(context.Background(), cfgPath)
+		if err != nil {
+			return err
+		}
+		return evaluateRunExit(out)
 	},
 }
 

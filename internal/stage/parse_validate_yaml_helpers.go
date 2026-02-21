@@ -49,30 +49,30 @@ func processYAMLRecord(rec Record, root string, mode string, allowUnknownTop boo
 	info, statErr := os.Stat(p)
 	if statErr != nil {
 		if mode == "keep-going" {
-			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: fmt.Sprintf("read error: %v", statErr)}, nil
+			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: sanitizeErrorMessage(fmt.Sprintf("read error: %v", statErr))}, nil
 		}
-		return yamlKV{}, nil, fmt.Errorf("read error %s: %w", p, statErr)
+		return yamlKV{}, nil, fmt.Errorf("read error %s: %s", p, sanitizeErrorMessage(statErr.Error()))
 	}
 	if info.Size() > int64(maxBytes) {
 		msg := fmt.Sprintf("file exceeds maxYAMLBytes limit: %d", maxBytes)
 		if mode == "keep-going" {
-			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: msg}, nil
+			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: sanitizeErrorMessage(msg)}, nil
 		}
 		return yamlKV{}, nil, fmt.Errorf("yaml too large %s: exceeds maxYAMLBytes %d", p, maxBytes)
 	}
 	b, err := os.ReadFile(p)
 	if err != nil {
 		if mode == "keep-going" {
-			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: fmt.Sprintf("read error: %v", err)}, nil
+			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: sanitizeErrorMessage(fmt.Sprintf("read error: %v", err))}, nil
 		}
-		return yamlKV{}, nil, fmt.Errorf("read error %s: %w", p, err)
+		return yamlKV{}, nil, fmt.Errorf("read error %s: %s", p, sanitizeErrorMessage(err.Error()))
 	}
 	var y any
 	if err := yaml.Unmarshal(b, &y); err != nil {
 		if mode == "keep-going" {
-			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: fmt.Sprintf("invalid YAML: %v", err)}, nil
+			return yamlKV{locator: locator, meta: nil}, &Error{Stage: parseValidateYAMLStage, Locator: locator, Message: sanitizeErrorMessage(fmt.Sprintf("invalid YAML: %v", err))}, nil
 		}
-		return yamlKV{}, nil, fmt.Errorf("invalid YAML %s: %v", p, err)
+		return yamlKV{}, nil, fmt.Errorf("invalid YAML %s: %s", p, sanitizeErrorMessage(err.Error()))
 	}
 	ym, ok := y.(map[string]any)
 	if !ok {

@@ -27,6 +27,7 @@ func discoverRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	out := in
 	if len(envErrs) > 0 {
 		out.Errors = append(out.Errors, envErrs...)
+		SortEnvelopeErrors(&out)
 	}
 	out.Records = make([]Record, 0, len(locators))
 	for _, l := range locators {

@@ -17,13 +17,15 @@ func runSequentialRecordStage(
 		}
 		rec, envE, err := fn(r)
 		if envE != nil {
-			envErrs = append(envErrs, *envE)
+			se := sanitizedError(*envE)
+			envErrs = append(envErrs, se)
+			envE = &se
 		}
 		if err != nil {
 			if mode == "keep-going" {
 				if embed {
 					rec = r
-					msg := err.Error()
+					msg := sanitizeErrorMessage(err.Error())
 					if envE != nil {
 						msg = envE.Message
 					}
@@ -32,12 +34,13 @@ func runSequentialRecordStage(
 				out.Records[i] = rec
 				continue
 			}
-			return Envelope{}, fmt.Errorf("%w", err)
+			return Envelope{}, fmt.Errorf("%s: %s", stage, sanitizeErrorMessage(err.Error()))
 		}
 		out.Records[i] = rec
 	}
 	if len(envErrs) > 0 {
 		out.Errors = append(out.Errors, envErrs...)
+		SortEnvelopeErrors(&out)
 	}
 	return out, nil
 }

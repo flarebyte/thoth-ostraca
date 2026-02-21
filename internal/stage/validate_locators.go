@@ -173,7 +173,10 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 		return Envelope{}, firstErr
 	}
 	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
+		for _, e := range envErrs {
+			out.Errors = append(out.Errors, sanitizedError(e))
+		}
+		SortEnvelopeErrors(&out)
 	}
 	sort.Slice(out.Records, func(i, j int) bool {
 		return out.Records[i].Locator < out.Records[j].Locator

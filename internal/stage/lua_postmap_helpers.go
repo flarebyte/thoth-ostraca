@@ -65,18 +65,20 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 		"shell":   shellMap,
 	}, code)
 	if err != nil {
+		msg := sanitizeErrorMessage(err.Error())
 		if mode == "keep-going" {
-			rec.Error = &RecError{Stage: luaPostMapStage, Message: err.Error()}
-			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: err.Error()}, nil
+			rec.Error = &RecError{Stage: luaPostMapStage, Message: msg}
+			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: msg}, nil
 		}
-		return Record{}, nil, fmt.Errorf("lua-postmap: %v", err)
+		return Record{}, nil, fmt.Errorf("lua-postmap: %s", msg)
 	}
 	if violation != "" {
+		msg := sanitizeErrorMessage(violation)
 		if mode == "keep-going" {
-			rec.Error = &RecError{Stage: luaPostMapStage, Message: violation}
-			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: violation}, nil
+			rec.Error = &RecError{Stage: luaPostMapStage, Message: msg}
+			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: msg}, nil
 		}
-		return Record{}, nil, luaViolationFailFast(luaPostMapStage, violation)
+		return Record{}, nil, luaViolationFailFast(luaPostMapStage, msg)
 	}
 	rec.Post = ret
 	return rec, nil, nil
@@ -96,12 +98,15 @@ func runPostMapParallel(in Envelope, mode string, fn func(Record) (Record, *Erro
 	var firstErr error
 	for _, rr := range results {
 		if rr.envE != nil {
-			out.Errors = append(out.Errors, *rr.envE)
+			out.Errors = append(out.Errors, sanitizedError(*rr.envE))
 		}
 		if rr.fatal != nil && firstErr == nil {
 			firstErr = rr.fatal
 		}
 		out.Records[rr.idx] = rr.rec
+	}
+	if len(out.Errors) > 0 {
+		SortEnvelopeErrors(&out)
 	}
 	if firstErr != nil {
 		return Envelope{}, firstErr

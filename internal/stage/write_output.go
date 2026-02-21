@@ -24,15 +24,6 @@ func getOutputSettings(meta *Meta) (outPath string, pretty bool, lines bool) {
 	return
 }
 
-func hasSuccess(records []Record) bool {
-	for _, r := range records {
-		if r.Error == nil {
-			return true
-		}
-	}
-	return false
-}
-
 func stripErrorsIfNeeded(env *Envelope) {
 	if env.Meta != nil && env.Meta.Errors != nil && !env.Meta.Errors.EmbedErrors {
 		for i := range env.Records {
@@ -139,12 +130,9 @@ func writeOutputRunner(_ctx context.Context, in Envelope, deps Deps) (Envelope, 
 
 	if lines {
 		if deps.RecordStream != nil {
-			successSeen, err := writeLinesFromStream(outPath, env.Meta, deps.RecordStream)
+			_, err := writeLinesFromStream(outPath, env.Meta, deps.RecordStream)
 			if err != nil {
 				return Envelope{}, err
-			}
-			if env.Meta != nil && env.Meta.Errors != nil && env.Meta.Errors.Mode == "keep-going" && !successSeen {
-				return Envelope{}, fmt.Errorf("keep-going: no successful records")
 			}
 			return in, nil
 		}
@@ -159,12 +147,6 @@ func writeOutputRunner(_ctx context.Context, in Envelope, deps Deps) (Envelope, 
 		}
 		if err := writeTo(outPath, all.Bytes()); err != nil {
 			return Envelope{}, err
-		}
-		// keep-going error semantics for lines
-		if env.Meta != nil && env.Meta.Errors != nil && env.Meta.Errors.Mode == "keep-going" {
-			if !hasSuccess(in.Records) {
-				return Envelope{}, fmt.Errorf("keep-going: no successful records")
-			}
 		}
 		return in, nil
 	}
@@ -182,11 +164,6 @@ func writeOutputRunner(_ctx context.Context, in Envelope, deps Deps) (Envelope, 
 	}
 	if err := writeTo(outPath, data); err != nil {
 		return Envelope{}, err
-	}
-	if env.Meta != nil && env.Meta.Errors != nil && env.Meta.Errors.Mode == "keep-going" {
-		if !hasSuccess(in.Records) && len(env.Errors) > 0 {
-			return Envelope{}, fmt.Errorf("keep-going: no successful records")
-		}
 	}
 	return in, nil
 }

@@ -65,7 +65,11 @@ func writeUpdatedMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (E
 			if mode == "keep-going" {
 				if embed {
 					rr = r
-					rr.Error = &RecError{Stage: writeUpdatedMetaFilesStage, Message: envE.Message}
+					msg := "write updated meta failed"
+					if envE != nil {
+						msg = sanitizeErrorMessage(envE.Message)
+					}
+					rr.Error = &RecError{Stage: writeUpdatedMetaFilesStage, Message: msg}
 				}
 				out.Records[i] = rr
 				continue
@@ -75,7 +79,10 @@ func writeUpdatedMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (E
 		out.Records[i] = rr
 	}
 	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
+		for _, e := range envErrs {
+			out.Errors = append(out.Errors, sanitizedError(e))
+		}
+		SortEnvelopeErrors(&out)
 	}
 	return out, nil
 }
