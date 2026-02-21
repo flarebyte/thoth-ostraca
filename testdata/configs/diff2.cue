@@ -1,5 +1,5 @@
 {
-  configVersion: "v0"
+  configVersion: "1"
   action: "diff-meta"
   discovery: { root: "testdata/repos/diff2" }
   diffMeta: {

@@ -21,11 +21,14 @@ var Cmd = &cobra.Command{
 		if cfgPath == "" {
 			return fmt.Errorf("missing required flag: --config")
 		}
-		_, err := executePipeline(context.Background(), cfgPath)
-		return err
+		out, err := executePipeline(context.Background(), cfgPath)
+		if err != nil {
+			return err
+		}
+		return evaluateRunExit(out)
 	},
 }
 
 func init() {
-	Cmd.Flags().StringVarP(&cfgPath, "config", "c", "", "Path to config file (.cue)")
+	Cmd.Flags().StringVarP(&cfgPath, "config", "c", "", "Config file path (.cue, required)")
 }

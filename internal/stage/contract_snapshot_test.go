@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/flarebyte/thoth-ostraca/internal/config"
 	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
@@ -63,23 +64,10 @@ func encodeEnvelopeContract(env Envelope) ([]byte, error) {
 	return encodeJSONCompact(env)
 }
 
-func canonicalJSON(t *testing.T, b []byte) []byte {
-	t.Helper()
-	var v any
-	if err := json.Unmarshal(b, &v); err != nil {
-		t.Fatalf("unmarshal: %v", err)
-	}
-	out, err := json.Marshal(v)
-	if err != nil {
-		t.Fatalf("marshal: %v", err)
-	}
-	return out
-}
-
 func assertJSONEqual(t *testing.T, actual, expected []byte) {
 	t.Helper()
-	a := canonicalJSON(t, actual)
-	e := canonicalJSON(t, expected)
+	a := normalizeJSON(t, actual)
+	e := normalizeJSON(t, expected)
 	if string(a) != string(e) {
 		t.Fatalf("mismatch\nactual: %s\nexpected: %s", string(actual), string(expected))
 	}
@@ -157,7 +145,7 @@ func TestContract_CreateMeta(t *testing.T) {
 	}
 	cfg := rootTempPath("create1_contract.cue")
 	_ = os.MkdirAll(rootTempPath(), 0o755)
-	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"create-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \""+config.CurrentConfigVersion+"\"\n  action: \"create-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
 	_, b := runActionWithConfig(t, cfg)
@@ -178,7 +166,7 @@ func TestContract_UpdateMeta(t *testing.T) {
 	}
 	cfg := rootTempPath("update1_contract.cue")
 	_ = os.MkdirAll(rootTempPath(), 0o755)
-	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \"v0\"\n  action: \"update-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
+	if err := os.WriteFile(cfg, []byte("{\n  configVersion: \""+config.CurrentConfigVersion+"\"\n  action: \"update-meta\"\n  discovery: { root: \""+repoRel+"\" }\n}\n"), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}
 	_, b := runActionWithConfig(t, cfg)

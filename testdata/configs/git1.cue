@@ -1,5 +1,5 @@
 {
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "" } // set in test
   git: { enabled: true }

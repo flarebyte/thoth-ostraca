@@ -13,17 +13,22 @@ import (
 )
 
 var (
-	flagStage   string
-	flagIn      string
-	flagDumpIn  string
-	flagDumpOut string
-	flagPrepare string
-	flagConfig  string
-	flagRoot    string
-	flagNoGit   bool
-	flagOut     string
-	flagPretty  bool
-	flagLines   bool
+	flagStage           string
+	flagStageIndex      int
+	flagUntilStage      string
+	flagUntilIndex      int
+	flagIn              string
+	flagDumpIn          string
+	flagDumpOut         string
+	flagDumpDir         string
+	flagPrepare         string
+	flagPreparePipeline string
+	flagConfig          string
+	flagRoot            string
+	flagNoGit           bool
+	flagOut             string
+	flagPretty          bool
+	flagLines           bool
 )
 
 // Cmd implements `thoth diagnose`.
@@ -33,14 +38,20 @@ var Cmd = &cobra.Command{
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		if flagStage == "" {
-			return errors.New("missing required flag: --stage")
-		}
 		if flagIn != "" {
 			return runDiagnoseWithIn()
 		}
+		if flagPreparePipeline != "" {
+			return runDiagnoseWithPreparedPipeline(cmd)
+		}
 		if flagPrepare != "" {
+			if flagStage == "" {
+				return errors.New("missing required flag: --stage")
+			}
 			return runDiagnoseWithPrepare()
+		}
+		if flagStage == "" {
+			return errors.New("missing required flag: --stage")
 		}
 		return runDiagnoseDefault(cmd)
 	},
@@ -72,10 +83,15 @@ func relativizeRoot(root string) string {
 
 func init() {
 	Cmd.Flags().StringVar(&flagStage, "stage", "", "Stage name (required)")
+	Cmd.Flags().IntVar(&flagStageIndex, "stage-index", -1, "Stage index in prepared pipeline (0-based)")
+	Cmd.Flags().StringVar(&flagUntilStage, "until-stage", "", "Run prepared pipeline through this stage name (inclusive)")
+	Cmd.Flags().IntVar(&flagUntilIndex, "until-index", -1, "Run prepared pipeline through this stage index (inclusive, 0-based)")
 	Cmd.Flags().StringVar(&flagIn, "in", "", "Path to input envelope JSON")
-	Cmd.Flags().StringVar(&flagDumpIn, "dump-in", "", "Path to write resolved input envelope JSON")
-	Cmd.Flags().StringVar(&flagDumpOut, "dump-out", "", "Path to write output envelope JSON")
-	Cmd.Flags().StringVar(&flagPrepare, "prepare", "", "Prepare input via discovery: meta-files|input-files")
+	Cmd.Flags().StringVar(&flagDumpIn, "dump-in", "", "Write resolved input envelope JSON")
+	Cmd.Flags().StringVar(&flagDumpOut, "dump-out", "", "Write output envelope JSON")
+	Cmd.Flags().StringVar(&flagDumpDir, "dump-dir", "", "Write per-stage fixtures to directory")
+	Cmd.Flags().StringVar(&flagPrepare, "prepare", "", "Prepare discovery input: meta-files|input-files")
+	Cmd.Flags().StringVar(&flagPreparePipeline, "prepare-pipeline", "", "Prepare run pipeline for action")
 	Cmd.Flags().StringVar(&flagConfig, "config", "", "Config path used when --in omitted")
 	Cmd.Flags().StringVar(&flagRoot, "root", ".", "Discovery root (prepare mode)")
 	Cmd.Flags().BoolVar(&flagNoGit, "no-gitignore", false, "Disable .gitignore (prepare mode)")

@@ -9,7 +9,7 @@
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "v0", "action": "diff-meta" },
+    "config": { "configVersion": "1", "action": "diff-meta" },
     "discovery": { "root": "testdata/repos/diff2" },
     "limits": { "maxRecordsInMemory": 10000 },
     "inputs": ["a.txt", "b.txt"],

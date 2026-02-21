@@ -11,6 +11,7 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 	allowUnknownTop := allowUnknownTopLevel(in)
 	maxBytes := maxYAMLBytes(in)
 	mode, _ := errorMode(in.Meta)
+	_, embed := errorMode(in.Meta)
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
@@ -79,11 +80,12 @@ func parseValidateYAMLRunner(ctx context.Context, in Envelope, deps Deps) (Envel
 			continue
 		}
 		if rr.envE != nil {
-			envErrs = append(envErrs, *rr.envE)
+			se := sanitizedError(*rr.envE)
+			envErrs = append(envErrs, se)
 			if mode == "keep-going" {
-				fr := Record{
-					Locator: rr.path,
-					Error:   &RecError{Stage: parseValidateYAMLStage, Message: rr.envE.Message},
+				fr := Record{Locator: rr.path}
+				if embed {
+					fr.Error = &RecError{Stage: parseValidateYAMLStage, Message: se.Message}
 				}
 				failedRecords = append(failedRecords, fr)
 			}

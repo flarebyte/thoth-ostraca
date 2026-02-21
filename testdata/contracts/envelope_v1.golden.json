@@ -18,6 +18,6 @@
   "meta": {
     "contractVersion": "1",
     "stage": "echo",
-    "config": { "configVersion": "v0", "action": "nop" }
+    "config": { "configVersion": "1", "action": "nop" }
   }
 }

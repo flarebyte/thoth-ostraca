@@ -12,7 +12,7 @@
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "v0", "action": "validate" },
+    "config": { "configVersion": "1", "action": "validate" },
     "discovery": { "root": "testdata/repos/keep1" },
     "limits": { "maxRecordsInMemory": 10000 },
     "errors": { "mode": "keep-going", "embedErrors": true }

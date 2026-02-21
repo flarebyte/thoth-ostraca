@@ -126,11 +126,8 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 			if !p.allowURLs {
 				msg := "URL locators are not allowed"
 				if mode == "keep-going" {
-					rr := r
-					if embed {
-						rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
-					}
-					return validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
+					rr, envErr := recordFailure(r, validateLocatorsStage, msg, embed)
+					return validateLocRes{idx: idx, rec: rr, envE: envErr}
 				}
 				return validateLocRes{idx: idx, fatal: &ErrInvalidLocator{msg: msg, locator: r.Locator}}
 			}
@@ -138,11 +135,8 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 			if err != nil {
 				msg := "invalid URL locator"
 				if mode == "keep-going" {
-					rr := r
-					if embed {
-						rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
-					}
-					return validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
+					rr, envErr := recordFailure(r, validateLocatorsStage, msg, embed)
+					return validateLocRes{idx: idx, rec: rr, envE: envErr}
 				}
 				return validateLocRes{idx: idx, fatal: err}
 			}
@@ -152,11 +146,8 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 		}
 		if bad, msg := violatesPathPolicy(r.Locator, p); bad {
 			if mode == "keep-going" {
-				rr := r
-				if embed {
-					rr.Error = &RecError{Stage: validateLocatorsStage, Message: msg}
-				}
-				return validateLocRes{idx: idx, rec: rr, envE: &Error{Stage: validateLocatorsStage, Locator: r.Locator, Message: msg}}
+				rr, envErr := recordFailure(r, validateLocatorsStage, msg, embed)
+				return validateLocRes{idx: idx, rec: rr, envE: envErr}
 			}
 			return validateLocRes{idx: idx, fatal: &ErrInvalidLocator{msg: msg, locator: r.Locator}}
 		}
@@ -172,9 +163,7 @@ func validateLocatorsRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 	if firstErr != nil {
 		return Envelope{}, firstErr
 	}
-	if len(envErrs) > 0 {
-		out.Errors = append(out.Errors, envErrs...)
-	}
+	appendSanitizedErrors(&out, envErrs)
 	sort.Slice(out.Records, func(i, j int) bool {
 		return out.Records[i].Locator < out.Records[j].Locator
 	})

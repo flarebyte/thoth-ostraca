@@ -20,7 +20,7 @@
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "v0", "action": "update-meta" },
+    "config": { "configVersion": "1", "action": "update-meta" },
     "discovery": { "root": "temp/update1_repo_contract" },
     "limits": { "maxRecordsInMemory": 10000 }
   }

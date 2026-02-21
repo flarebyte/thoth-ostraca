@@ -6,12 +6,16 @@
       "mapped": { "locator": "a", "name": "OK" },
       "post": { "locator": "a" }
     },
-    { "locator": "badyaml.thoth.yaml" },
+    {
+      "locator": "badyaml.thoth.yaml",
+      "mapped": { "locator": "badyaml.thoth.yaml" },
+      "post": { "locator": "badyaml.thoth.yaml" }
+    },
     { "locator": "luaerr", "meta": { "enabled": true, "name": "LuaErr" } }
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "v0", "action": "nop" },
+    "config": { "configVersion": "1", "action": "nop" },
     "discovery": { "root": "testdata/repos/keep1" },
     "limits": { "maxRecordsInMemory": 10000 },
     "lua": {
@@ -25,7 +29,7 @@
     {
       "stage": "lua-map",
       "locator": "luaerr",
-      "message": "<string>:1: boom\nstack traceback:\n\t[G]: in function 'error'\n\t<string>:1: in main chunk\n\t[G]: ?"
+      "message": "<string>:1: boom stack traceback: [G]: in function 'error' <string>:1: in main chunk [G]: ?"
     },
     {
       "stage": "parse-validate-yaml",

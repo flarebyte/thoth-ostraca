@@ -1,5 +1,5 @@
 {
-  configVersion: "v0"
+  configVersion: "1"
   action: "nop"
   discovery: {
     root: "testdata/repos/locator1"

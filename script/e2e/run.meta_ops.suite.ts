@@ -19,7 +19,7 @@ test('create-meta: creates .thoth.yaml files and prints expected envelope', () =
   fs.cpSync(srcRepo, tempRepo, { recursive: true });
   const cfgPath = path.join(root, 'temp', 'create1_tmp.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "create-meta"
   discovery: { root: "${path.join('temp', 'create1_repo').replaceAll('\\', '\\\\')}" }
 }`;
@@ -57,7 +57,7 @@ test('create-meta: second run fails-fast when meta exists', () => {
   fs.cpSync(srcRepo, tempRepo, { recursive: true });
   const cfgPath = path.join(root, 'temp', 'create1_tmp_second.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "create-meta"
   discovery: { root: "${path.join('temp', 'create1_repo_second').replaceAll('\\', '\\\\')}" }
 }`;
@@ -82,7 +82,7 @@ test('update-meta: preserves existing meta and creates missing', () => {
   fs.cpSync(srcRepo, tempRepo, { recursive: true });
   const cfgPath = path.join(root, 'temp', 'update1_tmp.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "${path.join('temp', 'update1_repo').replaceAll('\\', '\\\\')}" }
 }`;
@@ -119,7 +119,7 @@ test('update-meta: invalid existing meta embeds errors in keep-going and still c
   );
   const cfgPath = path.join(root, 'temp', 'update1_tmp_keep.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "${path.join('temp', 'update1_repo_keep').replaceAll('\\', '\\\\')}" }
   errors: { mode: "keep-going", embedErrors: true }
@@ -156,7 +156,7 @@ test('update-meta: invalid existing meta fails fast', () => {
   );
   const cfgPath = path.join(root, 'temp', 'update1_tmp_fail.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "${path.join('temp', 'update1_repo_fail').replaceAll('\\', '\\\\')}" }
 }`;
@@ -222,7 +222,7 @@ meta:
   );
   const cfgPath = path.join(root, 'temp', 'update_rewrite_tmp.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "${path.join('temp', 'update_rewrite_repo').replaceAll('\\', '\\\\')}" }
 }`;
@@ -276,7 +276,7 @@ meta:
   );
   const cfgPath = path.join(root, 'temp', 'update_patch_tmp.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "${path.join('temp', 'update_patch_repo').replaceAll('\\', '\\\\')}" }
   updateMeta: {
@@ -334,7 +334,7 @@ test('update-meta: keep-going with invalid existing meta still updates valid fil
   );
   const cfgPath = path.join(root, 'temp', 'update_patch_keep_tmp.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "update-meta"
   discovery: { root: "${path.join('temp', 'update_patch_keep_repo').replaceAll('\\', '\\\\')}" }
   errors: { mode: "keep-going", embedErrors: true }

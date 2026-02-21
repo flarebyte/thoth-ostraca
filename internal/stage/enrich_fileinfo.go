@@ -37,7 +37,7 @@ func enrichFileInfoRunner(_ context.Context, in Envelope, _ Deps) (Envelope, err
 		abs := filepath.Join(root, filepath.FromSlash(r.Locator))
 		fi, err := os.Stat(abs)
 		if err != nil {
-			msg := err.Error()
+			msg := sanitizeErrorMessage(err.Error())
 			envErrs = append(envErrs, Error{Stage: enrichFileInfoStage, Locator: r.Locator, Message: msg})
 			if mode == "keep-going" {
 				if embed {
@@ -55,6 +55,7 @@ func enrichFileInfoRunner(_ context.Context, in Envelope, _ Deps) (Envelope, err
 	}
 	if len(envErrs) > 0 {
 		out.Errors = append(out.Errors, envErrs...)
+		SortEnvelopeErrors(&out)
 	}
 	return out, nil
 }

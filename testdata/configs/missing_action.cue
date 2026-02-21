@@ -1,4 +1,4 @@
 {
-  configVersion: "v0"
+  configVersion: "1"
 }
 

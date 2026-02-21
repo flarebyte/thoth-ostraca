@@ -5,12 +5,14 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/config"
 )
 
 func TestValidateConfig_ExposesLuaSandboxDefaultsWhenLuaSectionPresent(t *testing.T) {
 	_ = os.MkdirAll("temp", 0o755)
 	cfg := filepath.Join("temp", "lua_sandbox_validate_test.cue")
-	content := "{\n  configVersion: \"v0\"\n  action: \"nop\"\n  lua: {}\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"nop\"\n  lua: {}\n}\n"
 	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
 		t.Fatalf("write cfg: %v", err)
 	}

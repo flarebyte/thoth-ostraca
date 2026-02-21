@@ -2,7 +2,7 @@
   "records": [],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "v0", "action": "nop" },
+    "config": { "configVersion": "1", "action": "nop" },
     "limits": { "maxRecordsInMemory": 10000 }
   }
 }

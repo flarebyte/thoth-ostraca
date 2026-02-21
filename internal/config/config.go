@@ -23,6 +23,14 @@ func LoadAndValidate(path string) error {
 	if err := requireStringField(v, "action"); err != nil {
 		return err
 	}
+	mv := v.LookupPath(cue.ParsePath("configVersion"))
+	var configVersion string
+	if err := mv.Decode(&configVersion); err != nil {
+		return fmt.Errorf("invalid value for configVersion: %v", err)
+	}
+	if !IsSupportedConfigVersion(configVersion) {
+		return fmt.Errorf("unsupported configVersion: %q (supported: %s)", configVersion, SupportedConfigVersionsCSV())
+	}
 	return nil
 }
 
@@ -58,6 +66,7 @@ type Minimal struct {
 	Output        Output
 	Errors        Errors
 	Workers       Workers
+	UI            UI
 }
 
 // ParseMinimal validates and extracts minimal values from the CUE config.
@@ -77,6 +86,9 @@ func ParseMinimal(path string) (Minimal, error) {
 	var m Minimal
 	if err := mv.Decode(&m.ConfigVersion); err != nil {
 		return Minimal{}, fmt.Errorf("invalid value for configVersion: %v", err)
+	}
+	if !IsSupportedConfigVersion(m.ConfigVersion) {
+		return Minimal{}, fmt.Errorf("unsupported configVersion: %q (supported: %s)", m.ConfigVersion, SupportedConfigVersionsCSV())
 	}
 	if err := av.Decode(&m.Action); err != nil {
 		return Minimal{}, fmt.Errorf("invalid value for action: %v", err)
@@ -105,6 +117,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Output = parseOutputSection(v)
 	m.Errors = parseErrorsSection(v)
 	m.Workers = parseWorkersSection(v)
+	m.UI = parseUISection(v)
 	return m, nil
 }
 
@@ -248,6 +261,15 @@ type Errors struct {
 type Workers struct {
 	Count    int
 	HasCount bool
+}
+
+// UI holds optional ui config.
+type UI struct {
+	Progress           bool
+	ProgressIntervalMs int
+	HasSection         bool
+	HasProgress        bool
+	HasIntervalMs      bool
 }
 
 // FileInfo holds optional fileInfo config.

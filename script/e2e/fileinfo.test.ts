@@ -36,7 +36,7 @@ test('enrich-fileinfo attaches deterministic fields for create-meta', () => {
 
   const cfgPath = path.join(root, 'temp', 'fileinfo1_tmp.cue');
   const cfgContent = `{
-  configVersion: "v0"
+  configVersion: "1"
   action: "create-meta"
   discovery: { root: "${path.join('temp', 'fileinfo1_repo').replaceAll('\\', '\\\\')}" }
   fileInfo: { enabled: true }

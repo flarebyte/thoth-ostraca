@@ -1,5 +1,5 @@
 {
-  configVersion: "v0"
+  configVersion: "1"
   action: "create-meta"
   discovery: { root: "" } // to be set by test via temp config copy
   fileInfo: { enabled: true }

@@ -3,7 +3,7 @@
 ## - No dynamic variables or shell logic
 ## - Real logic lives in scripts (TypeScript/Bun, bash, Go)
 
-.PHONY: lint format test test-race gen build build-dev e2e release clean help
+.PHONY: lint format test test-race gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
 
 BIOME := npx @biomejs/biome
 BUN := bun
@@ -26,11 +26,20 @@ test: gen
 test-race: gen
 	$(GO) test -race ./...
 
+bench:
+	$(GO) test -bench=. -run=^$$ ./...
+
+perf-smoke:
+	$(GO) test -run TestPerfSmoke_ ./...
+
+contract-snapshots:
+	$(GO) test -run TestContract_ ./internal/stage
+
 gen:
 	true
 
 build:
-	$(BUN) run build-go.mts
+	$(BUN) run build-go.ts
 
 build-dev:
 	mkdir -p .e2e-bin
@@ -41,6 +50,8 @@ e2e:
 
 release: build
 	@printf "Artifacts in ./build (checksums.txt included)\n"
+
+release-check: lint test contract-snapshots
 
 clean:
 	rm -rf build

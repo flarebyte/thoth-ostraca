@@ -1,0 +1,8 @@
+{
+  "records": [{ "locator": "a.thoth.yaml" }, { "locator": "b.thoth.yaml" }],
+  "meta": {
+    "config": { "configVersion": "1", "action": "nop" },
+    "discovery": { "root": "testdata/repos/yaml1" },
+    "limits": { "maxRecordsInMemory": 10000 }
+  }
+}

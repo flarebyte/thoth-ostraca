@@ -35,16 +35,18 @@ func processLuaMapRecord(rec Record, code string, mode string, metaCfg *Meta) (R
 		"meta":    meta,
 	}, code)
 	if err != nil {
+		msg := sanitizeErrorMessage(err.Error())
 		if mode == "keep-going" {
-			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: err.Error()}}, &Error{Stage: luaMapStage, Locator: locator, Message: err.Error()}, nil
+			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: msg}}, &Error{Stage: luaMapStage, Locator: locator, Message: msg}, nil
 		}
-		return Record{}, nil, fmt.Errorf("lua-map: %v", err)
+		return Record{}, nil, fmt.Errorf("lua-map: %s", msg)
 	}
 	if violation != "" {
+		msg := sanitizeErrorMessage(violation)
 		if mode == "keep-going" {
-			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: violation}}, &Error{Stage: luaMapStage, Locator: locator, Message: violation}, nil
+			return Record{Locator: locator, Meta: meta, Error: &RecError{Stage: luaMapStage, Message: msg}}, &Error{Stage: luaMapStage, Locator: locator, Message: msg}, nil
 		}
-		return Record{}, nil, luaViolationFailFast(luaMapStage, violation)
+		return Record{}, nil, luaViolationFailFast(luaMapStage, msg)
 	}
 	return Record{Locator: locator, Meta: meta, Mapped: ret}, nil, nil
 }

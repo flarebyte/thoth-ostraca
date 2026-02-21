@@ -18,6 +18,9 @@ func ValidateConfig(ctx context.Context, in Envelope, deps Deps) (Envelope, erro
 	if err != nil {
 		return Envelope{}, err
 	}
+	if err := validateCommonConfig(min); err != nil {
+		return Envelope{}, err
+	}
 	out := in
 	applyMinimalToMeta(&out, min)
 	// Allowed actions (Phase 2): pipeline, validate, create-meta, update-meta (accept "nop" as alias for pipeline for existing tests)

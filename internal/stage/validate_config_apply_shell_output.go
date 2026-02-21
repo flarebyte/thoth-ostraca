@@ -84,7 +84,11 @@ func applyOutputMeta(out *Envelope, min config.Minimal) {
 			out.Meta.Output = &OutputMeta{}
 		}
 		if min.Output.HasOut {
-			out.Meta.Output.Out = min.Output.Out
+			if min.Output.Out == "" {
+				out.Meta.Output.Out = "-"
+			} else {
+				out.Meta.Output.Out = min.Output.Out
+			}
 		}
 		if min.Output.HasPretty {
 			out.Meta.Output.Pretty = min.Output.Pretty
