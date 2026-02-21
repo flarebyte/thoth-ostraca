@@ -1,7 +1,6 @@
-## Makefile: Thin, explicit wrappers for tools
-## - One responsibility per target
-## - No dynamic variables or shell logic
-## - Real logic lives in scripts (TypeScript/Bun, bash, Go)
+## Makefile: thin wrappers for local/dev/release commands.
+## Keep target behavior explicit and deterministic.
+## Release artifacts are produced under ./build by build-go.ts.
 
 .PHONY: lint format test test-race gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
 
@@ -69,13 +68,21 @@ dup:
 
 help:
 	@printf "Targets:\n"
-	@printf "  lint     Run linters (Biome + go vet).\n"
-	@printf "  format   Apply formatting (gofmt + Biome).\n"
-	@printf "  test     Run Go tests.\n"
-	@printf "  test-race Run Go tests with race detector.\n"
-	@printf "  gen      Generate artifacts (no-op placeholder).\n"
-	@printf "  build    Build Go binaries via Bun script.\n"
-	@printf "  build-dev Build dev binary into .e2e-bin/.\n"
-	@printf "  e2e      Run Bun-powered end-to-end tests.\n"
-	@printf "  release  Prepare release artifacts (depends on build).\n"
-	@printf "  clean    Remove build artifacts.\n"
+	@printf "  (requires: go, bun, golangci-lint, biome)\n"
+	@printf "  lint               Run linters (Biome + go vet + golangci-lint).\n"
+	@printf "  format             Apply formatting (gofmt + Biome).\n"
+	@printf "  test               Run Go tests + coverage summary.\n"
+	@printf "  test-race          Run Go tests with race detector.\n"
+	@printf "  bench              Run Go benchmarks.\n"
+	@printf "  perf-smoke         Run performance smoke tests.\n"
+	@printf "  contract-snapshots Run contract snapshot tests.\n"
+	@printf "  release-check      Run lint + tests + contract snapshots.\n"
+	@printf "  gen                Generate artifacts (no-op placeholder).\n"
+	@printf "  build              Build release binaries into ./build.\n"
+	@printf "  build-dev          Build local dev binary into .e2e-bin/.\n"
+	@printf "  e2e                Run Bun-powered end-to-end tests.\n"
+	@printf "  release            Build release artifacts and checksums.\n"
+	@printf "  clean              Remove build artifacts.\n"
+	@printf "  complexity         Show top file complexity (Go/TS).\n"
+	@printf "  sec                Run security scan (semgrep).\n"
+	@printf "  dup                Run duplication scans (go/typescript).\n"
