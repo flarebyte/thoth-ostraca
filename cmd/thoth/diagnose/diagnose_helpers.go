@@ -166,21 +166,24 @@ func runDiagnoseWithPrepare() error {
 	return runStagesAndRender(prepOut, []string{flagStage})
 }
 
+func baseDiscoveryOverrides(cmd *cobra.Command) (string, bool) {
+	baseRoot := ""
+	baseNoGit := false
+	if cmd.Flags().Changed("root") {
+		baseRoot = relativizeRoot(flagRoot)
+	}
+	if cmd.Flags().Changed("no-gitignore") {
+		baseNoGit = flagNoGit
+	}
+	return baseRoot, baseNoGit
+}
+
 func runDiagnoseWithPreparedPipeline(cmd *cobra.Command) error {
 	action, err := resolvePreparedAction()
 	if err != nil {
 		return err
 	}
-	changedRoot := cmd.Flags().Changed("root")
-	changedNoGit := cmd.Flags().Changed("no-gitignore")
-	baseRoot := ""
-	baseNoGit := false
-	if changedRoot {
-		baseRoot = relativizeRoot(flagRoot)
-	}
-	if changedNoGit {
-		baseNoGit = flagNoGit
-	}
+	baseRoot, baseNoGit := baseDiscoveryOverrides(cmd)
 
 	inEnv, err := prepareDiagnoseInput("", flagConfig, baseRoot, baseNoGit)
 	if err != nil {
@@ -222,16 +225,7 @@ func runDiagnoseWithPreparedPipeline(cmd *cobra.Command) error {
 }
 
 func runDiagnoseDefault(cmd *cobra.Command) error {
-	changedRoot := cmd.Flags().Changed("root")
-	changedNoGit := cmd.Flags().Changed("no-gitignore")
-	baseRoot := ""
-	baseNoGit := false
-	if changedRoot {
-		baseRoot = relativizeRoot(flagRoot)
-	}
-	if changedNoGit {
-		baseNoGit = flagNoGit
-	}
+	baseRoot, baseNoGit := baseDiscoveryOverrides(cmd)
 
 	inEnv, err := prepareDiagnoseInput("", flagConfig, baseRoot, baseNoGit)
 	if err != nil {

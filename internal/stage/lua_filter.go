@@ -33,12 +33,7 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	if firstErr != nil {
 		return Envelope{}, firstErr
 	}
-	if len(envErrs) > 0 {
-		for _, e := range envErrs {
-			out.Errors = append(out.Errors, sanitizedError(e))
-		}
-		SortEnvelopeErrors(&out)
-	}
+	appendSanitizedErrors(&out, envErrs)
 	for i := 0; i < n; i++ {
 		if keeps[i] {
 			out.Records = append(out.Records, outs[i])
