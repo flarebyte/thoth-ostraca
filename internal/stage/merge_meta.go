@@ -35,28 +35,22 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 		if expectedLuaInline != "" {
 			next, violation, err := runExpectedLuaInline(updateMetaExpectedLuaStage, in.Meta, r.Locator, existing, expectedLuaInline)
 			if err != nil {
-				msg := sanitizeErrorMessage(err.Error())
-				if mode == "keep-going" {
-					rr, envE := recordFailure(r, updateMetaExpectedLuaStage, msg, embed)
-					out.Records[i] = rr
-					if envE != nil {
-						envErrs = append(envErrs, *envE)
-					}
+				handled, outErr := handleUpdateMetaLuaFailure(&out, &envErrs, i, r, mode, embed, err.Error())
+				if outErr != nil {
+					return Envelope{}, outErr
+				}
+				if handled {
 					continue
 				}
-				return Envelope{}, luaViolationFailFast(updateMetaExpectedLuaStage, msg)
 			}
 			if violation != "" {
-				msg := sanitizeErrorMessage(violation)
-				if mode == "keep-going" {
-					rr, envE := recordFailure(r, updateMetaExpectedLuaStage, msg, embed)
-					out.Records[i] = rr
-					if envE != nil {
-						envErrs = append(envErrs, *envE)
-					}
+				handled, outErr := handleUpdateMetaLuaFailure(&out, &envErrs, i, r, mode, embed, violation)
+				if outErr != nil {
+					return Envelope{}, outErr
+				}
+				if handled {
 					continue
 				}
-				return Envelope{}, luaViolationFailFast(updateMetaExpectedLuaStage, msg)
 			}
 			derivedPerRecord = next
 		}
@@ -74,6 +68,19 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	}
 	appendSanitizedErrors(&out, envErrs)
 	return out, nil
+}
+
+func handleUpdateMetaLuaFailure(out *Envelope, envErrs *[]Error, idx int, rec Record, mode string, embed bool, rawMsg string) (bool, error) {
+	msg := sanitizeErrorMessage(rawMsg)
+	if mode == "keep-going" {
+		rr, envE := recordFailure(rec, updateMetaExpectedLuaStage, msg, embed)
+		out.Records[idx] = rr
+		if envE != nil {
+			*envErrs = append(*envErrs, *envE)
+		}
+		return true, nil
+	}
+	return false, luaViolationFailFast(updateMetaExpectedLuaStage, msg)
 }
 
 func init() { Register(mergeMetaStage, mergeMetaRunner) }

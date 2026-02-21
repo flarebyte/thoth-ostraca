@@ -83,36 +83,18 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		if expectedLuaInline != "" {
 			next, violation, err := runExpectedLuaInline(diffMetaExpectedLuaStage, in.Meta, loc, existing, expectedLuaInline)
 			if err != nil {
-				msg := sanitizeErrorMessage(err.Error())
-				if mode == "keep-going" {
-					if idx, ok := recordIdxByLocator[loc]; ok {
-						rr, envE := recordFailure(outRecordFallback(in.Records[idx], loc), diffMetaExpectedLuaStage, msg, embed)
-						in.Records[idx] = rr
-						if envE != nil {
-							envErrs = append(envErrs, *envE)
-						}
-					} else {
-						envErrs = append(envErrs, Error{Stage: diffMetaExpectedLuaStage, Locator: loc, Message: msg})
-					}
+				handled, fatalErr := handleDiffMetaExpectedLuaFailure(&in, recordIdxByLocator, &envErrs, loc, err.Error(), mode, embed)
+				if handled {
 					continue
 				}
-				return Envelope{}, luaViolationFailFast(diffMetaExpectedLuaStage, msg)
+				return Envelope{}, fatalErr
 			}
 			if violation != "" {
-				msg := sanitizeErrorMessage(violation)
-				if mode == "keep-going" {
-					if idx, ok := recordIdxByLocator[loc]; ok {
-						rr, envE := recordFailure(outRecordFallback(in.Records[idx], loc), diffMetaExpectedLuaStage, msg, embed)
-						in.Records[idx] = rr
-						if envE != nil {
-							envErrs = append(envErrs, *envE)
-						}
-					} else {
-						envErrs = append(envErrs, Error{Stage: diffMetaExpectedLuaStage, Locator: loc, Message: msg})
-					}
+				handled, fatalErr := handleDiffMetaExpectedLuaFailure(&in, recordIdxByLocator, &envErrs, loc, violation, mode, embed)
+				if handled {
 					continue
 				}
-				return Envelope{}, luaViolationFailFast(diffMetaExpectedLuaStage, msg)
+				return Envelope{}, fatalErr
 			}
 			expectedPerLocator = next
 		}
@@ -260,6 +242,29 @@ func outRecordFallback(r Record, locator string) Record {
 		r.Locator = locator
 	}
 	return r
+}
+
+func handleDiffMetaExpectedLuaFailure(
+	in *Envelope,
+	recordIdxByLocator map[string]int,
+	envErrs *[]Error,
+	loc, message, mode string,
+	embed bool,
+) (bool, error) {
+	msg := sanitizeErrorMessage(message)
+	if mode == "keep-going" {
+		if idx, ok := recordIdxByLocator[loc]; ok {
+			rr, envE := recordFailure(outRecordFallback(in.Records[idx], loc), diffMetaExpectedLuaStage, msg, embed)
+			in.Records[idx] = rr
+			if envE != nil {
+				*envErrs = append(*envErrs, *envE)
+			}
+		} else {
+			*envErrs = append(*envErrs, Error{Stage: diffMetaExpectedLuaStage, Locator: loc, Message: msg})
+		}
+		return true, nil
+	}
+	return false, luaViolationFailFast(diffMetaExpectedLuaStage, msg)
 }
 
 func init() { Register(computeMetaDiffStage, computeMetaDiffRunner) }

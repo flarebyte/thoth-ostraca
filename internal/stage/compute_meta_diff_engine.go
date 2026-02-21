@@ -64,20 +64,7 @@ func diffMetaMapsV3JSONPatch(existing, expected map[string]any) diffSummary {
 }
 
 func (c *diffCollector) compareMaps(prefix string, existing, expected map[string]any) {
-	keys := map[string]struct{}{}
-	for k := range existing {
-		keys[k] = struct{}{}
-	}
-	for k := range expected {
-		keys[k] = struct{}{}
-	}
-	all := make([]string, 0, len(keys))
-	for k := range keys {
-		all = append(all, k)
-	}
-	sort.Strings(all)
-
-	for _, k := range all {
+	for _, k := range sortedMergedKeys(existing, expected) {
 		path := k
 		if prefix != "" {
 			path = prefix + "." + k
@@ -208,20 +195,7 @@ func diffMetaJSONPatch(existing, expected map[string]any) []DiffOp {
 }
 
 func collectDiffMetaJSONPatchOps(base string, existing, expected map[string]any, ops *[]DiffOp) {
-	keys := map[string]struct{}{}
-	for k := range existing {
-		keys[k] = struct{}{}
-	}
-	for k := range expected {
-		keys[k] = struct{}{}
-	}
-	all := make([]string, 0, len(keys))
-	for k := range keys {
-		all = append(all, k)
-	}
-	sort.Strings(all)
-
-	for _, k := range all {
+	for _, k := range sortedMergedKeys(existing, expected) {
 		path := joinJSONPointer(base, k)
 		ev, inExisting := existing[k]
 		pv, inExpected := expected[k]
@@ -254,6 +228,22 @@ func collectDiffMetaJSONPatchOps(base string, existing, expected map[string]any,
 			*ops = append(*ops, DiffOp{Op: "replace", Path: path, Value: deepCopyAny(pv)})
 		}
 	}
+}
+
+func sortedMergedKeys(existing, expected map[string]any) []string {
+	keys := map[string]struct{}{}
+	for k := range existing {
+		keys[k] = struct{}{}
+	}
+	for k := range expected {
+		keys[k] = struct{}{}
+	}
+	all := make([]string, 0, len(keys))
+	for k := range keys {
+		all = append(all, k)
+	}
+	sort.Strings(all)
+	return all
 }
 
 func joinJSONPointer(base, segment string) string {
