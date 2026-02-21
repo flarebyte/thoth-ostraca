@@ -12,7 +12,7 @@ import (
 func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error) {
 	// Always start by validating config to determine action
 	in := stage.Envelope{Records: []stage.Record{}, Meta: &stage.Meta{ConfigPath: cfgPath}}
-	out, err := stage.Run(ctx, "validate-config", in, stage.Deps{})
+	out, err := stage.Run(ctx, "validate-config", in, stage.Deps{Stderr: os.Stderr})
 	if err != nil {
 		return stage.Envelope{}, err
 	}
@@ -74,7 +74,7 @@ func runStreamingNDJSONPipeline(ctx context.Context, in stage.Envelope) (stage.E
 	}
 	writeDone := make(chan writeResult, 1)
 	go func() {
-		out, err := runStage(ctx, "write-output", streamIn, stage.Deps{RecordStream: stream})
+		out, err := runStage(ctx, "write-output", streamIn, stage.Deps{RecordStream: stream, Stderr: os.Stderr})
 		writeDone <- writeResult{out: out, err: err}
 	}()
 
@@ -88,7 +88,7 @@ func runStreamingNDJSONPipeline(ctx context.Context, in stage.Envelope) (stage.E
 		}
 		var err error
 		for _, name := range perRecordStages {
-			recEnv, err = runStage(ctx, name, recEnv, stage.Deps{})
+			recEnv, err = runStage(ctx, name, recEnv, stage.Deps{Stderr: os.Stderr})
 			if err != nil {
 				close(stream)
 				<-writeDone

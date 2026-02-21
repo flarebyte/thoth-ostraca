@@ -1,11 +1,15 @@
 package stage
 
-import "context"
+import (
+	"context"
+	"io"
+)
 
 // Deps is a placeholder for stage dependencies (e.g., FS, log, etc.).
 // Keep minimal for now.
 type Deps struct {
 	RecordStream <-chan Record
+	Stderr       io.Writer
 }
 
 // Runner executes a stage.

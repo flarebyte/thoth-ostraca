@@ -46,6 +46,16 @@ func parseUpdateMetaSection(v cue.Value) (UpdateMeta, error) {
 		return u, nil
 	}
 	u.HasSection = true
+	lv := uv.LookupPath(cue.ParsePath("expectedLua.inline"))
+	if lv.Exists() {
+		if lv.Kind() != cue.StringKind {
+			return UpdateMeta{}, fmt.Errorf("invalid updateMeta.expectedLua.inline: must be string")
+		}
+		if err := lv.Decode(&u.ExpectedLuaInline); err != nil {
+			return UpdateMeta{}, fmt.Errorf("invalid updateMeta.expectedLua.inline: must be string")
+		}
+		u.HasExpectedLuaCode = true
+	}
 	pv := uv.LookupPath(cue.ParsePath("patch"))
 	if !pv.Exists() {
 		return u, nil
@@ -67,6 +77,60 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 		return d, nil
 	}
 	d.HasSection = true
+	d.Format = "summary"
+	d.Only = "all"
+	fv := dv.LookupPath(cue.ParsePath("format"))
+	if fv.Exists() {
+		var f string
+		if err := fv.Decode(&f); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary', 'detailed', or 'json-patch'")
+		}
+		if f != "summary" && f != "detailed" && f != "json-patch" {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary', 'detailed', or 'json-patch'")
+		}
+		d.Format = f
+		d.HasFormat = true
+	}
+	ov := dv.LookupPath(cue.ParsePath("only"))
+	if ov.Exists() {
+		var only string
+		if err := ov.Decode(&only); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.only: must be 'all', 'changed', 'unchanged', or 'orphans'")
+		}
+		if only != "all" && only != "changed" && only != "unchanged" && only != "orphans" {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.only: must be 'all', 'changed', 'unchanged', or 'orphans'")
+		}
+		d.Only = only
+		d.HasOnly = true
+	}
+	sv := dv.LookupPath(cue.ParsePath("summary"))
+	if sv.Exists() {
+		var summary bool
+		if err := sv.Decode(&summary); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.summary: must be boolean")
+		}
+		d.Summary = summary
+		d.HasSummary = true
+	}
+	focv := dv.LookupPath(cue.ParsePath("failOnChange"))
+	if focv.Exists() {
+		var foc bool
+		if err := focv.Decode(&foc); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.failOnChange: must be boolean")
+		}
+		d.FailOnChange = foc
+		d.HasFailOnChange = true
+	}
+	elv := dv.LookupPath(cue.ParsePath("expectedLua.inline"))
+	if elv.Exists() {
+		if elv.Kind() != cue.StringKind {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.expectedLua.inline: must be string")
+		}
+		if err := elv.Decode(&d.ExpectedLuaInline); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.expectedLua.inline: must be string")
+		}
+		d.HasExpectedLuaCode = true
+	}
 	pv := dv.LookupPath(cue.ParsePath("expectedPatch"))
 	if !pv.Exists() {
 		return d, nil

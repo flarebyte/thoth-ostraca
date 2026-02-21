@@ -1,14 +1,27 @@
 {
   "records": [
-    { "locator": "a.txt" },
-    { "locator": "dir/b.txt" },
-    { "locator": "orphan.txt" }
+    {
+      "locator": "a.txt"
+    },
+    {
+      "locator": "dir/b.txt"
+    },
+    {
+      "locator": "orphan.txt"
+    }
   ],
   "meta": {
     "contractVersion": "1",
-    "config": { "configVersion": "1", "action": "diff-meta" },
-    "discovery": { "root": "testdata/repos/diff1" },
-    "limits": { "maxRecordsInMemory": 10000 },
+    "config": {
+      "configVersion": "1",
+      "action": "diff-meta"
+    },
+    "discovery": {
+      "root": "testdata/repos/diff1"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
     "inputs": ["a.txt", "dir/b.txt"],
     "metaFiles": [
       "a.txt.thoth.yaml",
@@ -39,6 +52,11 @@
       "orphans": ["orphan.txt.thoth.yaml"],
       "presentCount": 2
     },
-    "diffMeta": { "expectedPatch": {} }
+    "diffMeta": {
+      "expectedPatch": {},
+      "format": "summary",
+      "only": "all",
+      "failOnChange": false
+    }
   }
 }

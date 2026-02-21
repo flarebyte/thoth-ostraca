@@ -25,7 +25,8 @@
           "metaFile": "a.txt.thoth.yaml",
           "addedKeys": ["obj.z"],
           "removedKeys": ["obj.x"],
-          "changedKeys": ["obj.y"],
+          "changedKeys": ["a", "obj.y"],
+          "typeChangedKeys": ["a"],
           "arrays": [{ "path": "arr", "addedIndices": [2] }]
         },
         {
@@ -40,9 +41,13 @@
       "presentCount": 2
     },
     "diffMeta": {
-      "expectedPatch": { "a": 1, "arr": [1, 2, 3], "obj": { "y": 9, "z": 3 } },
+      "expectedPatch": {
+        "a": "1",
+        "arr": [1, 2, 3],
+        "obj": { "y": 9, "z": 3 }
+      },
       "format": "summary",
-      "only": "all",
+      "only": "changed",
       "failOnChange": false
     }
   }

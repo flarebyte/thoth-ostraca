@@ -2,6 +2,7 @@ package run
 
 import (
 	"context"
+	"os"
 
 	"github.com/flarebyte/thoth-ostraca/internal/stage"
 )
@@ -10,8 +11,9 @@ import (
 func runStages(ctx context.Context, in stage.Envelope, stages []string) (stage.Envelope, error) {
 	out := in
 	var err error
+	deps := stage.Deps{Stderr: os.Stderr}
 	for _, name := range stages {
-		out, err = runStage(ctx, name, out, stage.Deps{})
+		out, err = runStage(ctx, name, out, deps)
 		if err != nil {
 			return stage.Envelope{}, err
 		}

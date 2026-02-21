@@ -1,0 +1,5 @@
+locator: a.txt
+meta:
+  x: 1
+  nested:
+    keep: true

@@ -73,11 +73,38 @@ type DiffReport struct {
 
 // DiffDetail holds a per-locator content diff summary.
 type DiffDetail struct {
-	Locator     string   `json:"locator"`
-	MetaFile    string   `json:"metaFile"`
-	AddedKeys   []string `json:"addedKeys"`
-	RemovedKeys []string `json:"removedKeys"`
-	ChangedKeys []string `json:"changedKeys"`
+	Locator         string       `json:"locator"`
+	MetaFile        string       `json:"metaFile"`
+	AddedKeys       []string     `json:"addedKeys"`
+	RemovedKeys     []string     `json:"removedKeys"`
+	ChangedKeys     []string     `json:"changedKeys"`
+	TypeChangedKeys []string     `json:"typeChangedKeys,omitempty"`
+	Arrays          []ArrayDiff  `json:"arrays,omitempty"`
+	Changes         []DiffChange `json:"changes,omitempty"`
+	Patch           []DiffOp     `json:"patch,omitempty"`
+}
+
+// ArrayDiff holds index-based array differences at a specific path.
+type ArrayDiff struct {
+	Path           string `json:"path"`
+	AddedIndices   []int  `json:"addedIndices,omitempty"`
+	RemovedIndices []int  `json:"removedIndices,omitempty"`
+	ChangedIndices []int  `json:"changedIndices,omitempty"`
+}
+
+// DiffChange holds a deterministic detailed change item.
+type DiffChange struct {
+	Path     string `json:"path"`
+	Kind     string `json:"kind"`
+	OldValue any    `json:"oldValue,omitempty"`
+	NewValue any    `json:"newValue,omitempty"`
+}
+
+// DiffOp holds one RFC 6902 JSON Patch operation.
+type DiffOp struct {
+	Op    string `json:"op"`
+	Path  string `json:"path"`
+	Value any    `json:"value,omitempty"`
 }
 
 // LocatorPolicy mirrors policy flags for locator validation in meta.
@@ -177,12 +204,18 @@ type OutputMeta struct {
 
 // UpdateMetaMeta holds update-meta patch settings.
 type UpdateMetaMeta struct {
-	Patch map[string]any `json:"patch,omitempty"`
+	Patch             map[string]any `json:"patch,omitempty"`
+	ExpectedLuaInline string         `json:"expectedLuaInline,omitempty"`
 }
 
 // DiffMetaMeta holds diff-meta expected patch settings.
 type DiffMetaMeta struct {
-	ExpectedPatch map[string]any `json:"expectedPatch"`
+	ExpectedPatch     map[string]any `json:"expectedPatch"`
+	ExpectedLuaInline string         `json:"expectedLuaInline,omitempty"`
+	Format            string         `json:"format,omitempty"`
+	Only              string         `json:"only,omitempty"`
+	Summary           bool           `json:"summary,omitempty"`
+	FailOnChange      bool           `json:"failOnChange"`
 }
 
 // ErrorsMeta holds error handling behavior.

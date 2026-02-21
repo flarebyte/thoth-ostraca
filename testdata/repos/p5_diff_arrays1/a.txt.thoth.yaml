@@ -1,0 +1,8 @@
+locator: a.txt
+meta:
+  value: 1
+  kind:
+    k: 1
+  rules:
+    - tags: [a, b]
+    - tags: [x]

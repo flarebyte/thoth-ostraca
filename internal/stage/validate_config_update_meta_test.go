@@ -8,7 +8,7 @@ import (
 )
 
 func TestValidateConfig_ExposesUpdateMetaPatch(t *testing.T) {
-	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { patch: { b: 2, obj: { y: 9 } } }\n}\n"
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { patch: { b: 2, obj: { y: 9 } }, expectedLua: { inline: \"return function(locator, existingMeta) return {} end\" } }\n}\n"
 	out, err := runValidateConfigWithContent(t, "update_meta_patch_validate_test.cue", content)
 	if err != nil {
 		t.Fatalf("validate-config: %v", err)
@@ -19,6 +19,9 @@ func TestValidateConfig_ExposesUpdateMetaPatch(t *testing.T) {
 	if out.Meta.UpdateMeta.Patch["b"] != int64(2) && out.Meta.UpdateMeta.Patch["b"] != 2 {
 		t.Fatalf("unexpected patch value: %+v", out.Meta.UpdateMeta.Patch)
 	}
+	if out.Meta.UpdateMeta.ExpectedLuaInline == "" {
+		t.Fatalf("expected updateMeta.expectedLuaInline")
+	}
 }
 
 func TestValidateConfig_UpdateMetaPatchMustBeObject(t *testing.T) {
@@ -26,5 +29,13 @@ func TestValidateConfig_UpdateMetaPatchMustBeObject(t *testing.T) {
 	_, err := runValidateConfigWithContent(t, "update_meta_patch_invalid_validate_test.cue", content)
 	if err == nil || !strings.Contains(err.Error(), "invalid updateMeta.patch") {
 		t.Fatalf("expected invalid updateMeta.patch error, got: %v", err)
+	}
+}
+
+func TestValidateConfig_UpdateMetaExpectedLuaMustBeString(t *testing.T) {
+	content := "{\n  configVersion: \"" + config.CurrentConfigVersion + "\"\n  action: \"update-meta\"\n  updateMeta: { expectedLua: { inline: 1 } }\n}\n"
+	_, err := runValidateConfigWithContent(t, "update_meta_expected_lua_invalid_validate_test.cue", content)
+	if err == nil || !strings.Contains(err.Error(), "invalid updateMeta.expectedLua.inline") {
+		t.Fatalf("expected invalid updateMeta.expectedLua.inline error, got: %v", err)
 	}
 }

@@ -3,16 +3,21 @@ package stage
 import "github.com/flarebyte/thoth-ostraca/internal/config"
 
 func applyUpdateMeta(out *Envelope, min config.Minimal) {
-	if !min.UpdateMeta.HasPatch {
+	if !min.UpdateMeta.HasPatch && !min.UpdateMeta.HasExpectedLuaCode {
 		return
 	}
 	if out.Meta.UpdateMeta == nil {
 		out.Meta.UpdateMeta = &UpdateMetaMeta{}
 	}
-	if cp, ok := deepCopyAny(min.UpdateMeta.Patch).(map[string]any); ok {
-		out.Meta.UpdateMeta.Patch = cp
-	} else {
-		out.Meta.UpdateMeta.Patch = map[string]any{}
+	if min.UpdateMeta.HasPatch {
+		if cp, ok := deepCopyAny(min.UpdateMeta.Patch).(map[string]any); ok {
+			out.Meta.UpdateMeta.Patch = cp
+		} else {
+			out.Meta.UpdateMeta.Patch = map[string]any{}
+		}
+	}
+	if min.UpdateMeta.HasExpectedLuaCode {
+		out.Meta.UpdateMeta.ExpectedLuaInline = min.UpdateMeta.ExpectedLuaInline
 	}
 }
 
@@ -21,7 +26,27 @@ func applyDiffMeta(out *Envelope, min config.Minimal) {
 		return
 	}
 	if out.Meta.DiffMeta == nil {
-		out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}}
+		out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}, Format: "summary", Only: "all", Summary: false, FailOnChange: false}
+	}
+	out.Meta.DiffMeta.Format = "summary"
+	out.Meta.DiffMeta.Only = "all"
+	out.Meta.DiffMeta.Summary = false
+	out.Meta.DiffMeta.FailOnChange = false
+	out.Meta.DiffMeta.ExpectedLuaInline = ""
+	if min.DiffMeta.HasFormat {
+		out.Meta.DiffMeta.Format = min.DiffMeta.Format
+	}
+	if min.DiffMeta.HasOnly {
+		out.Meta.DiffMeta.Only = min.DiffMeta.Only
+	}
+	if min.DiffMeta.HasSummary {
+		out.Meta.DiffMeta.Summary = min.DiffMeta.Summary
+	}
+	if min.DiffMeta.HasFailOnChange {
+		out.Meta.DiffMeta.FailOnChange = min.DiffMeta.FailOnChange
+	}
+	if min.DiffMeta.HasExpectedLuaCode {
+		out.Meta.DiffMeta.ExpectedLuaInline = min.DiffMeta.ExpectedLuaInline
 	}
 	if min.DiffMeta.HasExpectedPatch {
 		if cp, ok := deepCopyAny(min.DiffMeta.ExpectedPatch).(map[string]any); ok {

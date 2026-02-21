@@ -25,23 +25,41 @@
           "metaFile": "a.txt.thoth.yaml",
           "addedKeys": ["obj.z"],
           "removedKeys": ["obj.x"],
-          "changedKeys": ["obj.y"],
-          "arrays": [{ "path": "arr", "addedIndices": [2] }]
+          "changedKeys": ["a", "obj.y"],
+          "typeChangedKeys": ["a"],
+          "arrays": [{ "path": "arr", "addedIndices": [2] }],
+          "patch": [
+            { "op": "replace", "path": "/a", "value": "1" },
+            { "op": "replace", "path": "/arr", "value": [1, 2, 3] },
+            { "op": "remove", "path": "/obj/x" },
+            { "op": "replace", "path": "/obj/y", "value": 9 },
+            { "op": "add", "path": "/obj/z", "value": 3 }
+          ]
         },
         {
           "locator": "b.txt",
           "metaFile": "b.txt.thoth.yaml",
           "addedKeys": ["a", "arr", "obj"],
           "removedKeys": ["only"],
-          "changedKeys": []
+          "changedKeys": [],
+          "patch": [
+            { "op": "add", "path": "/a", "value": "1" },
+            { "op": "add", "path": "/arr", "value": [1, 2, 3] },
+            { "op": "add", "path": "/obj", "value": { "y": 9, "z": 3 } },
+            { "op": "remove", "path": "/only" }
+          ]
         }
       ],
       "orphans": ["orphan.thoth.yaml"],
       "presentCount": 2
     },
     "diffMeta": {
-      "expectedPatch": { "a": 1, "arr": [1, 2, 3], "obj": { "y": 9, "z": 3 } },
-      "format": "summary",
+      "expectedPatch": {
+        "a": "1",
+        "arr": [1, 2, 3],
+        "obj": { "y": 9, "z": 3 }
+      },
+      "format": "json-patch",
       "only": "all",
       "failOnChange": false
     }

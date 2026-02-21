@@ -13,6 +13,38 @@ func keepGoingMeta(action string) *stage.Meta {
 	}
 }
 
+func diffFailOnChangeEnv(withExecErrors bool) stage.Envelope {
+	env := stage.Envelope{
+		Meta: &stage.Meta{
+			Config:   &stage.ConfigMeta{Action: "diff-meta"},
+			DiffMeta: &stage.DiffMetaMeta{FailOnChange: true},
+			Diff: &stage.DiffReport{
+				Details: []stage.DiffDetail{
+					{Locator: "a", ChangedKeys: []string{"x"}},
+				},
+			},
+		},
+	}
+	if withExecErrors {
+		env.Errors = []stage.Error{{Stage: "parse-validate-yaml", Message: "invalid YAML"}}
+	}
+	return env
+}
+
+func assertExitError(t *testing.T, err error, wantMsg string, wantCode int) {
+	t.Helper()
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if err.Error() != wantMsg {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	ec, ok := err.(interface{ ExitCode() int })
+	if !ok || ec.ExitCode() != wantCode {
+		t.Fatalf("unexpected exit code")
+	}
+}
+
 func TestEvaluateRunExit_KeepGoing_SuccessRecord(t *testing.T) {
 	env := stage.Envelope{
 		Meta:    keepGoingMeta("pipeline"),
@@ -36,6 +68,10 @@ func TestEvaluateRunExit_KeepGoing_AllFailed(t *testing.T) {
 	}
 	if err.Error() != "keep-going: no successful records" {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	ec, ok := err.(interface{ ExitCode() int })
+	if !ok || ec.ExitCode() != exitCodeExecErr {
+		t.Fatalf("unexpected exit code")
 	}
 }
 
@@ -61,4 +97,29 @@ func TestEvaluateRunExit_FailFastMode(t *testing.T) {
 	if err := evaluateRunExit(env); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+}
+
+func TestEvaluateRunExit_DiffFailOnChange_DriftDetected(t *testing.T) {
+	assertExitError(t, evaluateRunExit(diffFailOnChangeEnv(false)), "drift detected", exitCodeDrift)
+}
+
+func TestEvaluateRunExit_DiffFailOnChange_NoDrift(t *testing.T) {
+	env := stage.Envelope{
+		Meta: &stage.Meta{
+			Config:   &stage.ConfigMeta{Action: "diff-meta"},
+			DiffMeta: &stage.DiffMetaMeta{FailOnChange: true},
+			Diff: &stage.DiffReport{
+				Details: []stage.DiffDetail{
+					{Locator: "a"},
+				},
+			},
+		},
+	}
+	if err := evaluateRunExit(env); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestEvaluateRunExit_DiffFailOnChange_ExecutionErrorWins(t *testing.T) {
+	assertExitError(t, evaluateRunExit(diffFailOnChangeEnv(true)), "execution errors", exitCodeExecErr)
 }

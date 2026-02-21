@@ -56,3 +56,40 @@ func TestMergeMetaRunner_UsesPatchWhenNoExisting(t *testing.T) {
 		t.Fatalf("expected patch-only nextMeta, got: %+v", next)
 	}
 }
+
+func TestMergeMetaRunner_UsesExpectedLuaPerLocator(t *testing.T) {
+	in := Envelope{
+		Records: []Record{
+			{Locator: "a.txt", Post: map[string]any{"existingMeta": map[string]any{"x": 1}}},
+			{Locator: "b.txt", Post: map[string]any{"existingMeta": map[string]any{"x": 2}}},
+		},
+		Meta: &Meta{
+			UpdateMeta: &UpdateMetaMeta{
+				Patch: map[string]any{"ignored": true},
+				ExpectedLuaInline: `return function(locator, existingMeta)
+  if locator == "a.txt" then
+    return { x = 9, obj = { y = 1 } }
+  end
+  return { obj = { y = existingMeta and existingMeta.x or 0 } }
+end`,
+			},
+		},
+	}
+	out, err := mergeMetaRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("merge-meta: %v", err)
+	}
+	aPost, _ := out.Records[0].Post.(map[string]any)
+	bPost, _ := out.Records[1].Post.(map[string]any)
+	aNext, _ := aPost["nextMeta"].(map[string]any)
+	bNext, _ := bPost["nextMeta"].(map[string]any)
+	if aNext["ignored"] != nil {
+		t.Fatalf("expected patch ignored when expectedLuaInline set")
+	}
+	if aNext["x"] != float64(9) && aNext["x"] != 9 {
+		t.Fatalf("unexpected a nextMeta: %+v", aNext)
+	}
+	if _, ok := bNext["obj"].(map[string]any); !ok {
+		t.Fatalf("unexpected b nextMeta: %+v", bNext)
+	}
+}

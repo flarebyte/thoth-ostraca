@@ -3,12 +3,12 @@ package stage
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"sort"
 	"strings"
 )
 
 const computeMetaDiffStage = "compute-meta-diff"
+const diffMetaExpectedLuaStage = "diff-meta-expectedLua"
 
 func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	if in.Meta == nil {
@@ -30,6 +30,7 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 	}
 
 	existingByLocator := map[string]map[string]any{}
+	recordIdxByLocator := map[string]int{}
 	for _, r := range in.Records {
 		if r.Error != nil || r.Meta == nil {
 			continue
@@ -38,16 +39,27 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 			existingByLocator[r.Locator] = cp
 		}
 	}
+	for i := range in.Records {
+		if in.Records[i].Error == nil {
+			recordIdxByLocator[in.Records[i].Locator] = i
+		}
+	}
 
 	expected := map[string]any{}
-	if in.Meta.DiffMeta != nil && in.Meta.DiffMeta.ExpectedPatch != nil {
+	expectedLuaInline := ""
+	mode, embed := errorMode(in.Meta)
+	var envErrs []Error
+	if in.Meta.DiffMeta != nil {
+		expectedLuaInline = in.Meta.DiffMeta.ExpectedLuaInline
+	}
+	if expectedLuaInline == "" && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.ExpectedPatch != nil {
 		if cp, ok := deepCopyAny(in.Meta.DiffMeta.ExpectedPatch).(map[string]any); ok {
 			expected = cp
 		}
 	}
 
-	var orphans []string
-	var details []DiffDetail
+	orphans := make([]string, 0)
+	details := make([]DiffDetail, 0)
 	sort.Strings(orphans)
 
 	for _, m := range metas {
@@ -67,140 +79,195 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 		if !ok {
 			continue
 		}
-		added, removed, changed := diffMetaMaps(existing, expected)
+		expectedPerLocator := expected
+		if expectedLuaInline != "" {
+			next, violation, err := runExpectedLuaInline(diffMetaExpectedLuaStage, in.Meta, loc, existing, expectedLuaInline)
+			if err != nil {
+				handled, fatalErr := handleDiffMetaExpectedLuaFailure(&in, recordIdxByLocator, &envErrs, loc, err.Error(), mode, embed)
+				if handled {
+					continue
+				}
+				return Envelope{}, fatalErr
+			}
+			if violation != "" {
+				handled, fatalErr := handleDiffMetaExpectedLuaFailure(&in, recordIdxByLocator, &envErrs, loc, violation, mode, embed)
+				if handled {
+					continue
+				}
+				return Envelope{}, fatalErr
+			}
+			expectedPerLocator = next
+		}
+		format := "summary"
+		if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Format != "" {
+			format = in.Meta.DiffMeta.Format
+		}
+		var s diffSummary
+		switch format {
+		case "detailed":
+			s = diffMetaMapsV3Detailed(existing, expectedPerLocator)
+		case "json-patch":
+			s = diffMetaMapsV3JSONPatch(existing, expectedPerLocator)
+		default:
+			s = diffMetaMapsV3(existing, expectedPerLocator)
+		}
 		details = append(details, DiffDetail{
-			Locator:     loc,
-			MetaFile:    metaFile,
-			AddedKeys:   added,
-			RemovedKeys: removed,
-			ChangedKeys: changed,
+			Locator:         loc,
+			MetaFile:        metaFile,
+			AddedKeys:       s.added,
+			RemovedKeys:     s.removed,
+			ChangedKeys:     s.changed,
+			TypeChangedKeys: s.typeChanged,
+			Arrays:          s.arrays,
+			Changes:         s.changes,
+			Patch:           s.patch,
 		})
 	}
 	sort.Slice(details, func(i, j int) bool { return details[i].Locator < details[j].Locator })
 
+	only := "all"
+	if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Only != "" {
+		only = in.Meta.DiffMeta.Only
+	}
+	details = filterDiffDetails(details, only)
+
 	changedCount := 0
 	for _, d := range details {
-		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 {
+		if detailHasChanges(d) {
 			changedCount++
 		}
 	}
 
 	out := in
+	var outDetails []DiffDetail
+	if only != "orphans" {
+		outDetails = details
+	}
 	out.Meta.Diff = &DiffReport{
 		OrphanMetaFiles: orphans,
 		PairedCount:     len(details),
 		OrphanCount:     len(orphans),
 		ChangedCount:    changedCount,
-		Details:         details,
+		Details:         outDetails,
 		Orphans:         orphans,
 		PresentCount:    len(details),
 	}
+	if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Summary && deps.Stderr != nil {
+		emitDiffSummary(deps.Stderr, out.Meta.Diff)
+	}
+	appendSanitizedErrors(&out, envErrs)
 	return out, nil
 }
 
-func init() { Register(computeMetaDiffStage, computeMetaDiffRunner) }
-
-func diffMetaMaps(existing, expected map[string]any) ([]string, []string, []string) {
-	added := make([]string, 0)
-	removed := make([]string, 0)
-	changed := make([]string, 0)
-	diffMetaAtPath(existing, expected, "", &added, &removed, &changed)
-	sort.Strings(added)
-	sort.Strings(removed)
-	sort.Strings(changed)
-	return added, removed, changed
-}
-
-func diffMetaAtPath(existing, expected map[string]any, prefix string, added, removed, changed *[]string) {
-	keys := map[string]struct{}{}
-	for k := range existing {
-		keys[k] = struct{}{}
+func emitDiffSummary(w interface{ Write([]byte) (int, error) }, report *DiffReport) {
+	if report == nil {
+		return
 	}
-	for k := range expected {
-		keys[k] = struct{}{}
-	}
-	all := make([]string, 0, len(keys))
-	for k := range keys {
-		all = append(all, k)
-	}
-	sort.Strings(all)
-
-	for _, k := range all {
-		path := k
-		if prefix != "" {
-			path = prefix + "." + k
-		}
-		ev, inExisting := existing[k]
-		pv, inExpected := expected[k]
-		if !inExisting && inExpected {
-			*added = append(*added, path)
-			continue
-		}
-		if inExisting && !inExpected {
-			*removed = append(*removed, path)
-			continue
-		}
-		em, eok := asStringMap(ev)
-		pm, pok := asStringMap(pv)
-		if eok && pok {
-			diffMetaAtPath(em, pm, path, added, removed, changed)
-			continue
-		}
-		if !metaScalarEqual(ev, pv) {
-			*changed = append(*changed, path)
+	_, _ = fmt.Fprintf(w, "diff-summary paired=%d changed=%d orphans=%d\n", report.PairedCount, report.ChangedCount, report.OrphanCount)
+	changed := make([]DiffDetail, 0, len(report.Details))
+	for _, d := range report.Details {
+		if detailHasChanges(d) {
+			changed = append(changed, d)
 		}
 	}
-}
-
-func metaScalarEqual(a, b any) bool {
-	if af, aok := toFloat64(a); aok {
-		if bf, bok := toFloat64(b); bok {
-			return af == bf
-		}
-	}
-	as, aok := a.([]any)
-	bs, bok := b.([]any)
-	if aok && bok {
-		if len(as) != len(bs) {
-			return false
-		}
-		for i := range as {
-			if !metaScalarEqual(as[i], bs[i]) {
-				return false
+	sort.Slice(changed, func(i, j int) bool { return changed[i].Locator < changed[j].Locator })
+	for _, d := range changed {
+		arraysCount := 0
+		for _, ad := range d.Arrays {
+			if arrayDiffHasChanges(ad) {
+				arraysCount++
 			}
 		}
-		return true
+		_, _ = fmt.Fprintf(
+			w,
+			"changed locator=%s added=%d removed=%d changed=%d typeChanged=%d arrays=%d\n",
+			d.Locator,
+			len(d.AddedKeys),
+			len(d.RemovedKeys),
+			len(d.ChangedKeys),
+			len(d.TypeChangedKeys),
+			arraysCount,
+		)
 	}
-	return reflect.DeepEqual(a, b)
+	orphans := append([]string(nil), report.OrphanMetaFiles...)
+	sort.Strings(orphans)
+	for _, orphan := range orphans {
+		_, _ = fmt.Fprintf(w, "orphan metaFile=%s\n", orphan)
+	}
 }
 
-func toFloat64(v any) (float64, bool) {
-	switch n := v.(type) {
-	case int:
-		return float64(n), true
-	case int8:
-		return float64(n), true
-	case int16:
-		return float64(n), true
-	case int32:
-		return float64(n), true
-	case int64:
-		return float64(n), true
-	case uint:
-		return float64(n), true
-	case uint8:
-		return float64(n), true
-	case uint16:
-		return float64(n), true
-	case uint32:
-		return float64(n), true
-	case uint64:
-		return float64(n), true
-	case float32:
-		return float64(n), true
-	case float64:
-		return n, true
+func filterDiffDetails(details []DiffDetail, only string) []DiffDetail {
+	switch only {
+	case "changed":
+		out := make([]DiffDetail, 0, len(details))
+		for _, d := range details {
+			if detailHasChanges(d) {
+				out = append(out, d)
+			}
+		}
+		return out
+	case "unchanged":
+		out := make([]DiffDetail, 0, len(details))
+		for _, d := range details {
+			if !detailHasChanges(d) {
+				out = append(out, d)
+			}
+		}
+		return out
+	case "orphans":
+		return nil
 	default:
-		return 0, false
+		return details
 	}
 }
+
+func detailHasChanges(d DiffDetail) bool {
+	if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 {
+		return true
+	}
+	if len(d.Changes) > 0 || len(d.Patch) > 0 {
+		return true
+	}
+	for _, ad := range d.Arrays {
+		if arrayDiffHasChanges(ad) {
+			return true
+		}
+	}
+	return false
+}
+
+func arrayDiffHasChanges(d ArrayDiff) bool {
+	return len(d.AddedIndices) > 0 || len(d.RemovedIndices) > 0 || len(d.ChangedIndices) > 0
+}
+
+func outRecordFallback(r Record, locator string) Record {
+	if r.Locator == "" {
+		r.Locator = locator
+	}
+	return r
+}
+
+func handleDiffMetaExpectedLuaFailure(
+	in *Envelope,
+	recordIdxByLocator map[string]int,
+	envErrs *[]Error,
+	loc, message, mode string,
+	embed bool,
+) (bool, error) {
+	msg := sanitizeErrorMessage(message)
+	if mode == "keep-going" {
+		if idx, ok := recordIdxByLocator[loc]; ok {
+			rr, envE := recordFailure(outRecordFallback(in.Records[idx], loc), diffMetaExpectedLuaStage, msg, embed)
+			in.Records[idx] = rr
+			if envE != nil {
+				*envErrs = append(*envErrs, *envE)
+			}
+		} else {
+			*envErrs = append(*envErrs, Error{Stage: diffMetaExpectedLuaStage, Locator: loc, Message: msg})
+		}
+		return true, nil
+	}
+	return false, luaViolationFailFast(diffMetaExpectedLuaStage, msg)
+}
+
+func init() { Register(computeMetaDiffStage, computeMetaDiffRunner) }
