@@ -19,6 +19,36 @@ async function ensureDir(p: string): Promise<void> {
   await fs.mkdir(p, { recursive: true });
 }
 
+async function readVersionFromProjectYAML(
+  p = 'main.project.yaml',
+): Promise<string> {
+  const raw = await readFileSafe(p);
+  if (!raw) return '';
+  const lines = raw.split(/\r?\n/);
+  let inTags = false;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+    if (!inTags) {
+      if (/^tags\s*:\s*$/.test(trimmed)) inTags = true;
+      continue;
+    }
+    if (/^\S/.test(line)) break; // next top-level key
+    const m = line.match(/^\s*version\s*:\s*(.+)\s*$/);
+    if (m) {
+      let v = m[1].trim();
+      if (
+        (v.startsWith('"') && v.endsWith('"')) ||
+        (v.startsWith("'") && v.endsWith("'"))
+      ) {
+        v = v.slice(1, -1);
+      }
+      return v;
+    }
+  }
+  return '';
+}
+
 async function runChecked(
   cmd: string[],
   opts: { cwd?: string; env?: Record<string, string | undefined> } = {},
@@ -66,8 +96,9 @@ async function sha256File(filePath: string): Promise<string> {
 }
 
 async function main() {
-  const version =
-    (process.env.VERSION ?? (await readFileSafe('VERSION'))).trim() || '0.0.0';
+  const version = (await readVersionFromProjectYAML()).trim();
+  if (!version)
+    throw new Error('version not found in main.project.yaml (tags.version)');
 
   const currentDirectory = process.cwd();
   const folderName = path.basename(currentDirectory);
