@@ -68,6 +68,9 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 			continue
 		}
 		s := diffMetaMapsV3(existing, expected)
+		if in.Meta != nil && in.Meta.DiffMeta != nil && in.Meta.DiffMeta.Format == "detailed" {
+			s = diffMetaMapsV3Detailed(existing, expected)
+		}
 		details = append(details, DiffDetail{
 			Locator:         loc,
 			MetaFile:        metaFile,
@@ -76,13 +79,14 @@ func computeMetaDiffRunner(ctx context.Context, in Envelope, deps Deps) (Envelop
 			ChangedKeys:     s.changed,
 			TypeChangedKeys: s.typeChanged,
 			Arrays:          s.arrays,
+			Changes:         s.changes,
 		})
 	}
 	sort.Slice(details, func(i, j int) bool { return details[i].Locator < details[j].Locator })
 
 	changedCount := 0
 	for _, d := range details {
-		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 || len(d.Arrays) > 0 {
+		if len(d.AddedKeys) > 0 || len(d.RemovedKeys) > 0 || len(d.ChangedKeys) > 0 || len(d.TypeChangedKeys) > 0 || len(d.Arrays) > 0 || len(d.Changes) > 0 {
 			changedCount++
 		}
 	}
@@ -113,6 +117,7 @@ type diffSummary struct {
 	changed     []string
 	typeChanged []string
 	arrays      []ArrayDiff
+	changes     []DiffChange
 }
 
 type diffCollector struct {
@@ -121,6 +126,8 @@ type diffCollector struct {
 	changed     []string
 	typeChanged []string
 	arrays      []ArrayDiff
+	changes     []DiffChange
+	format      string
 }
 
 func diffMetaMapsV3(existing, expected map[string]any) diffSummary {
@@ -132,6 +139,19 @@ func diffMetaMapsV3(existing, expected map[string]any) diffSummary {
 		changed:     uniqueSortedStrings(c.changed),
 		typeChanged: uniqueSortedStrings(c.typeChanged),
 		arrays:      normalizeArrayDiffs(c.arrays),
+	}
+}
+
+func diffMetaMapsV3Detailed(existing, expected map[string]any) diffSummary {
+	c := &diffCollector{format: "detailed"}
+	c.compareMaps("", existing, expected)
+	return diffSummary{
+		added:       uniqueSortedStrings(c.added),
+		removed:     uniqueSortedStrings(c.removed),
+		changed:     uniqueSortedStrings(c.changed),
+		typeChanged: uniqueSortedStrings(c.typeChanged),
+		arrays:      normalizeArrayDiffs(c.arrays),
+		changes:     sortDiffChanges(c.changes),
 	}
 }
 
@@ -158,10 +178,12 @@ func (c *diffCollector) compareMaps(prefix string, existing, expected map[string
 		pv, inExpected := expected[k]
 		if !inExisting && inExpected {
 			c.added = append(c.added, path)
+			c.addChange(path, "added", nil, pv)
 			continue
 		}
 		if inExisting && !inExpected {
 			c.removed = append(c.removed, path)
+			c.addChange(path, "removed", ev, nil)
 			continue
 		}
 		c.compareValues(path, ev, pv)
@@ -184,10 +206,12 @@ func (c *diffCollector) compareValues(path string, existing, expected any) {
 	if jsonType(existing) != jsonType(expected) {
 		c.typeChanged = append(c.typeChanged, path)
 		c.changed = append(c.changed, path)
+		c.addChange(path, "type-changed", existing, expected)
 		return
 	}
 	if !metaScalarEqual(existing, expected) {
 		c.changed = append(c.changed, path)
+		c.addChange(path, "changed", existing, expected)
 	}
 }
 
@@ -202,13 +226,24 @@ func (c *diffCollector) compareArrays(path string, existing, expected []any) {
 			continue
 		}
 		diff.ChangedIndices = append(diff.ChangedIndices, i)
-		c.compareValues(fmt.Sprintf("%s[%d]", path, i), existing[i], expected[i])
+		idxPath := fmt.Sprintf("%s[%d]", path, i)
+		if c.format == "detailed" {
+			c.addChange(idxPath, "array-index-changed", existing[i], expected[i])
+			continue
+		}
+		c.compareValues(idxPath, existing[i], expected[i])
 	}
 	for i := n; i < len(expected); i++ {
 		diff.AddedIndices = append(diff.AddedIndices, i)
+		if c.format == "detailed" {
+			c.addChange(fmt.Sprintf("%s[%d]", path, i), "added", nil, expected[i])
+		}
 	}
 	for i := n; i < len(existing); i++ {
 		diff.RemovedIndices = append(diff.RemovedIndices, i)
+		if c.format == "detailed" {
+			c.addChange(fmt.Sprintf("%s[%d]", path, i), "removed", existing[i], nil)
+		}
 	}
 	diff.AddedIndices = uniqueSortedInts(diff.AddedIndices)
 	diff.RemovedIndices = uniqueSortedInts(diff.RemovedIndices)
@@ -216,6 +251,37 @@ func (c *diffCollector) compareArrays(path string, existing, expected []any) {
 	if len(diff.AddedIndices) > 0 || len(diff.RemovedIndices) > 0 || len(diff.ChangedIndices) > 0 {
 		c.arrays = append(c.arrays, diff)
 	}
+}
+
+func (c *diffCollector) addChange(path, kind string, oldValue, newValue any) {
+	if c.format != "detailed" {
+		return
+	}
+	ch := DiffChange{Path: path, Kind: kind}
+	switch kind {
+	case "added":
+		ch.NewValue = deepCopyAny(newValue)
+	case "removed":
+		ch.OldValue = deepCopyAny(oldValue)
+	default:
+		ch.OldValue = deepCopyAny(oldValue)
+		ch.NewValue = deepCopyAny(newValue)
+	}
+	c.changes = append(c.changes, ch)
+}
+
+func sortDiffChanges(in []DiffChange) []DiffChange {
+	if len(in) == 0 {
+		return nil
+	}
+	out := append([]DiffChange(nil), in...)
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Path != out[j].Path {
+			return out[i].Path < out[j].Path
+		}
+		return out[i].Kind < out[j].Kind
+	})
+	return out
 }
 
 func jsonType(v any) string {

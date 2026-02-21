@@ -214,6 +214,21 @@ test('diff-meta: structural diff v3 arrays and type changes matches golden', () 
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('diff-meta: detailed format includes deterministic changes with old/new values', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/p5_diff_detailed1.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  saveOutputs(root, 'run-diff-meta-detailed-v1', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/p5_diff_detailed1_out.golden.json',
+  );
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('update-meta: rewrite-stable canonical YAML (run twice, exact golden)', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

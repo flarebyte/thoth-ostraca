@@ -67,6 +67,19 @@ func parseDiffMetaSection(v cue.Value) (DiffMeta, error) {
 		return d, nil
 	}
 	d.HasSection = true
+	d.Format = "summary"
+	fv := dv.LookupPath(cue.ParsePath("format"))
+	if fv.Exists() {
+		var f string
+		if err := fv.Decode(&f); err != nil {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary' or 'detailed'")
+		}
+		if f != "summary" && f != "detailed" {
+			return DiffMeta{}, fmt.Errorf("invalid diffMeta.format: must be 'summary' or 'detailed'")
+		}
+		d.Format = f
+		d.HasFormat = true
+	}
 	pv := dv.LookupPath(cue.ParsePath("expectedPatch"))
 	if !pv.Exists() {
 		return d, nil

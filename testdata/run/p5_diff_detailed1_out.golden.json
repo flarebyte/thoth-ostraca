@@ -61,21 +61,56 @@
           "metaFile": "a.txt.thoth.yaml",
           "addedKeys": [],
           "removedKeys": [],
-          "changedKeys": ["kind", "rules[0].tags[1]", "value"],
+          "changedKeys": ["kind", "value"],
           "typeChangedKeys": ["kind", "value"],
           "arrays": [
             {
               "path": "rules",
               "addedIndices": [2],
               "changedIndices": [0, 1]
+            }
+          ],
+          "changes": [
+            {
+              "path": "kind",
+              "kind": "type-changed",
+              "oldValue": {
+                "k": 1
+              },
+              "newValue": []
             },
             {
-              "path": "rules[0].tags",
-              "changedIndices": [1]
+              "path": "rules[0]",
+              "kind": "array-index-changed",
+              "oldValue": {
+                "tags": ["a", "b"]
+              },
+              "newValue": {
+                "tags": ["a", "c"]
+              }
             },
             {
-              "path": "rules[1].tags",
-              "addedIndices": [1]
+              "path": "rules[1]",
+              "kind": "array-index-changed",
+              "oldValue": {
+                "tags": ["x"]
+              },
+              "newValue": {
+                "tags": ["x", "y"]
+              }
+            },
+            {
+              "path": "rules[2]",
+              "kind": "added",
+              "newValue": {
+                "tags": []
+              }
+            },
+            {
+              "path": "value",
+              "kind": "type-changed",
+              "oldValue": 1,
+              "newValue": "1"
             }
           ]
         },
@@ -105,7 +140,7 @@
         ],
         "value": "1"
       },
-      "format": "summary"
+      "format": "detailed"
     }
   }
 }

@@ -21,7 +21,11 @@ func applyDiffMeta(out *Envelope, min config.Minimal) {
 		return
 	}
 	if out.Meta.DiffMeta == nil {
-		out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}}
+		out.Meta.DiffMeta = &DiffMetaMeta{ExpectedPatch: map[string]any{}, Format: "summary"}
+	}
+	out.Meta.DiffMeta.Format = "summary"
+	if min.DiffMeta.HasFormat {
+		out.Meta.DiffMeta.Format = min.DiffMeta.Format
 	}
 	if min.DiffMeta.HasExpectedPatch {
 		if cp, ok := deepCopyAny(min.DiffMeta.ExpectedPatch).(map[string]any); ok {
