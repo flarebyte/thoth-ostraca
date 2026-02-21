@@ -55,6 +55,16 @@ func enrichGitError(err error) string {
 	}
 }
 
+func handleEnrichGitStageError(in Envelope, mode, msg string) (Envelope, error) {
+	if mode == "keep-going" {
+		out := in
+		out.Errors = append(out.Errors, Error{Stage: enrichGitStage, Message: msg})
+		SortEnvelopeErrors(&out)
+		return out, nil
+	}
+	return Envelope{}, fmt.Errorf("%s: %s", enrichGitStage, msg)
+}
+
 func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 	if in.Meta == nil || in.Meta.Git == nil || !in.Meta.Git.Enabled {
 		return in, nil
@@ -64,24 +74,12 @@ func enrichGitRunner(_ context.Context, in Envelope, _ Deps) (Envelope, error) {
 	repoRoot, err := repoRootFor(root)
 	if err != nil {
 		msg := sanitizeErrorMessage(enrichGitError(err))
-		if mode == "keep-going" {
-			out := in
-			out.Errors = append(out.Errors, Error{Stage: enrichGitStage, Message: msg})
-			SortEnvelopeErrors(&out)
-			return out, nil
-		}
-		return Envelope{}, fmt.Errorf("%s: %s", enrichGitStage, msg)
+		return handleEnrichGitStageError(in, mode, msg)
 	}
 	ctx, err := newGitContext(root, repoRoot)
 	if err != nil {
 		msg := sanitizeErrorMessage(enrichGitError(err))
-		if mode == "keep-going" {
-			out := in
-			out.Errors = append(out.Errors, Error{Stage: enrichGitStage, Message: msg})
-			SortEnvelopeErrors(&out)
-			return out, nil
-		}
-		return Envelope{}, fmt.Errorf("%s: %s", enrichGitStage, msg)
+		return handleEnrichGitStageError(in, mode, msg)
 	}
 
 	out := in
