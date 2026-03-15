@@ -1,0 +1,3 @@
+locator: testutil/copytree.go
+meta:
+  language: go

@@ -1,0 +1,3 @@
+locator: stage/enrich_git_commit_lookup.go
+meta:
+  language: go

@@ -1,0 +1,3 @@
+locator: stage/test_helpers.go
+meta:
+  language: go

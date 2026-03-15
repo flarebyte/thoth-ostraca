@@ -1,0 +1,3 @@
+locator: stage/enrich_fileinfo.go
+meta:
+  language: go

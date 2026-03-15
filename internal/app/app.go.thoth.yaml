@@ -1,0 +1,3 @@
+locator: app/app.go
+meta:
+  language: go

@@ -1,0 +1,3 @@
+locator: stage/lua_postmap_helpers.go
+meta:
+  language: go

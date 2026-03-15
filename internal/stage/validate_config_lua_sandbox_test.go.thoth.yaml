@@ -1,0 +1,3 @@
+locator: stage/validate_config_lua_sandbox_test.go
+meta:
+  language: go

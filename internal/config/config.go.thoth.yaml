@@ -1,0 +1,3 @@
+locator: config/config.go
+meta:
+  language: go

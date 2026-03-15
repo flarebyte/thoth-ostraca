@@ -1,0 +1,3 @@
+locator: stage/lua_map_helpers.go
+meta:
+  language: go

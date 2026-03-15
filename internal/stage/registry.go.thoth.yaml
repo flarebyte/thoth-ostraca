@@ -1,0 +1,3 @@
+locator: stage/registry.go
+meta:
+  language: go

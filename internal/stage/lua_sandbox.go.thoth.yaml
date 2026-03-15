@@ -1,0 +1,3 @@
+locator: stage/lua_sandbox.go
+meta:
+  language: go
