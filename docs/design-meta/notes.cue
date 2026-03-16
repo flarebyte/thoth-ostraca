@@ -1,12 +1,8 @@
 package flyb
 
-notes: [
-  {
-    name:   "flow.function-calls-tree"
-    title:  "Function calls tree"
-    labels: ["design", "flow"]
-    filepath: "examples/function-calls-tree.txt"
-  },
+import "list"
+
+#baseNotes: [
   {
     name:   "flow.function-calls-tree-supported-use-cases"
     title:  "Supported use cases"
@@ -898,3 +894,8 @@ thoth CLI root command [cli.root]
 """
   },
 ]
+
+notes: list.Concat([
+  #baseNotes,
+  #callGraphNotes,
+])

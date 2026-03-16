@@ -16,13 +16,23 @@ reports: [{
   sections: [
     {
       title: "Function calls tree"
-      sections: [{
-        title: "Details"
-        notes: [
-          "flow.function-calls-tree",
-          "flow.function-calls-tree-supported-use-cases",
-        ]
-      }]
+      sections: [
+        {
+          title: "Flow call graph"
+          arguments: [
+            "graph-subject-label=call",
+            "graph-edge-label=delegate_to",
+            "graph-start-node=call.thoth.cli.root",
+            "graph-renderer=markdown-text",
+            "cycle-policy=disallow",
+          ]
+          notes: ["call.thoth.cli.root"]
+        },
+        {
+          title: "Supported use cases"
+          notes: ["flow.function-calls-tree-supported-use-cases"]
+        },
+      ]
     },
     {
       title: "Suggested Go Implementation"

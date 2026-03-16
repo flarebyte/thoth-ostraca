@@ -627,67 +627,65 @@ thoth CLI root command [cli.root]
 
 ## Function calls tree
 
-### Details
+### Flow call graph
 
-#### Function calls tree
+- <a id="graph-node-call-thoth-cli-root"></a> thoth CLI root command
+  - <a id="graph-node-call-diagnose-parse-args"></a> Parse args for diagnose
+    - <a id="graph-node-call-diagnose-single-stage"></a> Diagnose single stage
+      - <a id="graph-node-call-diagnose-dump-stage-input"></a> Dump stage input (optional)
+      - <a id="graph-node-call-diagnose-dump-stage-output"></a> Dump stage output (optional)
+      - <a id="graph-node-call-diagnose-emit-run-header"></a> Emit run header
+      - <a id="graph-node-call-diagnose-execute-target-stage"></a> Execute target stage
+      - <a id="graph-node-call-diagnose-load-action-config"></a> Load action config (CUE)
+      - <a id="graph-node-call-diagnose-parse-subcommand-args"></a> Parse args for diagnose
+      - <a id="graph-node-call-diagnose-resolve-input-mode"></a> Resolve input mode
+      - <a id="graph-node-call-diagnose-resolve-target-step"></a> Resolve target step
+  - <a id="graph-node-call-run-parse-args"></a> Parse args for run
+    - <a id="graph-node-call-run-load-action-config-file"></a> Load action config file
+    - <a id="graph-node-call-run-route-by-action-type"></a> Route by action type
+      - <a id="graph-node-call-create-flow"></a> Create meta files flow
+        - <a id="graph-node-call-create-enrich-files"></a> Enrich files with OS/Git info
+        - <a id="graph-node-call-create-filter-filenames"></a> Filter filenames
+        - <a id="graph-node-call-create-find-files"></a> Find files recursively (gitignore)
+        - <a id="graph-node-call-create-map-filenames"></a> Map filenames
+        - <a id="graph-node-call-create-post-map-from-files"></a> Post-map from files
+        - <a id="graph-node-call-create-save-meta-files"></a> Save meta files (*.thoth.yaml)
+        - <a id="graph-node-call-create-write-json-result"></a> Write JSON result (array/value/lines)
+      - <a id="graph-node-call-diff-flow"></a> Diff meta files flow
+        - <a id="graph-node-call-diff-compute-meta-diffs"></a> Compute meta diffs
+        - <a id="graph-node-call-diff-detect-orphans"></a> Detect orphan meta files
+        - <a id="graph-node-call-diff-enrich-files"></a> Enrich files with OS/Git info
+        - <a id="graph-node-call-diff-filter-filenames"></a> Filter filenames
+        - <a id="graph-node-call-diff-find-files"></a> Find files recursively (update)
+        - <a id="graph-node-call-diff-load-existing-meta"></a> Load existing meta (if any)
+        - <a id="graph-node-call-diff-map-filenames"></a> Map filenames
+        - <a id="graph-node-call-diff-post-map-for-update"></a> Post-map for update (with existing)
+        - <a id="graph-node-call-diff-write-json-result"></a> Write JSON result (array/value/lines)
+      - <a id="graph-node-call-pipeline-meta-flow"></a> Meta pipeline flow
+        - <a id="graph-node-call-pipeline-apply-filter"></a> Apply filter predicate
+        - <a id="graph-node-call-pipeline-apply-map"></a> Apply map transform
+        - <a id="graph-node-call-pipeline-apply-reduce"></a> Apply reduce aggregate
+        - <a id="graph-node-call-pipeline-execute-shell"></a> Execute shell per mapped item
+        - <a id="graph-node-call-pipeline-find-meta-files"></a> Find *.thoth.yaml files
+        - <a id="graph-node-call-pipeline-parse-validate-yaml"></a> Parse and validate YAML records
+        - <a id="graph-node-call-pipeline-post-map-shell-results"></a> Post-map shell results
+        - <a id="graph-node-call-pipeline-write-json-result"></a> Write JSON result (array/value/lines)
+      - <a id="graph-node-call-update-flow"></a> Update meta files flow
+        - <a id="graph-node-call-update-enrich-files"></a> Enrich files with OS/Git info
+        - <a id="graph-node-call-update-filter-filenames"></a> Filter filenames
+        - <a id="graph-node-call-update-find-files"></a> Find files recursively (update)
+        - <a id="graph-node-call-update-load-existing-meta"></a> Load existing meta (if any)
+        - <a id="graph-node-call-update-map-filenames"></a> Map filenames
+        - <a id="graph-node-call-update-post-map-for-update"></a> Post-map for update (with existing)
+        - <a id="graph-node-call-update-update-meta-files"></a> Update meta files (merge/create)
+        - <a id="graph-node-call-update-write-json-result"></a> Write JSON result (array/value/lines)
+      - <a id="graph-node-call-validate-flow"></a> Validate meta files only
+        - <a id="graph-node-call-validate-collect-validation-results"></a> Collect validation results
+        - <a id="graph-node-call-validate-find-meta-files"></a> Find *.thoth.yaml files
+        - <a id="graph-node-call-validate-parse-validate-yaml"></a> Parse and validate YAML records
+        - <a id="graph-node-call-validate-write-json-result"></a> Write JSON result (array/value/lines)
 
-```txt
-thoth CLI root command
-  Parse args for run
-    Load action config file
-    Route by action type
-      Meta pipeline flow
-        Find *.thoth.yaml files
-        Parse and validate YAML records
-        Apply filter predicate
-        Apply map transform
-        Execute shell per mapped item
-        Post-map shell results
-        Apply reduce aggregate
-        Write JSON result (array/value/lines)
-      Create meta files flow
-        Find files recursively (gitignore)
-        Enrich files with OS/Git info
-        Filter filenames
-        Map filenames
-        Post-map from files
-        Save meta files (*.thoth.yaml)
-        Write JSON result (array/value/lines)
-      Update meta files flow
-        Find files recursively (update)
-        Enrich files with OS/Git info
-        Filter filenames
-        Map filenames
-        Load existing meta (if any)
-        Post-map for update (with existing)
-        Update meta files (merge/create)
-        Write JSON result (array/value/lines)
-      Diff meta files flow
-        Find files recursively (update)
-        Enrich files with OS/Git info
-        Filter filenames
-        Map filenames
-        Load existing meta (if any)
-        Post-map for update (with existing)
-        Compute meta diffs
-        Detect orphan meta files
-        Write JSON result (array/value/lines)
-      Validate meta files only
-        Find *.thoth.yaml files
-        Parse and validate YAML records
-        Collect validation results
-        Write JSON result (array/value/lines)
-  Parse args for diagnose
-    Diagnose single stage
-      Parse args for diagnose
-      Load action config (CUE)
-      Resolve target step
-      Resolve input mode
-      Dump stage input (optional)
-      Emit run header
-      Execute target stage
-      Dump stage output (optional)
-```
+### Supported use cases
 
 #### Supported use cases
 

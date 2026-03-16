@@ -1,3 +1,3 @@
 package flyb
 
-relationships: []
+relationships: #callGraphRelationships
