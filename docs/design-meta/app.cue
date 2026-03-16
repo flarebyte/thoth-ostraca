@@ -30,7 +30,7 @@ reports: [{
         },
         {
           title: "Supported use cases"
-          notes: ["flow.function-calls-tree-supported-use-cases"]
+          notes: #functionCallsTreeUseCaseRefs
         },
       ]
     },
@@ -185,7 +185,7 @@ reports: [{
       title: "Function calls details"
       sections: [{
         title: "Details"
-        notes: ["flow.function-calls-details"]
+        notes: #callDetailRefs
       }]
     },
     {

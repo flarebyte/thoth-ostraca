@@ -2,55 +2,155 @@ package flyb
 
 import "list"
 
-#baseNotes: [
+#functionCallsTreeUseCaseNotes: [
   {
-    name:   "flow.function-calls-tree-supported-use-cases"
-    title:  "Supported use cases"
-    labels: ["design", "flow"]
-    markdown: """
-Supported use cases:
-
-- Helpful, well-documented flags
-- JSON output for CLI/CI/AI
-  Machine-oriented default; aggregated JSON; lines optional
-- Load action config file
-  Prefer CUE (.cue) with schema validation
-- Respect .gitignore by default
-  Always on; opt-out via --no-gitignore
-- One file per locator
-  Minimize merge conflicts
-- Validate {locator, meta} schema
-  Required fields: locator:string, meta:object; error on missing
-- Locators as file path or URL
-- Filter meta by locator
-  boolean predicate over {locator, meta}
-- Script filter/map/reduce
-  Lua only (v1): small + popular
-- Process in parallel
-  Goroutines + channels; bounded pool; default workers = CPU count
-- Map meta records
-  transform {locator, meta} -> any
-- Run shell using map output
-  Support bash, sh, zsh early
-- Reduce across meta set
-  aggregate stream -> single result
-- Create many meta files
-- Expose os.FileInfo for inputs
-  Include size, mode, modTime, isDir for filtering/mapping when enabled
-- Expose Git metadata for inputs
-  Use go-git to provide tracked/ignored, worktree status, and last commit
-  info when enabled
-- Update many meta files
-- Diff meta files at scale
-- Validate meta files only
-  No transforms or shell; emit validation report
-- Diagnose a single stage
-  Execute one pipeline stage in isolation with explicit or prepared input;
-  capture fixtures
-- Capture stage boundary fixtures
-  Dump input/output JSON/NDJSON for reproducible debugging
-"""
+    name:   "flow.usecase.helpful-well-documented-flags"
+    title:  "Helpful, well-documented flags"
+    labels: ["design", "flow", "usecase"]
   },
+  {
+    name:   "flow.usecase.json-output-for-cli-ci-ai"
+    title:  "JSON output for CLI/CI/AI"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Machine-oriented default; aggregated JSON; lines optional."
+  },
+  {
+    name:   "flow.usecase.load-action-config-file"
+    title:  "Load action config file"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Prefer CUE (.cue) with schema validation."
+  },
+  {
+    name:   "flow.usecase.respect-gitignore-by-default"
+    title:  "Respect .gitignore by default"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Always on; opt-out via --no-gitignore."
+  },
+  {
+    name:   "flow.usecase.one-file-per-locator"
+    title:  "One file per locator"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Minimize merge conflicts."
+  },
+  {
+    name:   "flow.usecase.validate-locator-meta-schema"
+    title:  "Validate {locator, meta} schema"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Required fields: locator:string, meta:object; error on missing."
+  },
+  {
+    name:   "flow.usecase.locators-as-file-path-or-url"
+    title:  "Locators as file path or URL"
+    labels: ["design", "flow", "usecase"]
+  },
+  {
+    name:   "flow.usecase.filter-meta-by-locator"
+    title:  "Filter meta by locator"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Boolean predicate over {locator, meta}."
+  },
+  {
+    name:   "flow.usecase.script-filter-map-reduce"
+    title:  "Script filter/map/reduce"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Lua only (v1): small + popular."
+  },
+  {
+    name:   "flow.usecase.process-in-parallel"
+    title:  "Process in parallel"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Goroutines + channels; bounded pool; default workers = CPU count."
+  },
+  {
+    name:   "flow.usecase.map-meta-records"
+    title:  "Map meta records"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Transform {locator, meta} -> any."
+  },
+  {
+    name:   "flow.usecase.run-shell-using-map-output"
+    title:  "Run shell using map output"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Support bash, sh, zsh early."
+  },
+  {
+    name:   "flow.usecase.reduce-across-meta-set"
+    title:  "Reduce across meta set"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Aggregate stream -> single result."
+  },
+  {
+    name:   "flow.usecase.create-many-meta-files"
+    title:  "Create many meta files"
+    labels: ["design", "flow", "usecase"]
+  },
+  {
+    name:   "flow.usecase.expose-os-fileinfo-for-inputs"
+    title:  "Expose os.FileInfo for inputs"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Include size, mode, modTime, isDir for filtering/mapping when enabled."
+  },
+  {
+    name:   "flow.usecase.expose-git-metadata-for-inputs"
+    title:  "Expose Git metadata for inputs"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Use go-git to provide tracked/ignored, worktree status, and last commit info when enabled."
+  },
+  {
+    name:   "flow.usecase.update-many-meta-files"
+    title:  "Update many meta files"
+    labels: ["design", "flow", "usecase"]
+  },
+  {
+    name:   "flow.usecase.diff-meta-files-at-scale"
+    title:  "Diff meta files at scale"
+    labels: ["design", "flow", "usecase"]
+  },
+  {
+    name:   "flow.usecase.validate-meta-files-only"
+    title:  "Validate meta files only"
+    labels: ["design", "flow", "usecase"]
+    markdown: "No transforms or shell; emit validation report."
+  },
+  {
+    name:   "flow.usecase.diagnose-a-single-stage"
+    title:  "Diagnose a single stage"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Execute one pipeline stage in isolation with explicit or prepared input; capture fixtures."
+  },
+  {
+    name:   "flow.usecase.capture-stage-boundary-fixtures"
+    title:  "Capture stage boundary fixtures"
+    labels: ["design", "flow", "usecase"]
+    markdown: "Dump input/output JSON/NDJSON for reproducible debugging."
+  },
+]
+
+#functionCallsTreeUseCaseRefs: [
+  "flow.usecase.helpful-well-documented-flags",
+  "flow.usecase.json-output-for-cli-ci-ai",
+  "flow.usecase.load-action-config-file",
+  "flow.usecase.respect-gitignore-by-default",
+  "flow.usecase.one-file-per-locator",
+  "flow.usecase.validate-locator-meta-schema",
+  "flow.usecase.locators-as-file-path-or-url",
+  "flow.usecase.filter-meta-by-locator",
+  "flow.usecase.script-filter-map-reduce",
+  "flow.usecase.process-in-parallel",
+  "flow.usecase.map-meta-records",
+  "flow.usecase.run-shell-using-map-output",
+  "flow.usecase.reduce-across-meta-set",
+  "flow.usecase.create-many-meta-files",
+  "flow.usecase.expose-os-fileinfo-for-inputs",
+  "flow.usecase.expose-git-metadata-for-inputs",
+  "flow.usecase.update-many-meta-files",
+  "flow.usecase.diff-meta-files-at-scale",
+  "flow.usecase.validate-meta-files-only",
+  "flow.usecase.diagnose-a-single-stage",
+  "flow.usecase.capture-stage-boundary-fixtures",
+]
+
+#baseNotes: [
   {
     name:   "flow.suggested-go-implementation"
     title:  "Suggested Go Implementation"
@@ -398,337 +498,6 @@ Supported use cases:
 """
   },
   {
-    name:   "flow.function-calls-details"
-    title:  "Function calls details"
-    labels: ["design", "flow"]
-    markdown: """
-```text
-thoth CLI root command [cli.root]
-  - note: cobra-based command tree
-  - pkg: cmd/thoth
-  - func: CliRoot
-  - file: cmd/thoth/cli_root.go
-  Parse args for run [cli.run]
-    - note: flags: --config (CUE .cue file). All other options belong in the
-      action config.
-    - pkg: cmd/thoth
-    - func: CliRun
-    - file: cmd/thoth/cli_run.go
-    Load action config file [action.config.load]
-      - note: --config path; CUE schema-validated .cue; drives entire pipeline
-      - pkg: internal/config
-      - func: ActionConfigLoad
-      - file: internal/config/config_load.go
-    Route by action type [action.route]
-      - note: action: pipeline | create | update | diff
-      - pkg: internal/config
-      - func: ActionRoute
-      - file: internal/config/action_route.go
-      Meta pipeline flow [flow.pipeline]
-        - pkg: internal/pipeline
-        - func: FlowPipeline
-        - file: internal/pipeline/flow_pipeline.go
-        Find *.thoth.yaml files [fs.discovery]
-          - note: walk root; .gitignore ON by default even outside git repos;
-            --no-gitignore to disable; do not follow symlinks by default
-          - pkg: internal/fs
-          - func: FsDiscovery
-          - file: internal/fs/fs_discovery.go
-        Parse and validate YAML records [meta.parse]
-          - note: yaml.v3; strict fields; types; locator canonicalization;
-            top-level unknown = error
-            (unless validation.allowUnknownTopLevel); inside meta: unknown
-            allowed
-          - pkg: internal/meta
-          - func: MetaParse
-          - file: internal/meta/meta_parse.go
-        Apply filter predicate [meta.filter.step]
-          - note: Lua-only predicate (v1)
-          - pkg: internal/pipeline
-          - func: MetaFilterStep
-          - file: internal/pipeline/meta_filter_step.go
-        Apply map transform [meta.map.step]
-          - note: Lua-only mapping (v1); parallel by default
-          - pkg: internal/pipeline
-          - func: MetaMapStep
-          - file: internal/pipeline/meta_map_step.go
-        Execute shell per mapped item [shell.exec]
-          - note: Conditional: --run-shell; argv templates preferred
-            (no shell parsing); string templates auto-escape; supports bash/sh/
-            zsh; parallel with bounded workers; feeds post-map/reduce; timeout
-            kills process group
-          - pkg: internal/shell
-          - func: ShellExec
-          - file: internal/shell/shell_exec.go
-        Post-map shell results [meta.map.post-shell]
-          - note: Conditional: --post-map-script; Lua transforms
-            {locator,input,shell:{cmd,exitCode,stdout,stderr,durationMs}}
-          - pkg: internal/pipeline
-          - func: MetaMapPostShell
-          - file: internal/pipeline/meta_post_shell.go
-        Apply reduce aggregate [meta.reduce.step]
-          - note: Lua-only reduce (v1); parallel feed; single JSON value
-          - pkg: internal/pipeline
-          - func: MetaReduceStep
-          - file: internal/pipeline/meta_reduce_step.go
-        Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array
-            (sorted by locator/relPath); --lines streams nondeterministically;
-            reduce -> single value; embed per-item errors when configured
-          - pkg: internal/output
-          - func: OutputJsonResult
-          - file: internal/output/json_result.go
-      Create meta files flow [flow.create]
-        - pkg: internal/pipeline
-        - func: FlowCreate
-        - file: internal/pipeline/flow_create.go
-        Find files recursively (gitignore) [fs.discovery.files]
-          - note: walk root; .gitignore ON by default
-            (even if not a git repo); no patterns; do not follow symlinks by
-            default; filenames as inputs
-          - pkg: internal/fs
-          - func: FsDiscoveryFiles
-          - file: internal/fs/discovery_files.go
-        Enrich files with OS/Git info [files.enrich]
-          - note: Conditional: files.info and/or files.git; attach file.info
-            (os.Stat) and file.git (go-git status/last commit)
-          - pkg: internal/pipeline
-          - func: FilesEnrich
-          - file: internal/pipeline/files_enrich.go
-        Filter filenames [files.filter.step]
-          - note: Lua-only predicate (v1) over {file}
-          - pkg: internal/pipeline
-          - func: FilesFilterStep
-          - file: internal/pipeline/files_filter_step.go
-        Map filenames [files.map.step]
-          - note: Lua-only map (v1) over {file}
-          - pkg: internal/pipeline
-          - func: FilesMapStep
-          - file: internal/pipeline/files_map_step.go
-        Post-map from files [files.map.post]
-          - note: Conditional: inline Lua transforms {file,input} -> any
-          - pkg: internal/pipeline
-          - func: FilesMapPost
-          - file: internal/pipeline/files_map_post.go
-        Save meta files (*.thoth.yaml) [meta.save]
-          - note: Conditional: config.save.enabled or --save; name =
-            <sha256[:15]>[-r<rootTag>]-<lastdir>-<filename>.thoth.yaml;
-            sanitize components; if path exists and belongs to different
-            locator -> error; onExists: ignore|error
-          - pkg: internal/save
-          - func: MetaSave
-          - file: internal/save/meta_save.go
-        Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array
-            (sorted by locator/relPath); --lines streams nondeterministically;
-            reduce -> single value; embed per-item errors when configured
-          - pkg: internal/output
-          - func: OutputJsonResult
-          - file: internal/output/json_result.go
-      Update meta files flow [flow.update]
-        - pkg: internal/pipeline
-        - func: FlowUpdate
-        - file: internal/pipeline/flow_update.go
-        Find files recursively (update) [fs.discovery.files.update]
-          - note: walk root; .gitignore ON by default
-            (even if not a git repo); do not follow symlinks by default;
-            filenames as inputs
-          - pkg: internal/fs
-          - func: FsDiscoveryFilesUpdate
-          - file: internal/fs/files_update.go
-        Enrich files with OS/Git info [files.enrich]
-          - note: Conditional: files.info and/or files.git; attach file.info
-            (os.Stat) and file.git (go-git status/last commit)
-          - pkg: internal/pipeline
-          - func: FilesEnrich
-          - file: internal/pipeline/files_enrich.go
-        Filter filenames [files.filter.step]
-          - note: Lua-only predicate (v1) over {file}
-          - pkg: internal/pipeline
-          - func: FilesFilterStep
-          - file: internal/pipeline/files_filter_step.go
-        Map filenames [files.map.step]
-          - note: Lua-only map (v1) over {file}
-          - pkg: internal/pipeline
-          - func: FilesMapStep
-          - file: internal/pipeline/files_map_step.go
-        Load existing meta (if any) [meta.load.existing]
-          - note: compute expected path by naming convention; read YAML if
-            exists
-          - pkg: internal/meta
-          - func: MetaLoadExisting
-          - file: internal/meta/load_existing.go
-        Post-map for update (with existing) [files.map.post.update]
-          - note: Lua receives {file,input,existing?}; returns either { meta }
-            (full desired) or { patch } (RFC6902)
-          - pkg: internal/pipeline
-          - func: FilesMapPostUpdate
-          - file: internal/pipeline/files_post_update.go
-        Update meta files (merge/create) [meta.update]
-          - note: merge strategy via config.update.merge:
-            shallow|deep|jsonpatch (default shallow); if post-map returns patch,
-            apply RFC6902; else merge existing with returned meta; missing ->
-            create new by naming convention; verify filename hash against
-            current root+relPath (mismatch -> error)
-          - pkg: internal/save
-          - func: MetaUpdate
-          - file: internal/save/meta_update.go
-        Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array
-            (sorted by locator/relPath); --lines streams nondeterministically;
-            reduce -> single value; embed per-item errors when configured
-          - pkg: internal/output
-          - func: OutputJsonResult
-          - file: internal/output/json_result.go
-      Diff meta files flow [flow.diff]
-        - pkg: internal/pipeline
-        - func: FlowDiff
-        - file: internal/pipeline/flow_diff.go
-        Find files recursively (update) [fs.discovery.files.update]
-          - note: walk root; .gitignore ON by default
-            (even if not a git repo); do not follow symlinks by default;
-            filenames as inputs
-          - pkg: internal/fs
-          - func: FsDiscoveryFilesUpdate
-          - file: internal/fs/files_update.go
-        Enrich files with OS/Git info [files.enrich]
-          - note: Conditional: files.info and/or files.git; attach file.info
-            (os.Stat) and file.git (go-git status/last commit)
-          - pkg: internal/pipeline
-          - func: FilesEnrich
-          - file: internal/pipeline/files_enrich.go
-        Filter filenames [files.filter.step]
-          - note: Lua-only predicate (v1) over {file}
-          - pkg: internal/pipeline
-          - func: FilesFilterStep
-          - file: internal/pipeline/files_filter_step.go
-        Map filenames [files.map.step]
-          - note: Lua-only map (v1) over {file}
-          - pkg: internal/pipeline
-          - func: FilesMapStep
-          - file: internal/pipeline/files_map_step.go
-        Load existing meta (if any) [meta.load.existing]
-          - note: compute expected path by naming convention; read YAML if
-            exists
-          - pkg: internal/meta
-          - func: MetaLoadExisting
-          - file: internal/meta/load_existing.go
-        Post-map for update (with existing) [files.map.post.update]
-          - note: Lua receives {file,input,existing?}; returns either { meta }
-            (full desired) or { patch } (RFC6902)
-          - pkg: internal/pipeline
-          - func: FilesMapPostUpdate
-          - file: internal/pipeline/files_post_update.go
-        Compute meta diffs [meta.diff.compute]
-          - note: deep diff existing vs patch-applied result; output RFC6902
-            JSON Patch + summary
-          - pkg: internal/diff
-          - func: MetaDiffCompute
-          - file: internal/diff/diff_compute.go
-        Detect orphan meta files [meta.diff.orphans]
-          - note: iterate *.thoth.yaml; if locator is file path and does not
-            exist, flag
-          - pkg: internal/diff
-          - func: MetaDiffOrphans
-          - file: internal/diff/diff_orphans.go
-        Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array
-            (sorted by locator/relPath); --lines streams nondeterministically;
-            reduce -> single value; embed per-item errors when configured
-          - pkg: internal/output
-          - func: OutputJsonResult
-          - file: internal/output/json_result.go
-      Validate meta files only [flow.validate]
-        - pkg: internal/pipeline
-        - func: FlowValidate
-        - file: internal/pipeline/flow_validate.go
-        Find *.thoth.yaml files [fs.discovery]
-          - note: walk root; .gitignore ON by default even outside git repos;
-            --no-gitignore to disable; do not follow symlinks by default
-          - pkg: internal/fs
-          - func: FsDiscovery
-          - file: internal/fs/fs_discovery.go
-        Parse and validate YAML records [meta.parse]
-          - note: yaml.v3; strict fields; types; locator canonicalization;
-            top-level unknown = error
-            (unless validation.allowUnknownTopLevel); inside meta: unknown
-            allowed
-          - pkg: internal/meta
-          - func: MetaParse
-          - file: internal/meta/meta_parse.go
-        Collect validation results [meta.validate.only]
-          - note: Schema + locator checks only; no filter/map/reduce/shell
-          - pkg: internal/pipeline
-          - func: MetaValidateOnly
-          - file: internal/pipeline/validate_only.go
-        Write JSON result (array/value/lines) [output.json.result]
-          - note: default: aggregated JSON array
-            (sorted by locator/relPath); --lines streams nondeterministically;
-            reduce -> single value; embed per-item errors when configured
-          - pkg: internal/output
-          - func: OutputJsonResult
-          - file: internal/output/json_result.go
-  Parse args for diagnose [cli.diagnose]
-    - note: diagnose subcommand: --config, --step, input selection flags, dump
-      flags, debug flags
-    - pkg: cmd/thoth
-    - func: CliDiagnose
-    - file: cmd/thoth/cli_diagnose.go
-    Diagnose single stage [flow.diagnose]
-      - pkg: internal/pipeline
-      - func: FlowDiagnose
-      - file: internal/pipeline/flow_diagnose.go
-      Parse args for diagnose [diagnose.parse.args]
-        - note: flags: --config, --step, --input-file|--input-inline|--input-
-          stdin (mutually exclusive), --dump-in, --dump-out, --limit, --seed,
-          --dry-shell
-        - pkg: internal
-        - func: DiagnoseParseArgs
-        - file: internal/parse_args.go
-      Load action config (CUE) [diagnose.config.load]
-        - note: Use existing action config; validate with CUE schema
-        - pkg: internal/config
-        - func: DiagnoseConfigLoad
-        - file: internal/config/config_load.go
-      Resolve target step [diagnose.step.resolve]
-        - note: Map stable step name to internal implementation based on action
-        - pkg: internal
-        - func: DiagnoseStepResolve
-        - file: internal/step_resolve.go
-      Resolve input mode [diagnose.input.resolve]
-        - note: Use explicit JSON (file/inline/stdin) or prepare upstream to
-          boundary; apply --limit/--seed
-        - pkg: internal
-        - func: DiagnoseInputResolve
-        - file: internal/input_resolve.go
-      Dump stage input (optional) [diagnose.dump.in]
-        - note: --dump-in [path|-]; emit boundary input as JSON/NDJSON; avoid
-          mixing with normal stdout
-        - pkg: internal
-        - func: DiagnoseDumpIn
-        - file: internal/dump_in.go
-      Emit run header [diagnose.header.emit]
-        - note: Structured log: { action, executedStep, preparedStages,
-          inputMode, limits }
-        - pkg: internal
-        - func: DiagnoseHeaderEmit
-        - file: internal/header_emit.go
-      Execute target stage [diagnose.stage.exec]
-        - note: Run only the selected step; --dry-shell renders command/env
-          without exec for shell stage
-        - pkg: internal
-        - func: DiagnoseStageExec
-        - file: internal/stage_exec.go
-      Dump stage output (optional) [diagnose.dump.out]
-        - note: --dump-out [path|-]; emit stage output boundary for reproducible
-          debugging
-        - pkg: internal
-        - func: DiagnoseDumpOut
-        - file: internal/dump_out.go
-```
-"""
-  },
-  {
     name:   "flow.action-script-scope"
     title:  "Action Script Scope"
     labels: ["design"]
@@ -896,6 +665,7 @@ thoth CLI root command [cli.root]
 ]
 
 notes: list.Concat([
+  #functionCallsTreeUseCaseNotes,
   #baseNotes,
   #callGraphNotes,
 ])
