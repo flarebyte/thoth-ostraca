@@ -126,15 +126,13 @@ output: { lines: false, pretty: true, out: "-" }
 
 #### Action Script Scope
 
-```txt
-Action     Input                      Filter     Map        Post-Map     Reduce     Output
-------------------------------------------------------------------------------------------------------------------------------
-pipeline   { locator, meta }          Lua (yes)  Lua (yes)  Lua (shell)  Lua (yes)  array of records or single value (reduce)
-create     { file }                   Lua (yes)  Lua (yes)  Lua (yes)    Lua (opt)  array of post-map results; save if enabled
-update     { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch|meta) Lua (opt)  array of updates (dry-run) or write changes
-diff       { file, existing? }        Lua (yes)  Lua (yes)  Lua (patch)  N/A        patch list (RFC6902) + summary; orphans flagged
-validate   { locator, meta }          N/A        N/A        N/A          N/A        validation report array
-```
+| Action | Filter | Input | Map | Output | Post-Map | Reduce |
+| --- | --- | --- | --- | --- | --- | --- |
+| pipeline | Lua (yes) | { locator, meta } | Lua (yes) | array of records or single value (reduce) | Lua (shell) | Lua (yes) |
+| create | Lua (yes) | { file } | Lua (yes) | array of post-map results; save if enabled | Lua (yes) | Lua (opt) |
+| update | Lua (yes) | { file, existing? } | Lua (yes) | array of updates (dry-run) or write changes | Lua (patch\|meta) | Lua (opt) |
+| diff | Lua (yes) | { file, existing? } | Lua (yes) | patch list (RFC6902) + summary; orphans flagged | Lua (patch) | N/A |
+| validate | N/A | { locator, meta } | N/A | validation report array | N/A | N/A |
 
 ## CUE Tips (Inline Lua)
 

@@ -736,7 +736,7 @@ thoth CLI root command [cli.root]
     name:   "flow.action-script-scope"
     title:  "Action Script Scope"
     labels: ["design"]
-    filepath: "examples/action-script-scope.txt"
+    filepath: "examples/action-script-scope.csv"
   },
   {
     name:   "flow.pure-helper-functions"
