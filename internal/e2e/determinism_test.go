@@ -201,6 +201,22 @@ func TestDeterminism_InputPipelinePersistOutDir_MultiRuns(t *testing.T) {
 	)
 }
 
+func TestDeterminism_InputPipelinePersistDryRun_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	src := filepath.Join(root, "testdata", "repos", "input_pipeline1")
+	repo := filepath.Join(root, "temp", "input_pipeline_dryrun_det_repo")
+	cfgT := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  discovery: { root: \"%s\" }\n" +
+		"  filter: { inline: \"return string.sub(locator, -3) == '.go' and string.sub(locator, -8) ~= '_test.go'\" }\n" +
+		"  map: { inline: \"return { locator = locator, kind = 'go' }\" }\n" +
+		"  shell: { enabled: true, decodeJsonStdout: true, program: \"sh\", argsTemplate: [\"-c\", \"printf '%%s\\\\n' '{json}'\"] }\n" +
+		"  postMap: { inline: \"return { meta = { kind = shell and shell.json and shell.json.kind, shellLocator = shell and shell.json and shell.json.locator } }\" }\n" +
+		"  persistMeta: { enabled: true, dryRun: true }\n}\n"
+	assertInputPipelinePersistDryRunDeterminism(t, bin, src, repo, cfgT)
+}
+
 func TestDeterminism_Pipeline_Workers(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)
@@ -398,6 +414,44 @@ func assertInputPipelinePersistOutDirDeterminism(
 		}
 		if !bytes.Equal(cBytes, baseC) {
 			t.Fatalf("c sidecar drift run %d", i)
+		}
+	}
+}
+
+func assertInputPipelinePersistDryRunDeterminism(
+	t *testing.T,
+	bin, src, repo, cfgTemplate string,
+) {
+	t.Helper()
+	var baseOut []byte
+	for i := 0; i < 5; i++ {
+		if err := testutil.CopyTree(src, repo); err != nil {
+			t.Fatalf("copy: %v", err)
+		}
+		cfg := filepath.Join(repo, "tmp.cue")
+		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
+		if err := os.WriteFile(cfg, data, 0o644); err != nil {
+			t.Fatalf("write cfg: %v", err)
+		}
+		r := runCmd(t, bin, "run", "--config", cfg)
+		if r.code != 0 || len(r.stderr) != 0 {
+			t.Fatalf(
+				"unexpected status/stderr code=%d stderr=%s",
+				r.code,
+				r.stderr,
+			)
+		}
+		if _, err := os.Stat(filepath.Join(repo, "a.go.thoth.yaml")); !os.IsNotExist(err) {
+			t.Fatalf("a sidecar should not exist in dry-run")
+		}
+		if _, err := os.Stat(filepath.Join(repo, "sub", "c.go.thoth.yaml")); !os.IsNotExist(err) {
+			t.Fatalf("c sidecar should not exist in dry-run")
+		}
+		if i == 0 {
+			baseOut = r.stdout
+		}
+		if !bytes.Equal(r.stdout, baseOut) {
+			t.Fatalf("stdout drift run %d", i)
 		}
 	}
 }

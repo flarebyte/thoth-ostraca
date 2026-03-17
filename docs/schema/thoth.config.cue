@@ -126,6 +126,7 @@ PipelineConfig: {
   // Persist postMap.meta into sidecars for input-pipeline
   persistMeta?: {
     enabled?: bool | false
+    dryRun?: bool | false
     outDir?: string
   }
 

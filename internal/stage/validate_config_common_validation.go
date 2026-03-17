@@ -40,6 +40,11 @@ func validateCommonConfig(min config.Minimal) error {
 			"invalid persistMeta.outDir: requires persistMeta.enabled=true",
 		)
 	}
+	if min.PersistMeta.HasDryRun && !min.PersistMeta.Enabled {
+		return fmt.Errorf(
+			"invalid persistMeta.dryRun: requires persistMeta.enabled=true",
+		)
+	}
 	for _, p := range min.Discovery.Include {
 		if strings.TrimSpace(p) == "" {
 			return fmt.Errorf(

@@ -316,6 +316,91 @@ test('input-pipeline: invalid persistMeta.outDir config fails early', () => {
   expect(run.stderr.includes('invalid persistMeta.outDir')).toBe(true);
 });
 
+test('input-pipeline: dry-run reports intended writes and creates no sidecars', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(root, 'temp', 'input_pipeline_dryrun_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_dryrun_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_dryrun_repo').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return string.sub(locator, -3) == ".go"
+  and string.sub(locator, -8) ~= "_test.go"
+"""
+  }
+  map: {
+    inline: """
+return {
+  locator = locator,
+  kind = "go",
+}
+"""
+  }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = {
+    kind = shell and shell.json and shell.json.kind,
+    shellLocator = shell and shell.json and shell.json.locator,
+  },
+}
+"""
+  }
+  persistMeta: {
+    enabled: true
+    dryRun: true
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const beforeA = path.join(tempRepo, 'a.go.thoth.yaml');
+  const beforeC = path.join(tempRepo, 'sub', 'c.go.thoth.yaml');
+  expect(fs.existsSync(beforeA)).toBe(false);
+  expect(fs.existsSync(beforeC)).toBe(false);
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-dryrun', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(fs.existsSync(beforeA)).toBe(false);
+  expect(fs.existsSync(beforeC)).toBe(false);
+  const out = JSON.parse(run.stdout) as {
+    meta: { persistMeta: { enabled: boolean; dryRun: boolean } };
+    records: Array<{
+      locator: string;
+      post?: { metaPath?: string; writeSkipped?: string };
+    }>;
+  };
+  expect(out.meta.persistMeta.enabled).toBe(true);
+  expect(out.meta.persistMeta.dryRun).toBe(true);
+  const summary = {
+    locators: out.records.map((r) => r.locator),
+    metaPaths: out.records.map((r) => r.post?.metaPath),
+    writeSkipped: out.records.map((r) => r.post?.writeSkipped),
+  };
+  const expectedSummary = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/run/input_pipeline_persist_dryrun_summary.golden.json',
+      ),
+      'utf8',
+    ),
+  );
+  expect(summary).toEqual(expectedSummary);
+});
+
 test('create-meta: second run fails-fast when meta exists', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

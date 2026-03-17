@@ -22,6 +22,9 @@ func writeOneUpdatedWithMeta(meta *Meta, root string, r Record) (Record, *Error,
 		_, rel = persistMetaFilePath(meta, root, r.Locator)
 	}
 	abs := filepath.Join(persistMetaRoot(meta, root), filepath.FromSlash(rel))
+	dryRun := meta != nil &&
+		meta.PersistMeta != nil &&
+		meta.PersistMeta.DryRun
 	next := map[string]any{}
 	if r.Post != nil {
 		if pm, ok := r.Post.(map[string]any); ok {
@@ -30,11 +33,16 @@ func writeOneUpdatedWithMeta(meta *Meta, root string, r Record) (Record, *Error,
 			}
 		}
 	}
-	if err := metafile.Write(abs, r.Locator, next); err != nil {
-		return r, &Error{Stage: writeUpdatedMetaFilesStage, Locator: r.Locator, Message: err.Error()}, err
+	if !dryRun {
+		if err := metafile.Write(abs, r.Locator, next); err != nil {
+			return r, &Error{Stage: writeUpdatedMetaFilesStage, Locator: r.Locator, Message: err.Error()}, err
+		}
 	}
 	// Attach metaPath (for output symmetry)
 	m := map[string]any{"metaPath": rel}
+	if dryRun {
+		m["writeSkipped"] = "dry-run"
+	}
 	if r.Post != nil {
 		if pm, ok := r.Post.(map[string]any); ok {
 			for k, v := range pm {

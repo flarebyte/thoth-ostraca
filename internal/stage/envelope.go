@@ -209,6 +209,7 @@ type OutputMeta struct {
 // PersistMetaMeta enables sidecar persistence from input-pipeline records.
 type PersistMetaMeta struct {
 	Enabled bool   `json:"enabled"`
+	DryRun  bool   `json:"dryRun,omitempty"`
 	OutDir  string `json:"outDir,omitempty"`
 }
 

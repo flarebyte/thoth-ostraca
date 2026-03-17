@@ -239,9 +239,11 @@ type Reduce struct {
 // PersistMeta enables sidecar persistence from the input pipeline.
 type PersistMeta struct {
 	Enabled    bool
+	DryRun     bool
 	OutDir     string
 	HasSection bool
 	HasEnabled bool
+	HasDryRun  bool
 	HasOutDir  bool
 }
 

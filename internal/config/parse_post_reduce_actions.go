@@ -51,6 +51,11 @@ func parsePersistMetaSection(v cue.Value) PersistMeta {
 		_ = ev.Decode(&p.Enabled)
 		p.HasEnabled = true
 	}
+	dv := pv.LookupPath(cue.ParsePath("dryRun"))
+	if dv.Exists() && dv.Kind() == cue.BoolKind {
+		_ = dv.Decode(&p.DryRun)
+		p.HasDryRun = true
+	}
 	ov := pv.LookupPath(cue.ParsePath("outDir"))
 	if ov.Exists() && ov.Kind() == cue.StringKind {
 		_ = ov.Decode(&p.OutDir)
