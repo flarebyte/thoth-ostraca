@@ -3,12 +3,13 @@
 ## Build artifacts are produced under ./build by build-go.ts.
 ## Release publishing is handled by release-go.ts.
 
-.PHONY: lint format test test-race gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
+.PHONY: lint format test test-race gen docs-gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
 
 BIOME := npx @biomejs/biome
 BUN := bun
 GO := go
 GOLINT := golangci-lint
+FLYB := flyb
 
 lint:
 	$(BIOME) check
@@ -37,7 +38,11 @@ contract-snapshots:
 	$(GO) test -run TestContract_ ./internal/stage
 
 gen:
-	true
+	$(MAKE) docs-gen
+
+docs-gen:
+	$(FLYB) validate --config docs/design-meta
+	$(FLYB) generate markdown --config docs/design-meta
 
 build:
 	$(BUN) run build-go.ts
@@ -78,7 +83,8 @@ help:
 	@printf "  perf-smoke         Run performance smoke tests.\n"
 	@printf "  contract-snapshots Run contract snapshot tests.\n"
 	@printf "  release-check      Run lint + tests + contract snapshots.\n"
-	@printf "  gen                Generate artifacts (no-op placeholder).\n"
+	@printf "  gen                Generate repo artifacts.\n"
+	@printf "  docs-gen           Generate design docs from flyb config.\n"
 	@printf "  build              Build release binaries into ./build.\n"
 	@printf "  build-dev          Build local dev binary into .e2e-bin/.\n"
 	@printf "  e2e                Run Bun-powered end-to-end tests.\n"
