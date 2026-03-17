@@ -6,281 +6,171 @@ import "list"
   {
     name:   "flow.usecase.helpful-well-documented-flags"
     title:  "Helpful, well-documented flags"
-    labels: ["design", "flow", "usecase"]
-    markdown: "Status: partial."
+    labels: ["design", "flow", "usecase", "partial"]
   },
   {
     name:   "flow.usecase.json-output-for-cli-ci-ai"
     title:  "JSON output for CLI/CI/AI"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Machine-oriented default; aggregated JSON; lines optional.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Machine-oriented default; aggregated JSON; lines optional."
   },
   {
     name:   "flow.usecase.load-action-config-file"
     title:  "Load action config file"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Prefer CUE (.cue) with schema validation.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Prefer CUE (.cue) with schema validation."
   },
   {
     name:   "flow.usecase.respect-gitignore-by-default"
     title:  "Respect .gitignore by default"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: partial.
-
-Always on; opt-out via --no-gitignore.
-"""
+    labels: ["design", "flow", "usecase", "partial"]
+    markdown: "Always on; opt-out via --no-gitignore."
   },
   {
     name:   "flow.usecase.one-file-per-locator"
     title:  "One file per locator"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: partial.
-
-Minimize merge conflicts.
-"""
+    labels: ["design", "flow", "usecase", "partial"]
+    markdown: "Minimize merge conflicts."
   },
   {
     name:   "flow.usecase.validate-locator-meta-schema"
     title:  "Validate {locator, meta} schema"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Required fields: locator:string, meta:object; error on missing.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Required fields: locator:string, meta:object; error on missing."
   },
   {
     name:   "flow.usecase.locators-as-file-path-or-url"
     title:  "Locators as file path or URL"
-    labels: ["design", "flow", "usecase"]
-    markdown: "Status: partial."
+    labels: ["design", "flow", "usecase", "partial"]
   },
   {
     name:   "flow.usecase.filter-meta-by-locator"
     title:  "Filter meta by locator"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Boolean predicate over {locator, meta}.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Boolean predicate over {locator, meta}."
   },
   {
     name:   "flow.usecase.script-filter-map-reduce"
     title:  "Script filter/map/reduce"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: partial.
-
-Lua only (v1): small + popular.
-"""
+    labels: ["design", "flow", "usecase", "partial"]
+    markdown: "Lua only (v1): small + popular."
   },
   {
     name:   "flow.usecase.process-in-parallel"
     title:  "Process in parallel"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Goroutines + channels; bounded pool; default workers = CPU count.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Goroutines + channels; bounded pool; default workers = CPU count."
   },
   {
     name:   "flow.usecase.map-meta-records"
     title:  "Map meta records"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Transform {locator, meta} -> any.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Transform {locator, meta} -> any."
   },
   {
     name:   "flow.usecase.run-shell-using-map-output"
     title:  "Run shell using map output"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: partial.
-
-Support bash, sh, zsh early.
-"""
+    labels: ["design", "flow", "usecase", "partial"]
+    markdown: "Support bash, sh, zsh early."
   },
   {
     name:   "flow.usecase.reduce-across-meta-set"
     title:  "Reduce across meta set"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Aggregate stream -> single result.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Aggregate stream -> single result."
   },
   {
     name:   "flow.usecase.create-many-meta-files"
     title:  "Create many meta files"
-    labels: ["design", "flow", "usecase"]
-    markdown: "Status: partial."
+    labels: ["design", "flow", "usecase", "partial"]
   },
   {
     name:   "flow.usecase.expose-os-fileinfo-for-inputs"
     title:  "Expose os.FileInfo for inputs"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: partial.
-
-Include size, mode, modTime, isDir for filtering/mapping when enabled.
-"""
+    labels: ["design", "flow", "usecase", "partial"]
+    markdown: "Include size, mode, modTime, isDir for filtering/mapping when enabled."
   },
   {
     name:   "flow.usecase.expose-git-metadata-for-inputs"
     title:  "Expose Git metadata for inputs"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: partial.
-
-Use go-git to provide tracked/ignored, worktree status, and last commit info
-when enabled.
-"""
+    labels: ["design", "flow", "usecase", "partial"]
+    markdown: "Use go-git to provide tracked/ignored, worktree status, and last commit info when enabled."
   },
   {
     name:   "flow.usecase.update-many-meta-files"
     title:  "Update many meta files"
-    labels: ["design", "flow", "usecase"]
-    markdown: "Status: partial."
+    labels: ["design", "flow", "usecase", "partial"]
   },
   {
     name:   "flow.usecase.diff-meta-files-at-scale"
     title:  "Diff meta files at scale"
-    labels: ["design", "flow", "usecase"]
-    markdown: "Status: partial."
+    labels: ["design", "flow", "usecase", "partial"]
   },
   {
     name:   "flow.usecase.validate-meta-files-only"
     title:  "Validate meta files only"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-No transforms or shell; emit validation report.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "No transforms or shell; emit validation report."
   },
   {
     name:   "flow.usecase.diagnose-a-single-stage"
     title:  "Diagnose a single stage"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Execute one pipeline stage in isolation with explicit or prepared input;
-capture fixtures.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Execute one pipeline stage in isolation with explicit or prepared input; capture fixtures."
   },
   {
     name:   "flow.usecase.capture-stage-boundary-fixtures"
     title:  "Capture stage boundary fixtures"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: completed.
-
-Dump input/output JSON/NDJSON for reproducible debugging.
-"""
+    labels: ["design", "flow", "usecase", "completed"]
+    markdown: "Dump input/output JSON/NDJSON for reproducible debugging."
   },
   {
     name:   "flow.usecase.file-pipeline-filter-shell-map-persist"
     title:  "File pipeline: filter, shell, map, persist"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Discover input files, filter them, run shell analysis per file, map the
-results, and either emit JSON or persist `.thoth.yaml` sidecars.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Discover input files, filter them, run shell analysis per file, map the results, and either emit JSON or persist `.thoth.yaml` sidecars."
   },
   {
     name:   "flow.usecase.decode-shell-json-automatically"
     title:  "Decode shell JSON automatically"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Treat JSON shell output as structured data by default instead of exposing only
-raw stdout strings.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Treat JSON shell output as structured data by default instead of exposing only raw stdout strings."
   },
   {
     name:   "flow.usecase.sidecars-to-dedicated-output-directory"
     title:  "Write sidecars to a dedicated output directory"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Generated `.thoth.yaml` files should be able to go into a separate output tree
-instead of beside source files.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Generated `.thoth.yaml` files should be able to go into a separate output tree instead of beside source files."
   },
   {
     name:   "flow.usecase.safe-discovery-default-excludes"
     title:  "Safe discovery default excludes"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Discovery should exclude `.git`, fixture trees, and similar internal
-directories by default.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Discovery should exclude `.git`, fixture trees, and similar internal directories by default."
   },
   {
     name:   "flow.usecase.dry-run-save-mode"
     title:  "Dry-run save mode"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Save/update workflows should support a clear dry-run mode before writing
-sidecars.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Save/update workflows should support a clear dry-run mode before writing sidecars."
   },
   {
     name:   "flow.usecase.direct-shell-field-interpolation"
     title:  "Direct shell field interpolation"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Shell templating should support direct field interpolation beyond a single
-`{json}` placeholder.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Shell templating should support direct field interpolation beyond a single `{json}` placeholder."
   },
   {
     name:   "flow.usecase.progress-reporting-for-long-actions"
     title:  "Progress reporting for long-running actions"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Long-running actions should expose user-visible progress.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Long-running actions should expose user-visible progress."
   },
   {
     name:   "flow.usecase.lua-limits-allow-ordinary-transforms"
     title:  "Lua limits allow ordinary transforms"
-    labels: ["design", "flow", "usecase"]
-    markdown: """
-Status: missing.
-
-Default Lua limits should allow normal transformation logic without immediate
-instruction-limit failures.
-"""
+    labels: ["design", "flow", "usecase", "missing"]
+    markdown: "Default Lua limits should allow normal transformation logic without immediate instruction-limit failures."
   },
 ]
 
@@ -368,10 +258,10 @@ CLI flags, and good error messages at each stage.
   title:  "Status legend"
   labels: ["design", "flow", "usecase"]
   markdown: """
-- `completed`: delivered in the shipped CLI
-- `partial`: available, but narrower or less practical than the design intent
-- `missing`: described or needed, but not delivered in the shipped CLI
-- `exceeds`: delivered beyond the original design expectation
+- `completed` label: delivered in the shipped CLI
+- `partial` label: available, but narrower or less practical than the design intent
+- `missing` label: described or needed, but not delivered in the shipped CLI
+- `exceeds` label: delivered beyond the original design expectation
 """
 }]
 
