@@ -1,0 +1,3 @@
+locator: config/parse_locator_policy.go
+meta:
+  language: go

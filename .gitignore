@@ -37,6 +37,7 @@ go.work.sum
 build/
 temp/
 scratch/
+shared-script/
 
 # Node / general JS deps
 node_modules/

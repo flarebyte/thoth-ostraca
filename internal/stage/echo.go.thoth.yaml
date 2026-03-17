@@ -1,0 +1,3 @@
+locator: stage/echo.go
+meta:
+  language: go

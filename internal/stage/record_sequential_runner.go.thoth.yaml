@@ -1,0 +1,3 @@
+locator: stage/record_sequential_runner.go
+meta:
+  language: go

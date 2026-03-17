@@ -1,0 +1,4 @@
+configVersion: "1"
+action: "pipeline"
+filter: { inline: "return (meta and meta.enabled) == true" }
+map:    { inline: "return { locator = locator, name = meta and meta.name }" }

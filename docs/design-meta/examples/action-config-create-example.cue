@@ -1,0 +1,10 @@
+configVersion: "1"
+action: "create"
+discovery: { root: ".", noGitignore: false }
+files:     { info: true, git: true }
+workers:   8
+filter:    { inline: "return string.match(file.ext or \"\", \"^%.md$\") ~= nil" }
+map:       { inline: "return { title = file.base, category = file.dir }" }
+postMap:   { inline: "return { meta = { title = (input.title or file.base) } }" }
+output:    { lines: false, pretty: false, out: "-" }
+save:      { enabled: false, onExists: "ignore" }

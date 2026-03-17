@@ -1,0 +1,3 @@
+locator: stage/validate_config_apply_lua.go
+meta:
+  language: go

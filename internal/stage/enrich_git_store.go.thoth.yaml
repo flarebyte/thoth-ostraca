@@ -1,0 +1,3 @@
+locator: stage/enrich_git_store.go
+meta:
+  language: go

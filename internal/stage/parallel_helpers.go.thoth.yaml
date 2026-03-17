@@ -1,0 +1,3 @@
+locator: stage/parallel_helpers.go
+meta:
+  language: go

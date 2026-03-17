@@ -1,0 +1,3 @@
+locator: stage/load_existing_meta.go
+meta:
+  language: go

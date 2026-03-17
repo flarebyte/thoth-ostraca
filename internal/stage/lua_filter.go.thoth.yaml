@@ -1,0 +1,3 @@
+locator: stage/lua_filter.go
+meta:
+  language: go

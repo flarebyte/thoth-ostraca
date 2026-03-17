@@ -1,0 +1,3 @@
+locator: config/parse_discovery_validation_limits.go
+meta:
+  language: go

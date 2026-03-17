@@ -1,0 +1,3 @@
+locator: stage/validate_config_common_validation.go
+meta:
+  language: go

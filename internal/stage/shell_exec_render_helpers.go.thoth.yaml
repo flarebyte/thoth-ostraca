@@ -1,0 +1,3 @@
+locator: stage/shell_exec_render_helpers.go
+meta:
+  language: go

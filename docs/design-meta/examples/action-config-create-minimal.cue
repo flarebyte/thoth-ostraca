@@ -1,0 +1,7 @@
+configVersion: "1"
+action: "create"
+discovery: { root: ".", noGitignore: false }
+filter:    { inline: "return true" }
+map:       { inline: "return { meta = { created = true } }" }
+output:    { lines: false, pretty: true, out: "-" }
+save:      { enabled: false, onExists: "ignore", hashLen: 15 }

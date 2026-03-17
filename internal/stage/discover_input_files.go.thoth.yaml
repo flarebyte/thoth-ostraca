@@ -1,0 +1,3 @@
+locator: stage/discover_input_files.go
+meta:
+  language: go

@@ -1,0 +1,3 @@
+locator: stage/shell_exec.go
+meta:
+  language: go

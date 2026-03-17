@@ -1,0 +1,3 @@
+locator: stage/validate_config_apply_discovery_limits.go
+meta:
+  language: go

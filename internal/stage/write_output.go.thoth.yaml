@@ -1,0 +1,3 @@
+locator: stage/write_output.go
+meta:
+  language: go
