@@ -1,0 +1,52 @@
+{
+  "records": [
+    {
+      "locator": "a.go",
+      "mapped": { "kind": "go", "locator": "a.go" },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "{\"kind\":\"go\",\"locator\":\"a.go\"}\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": { "exit": 0, "kind": "go", "locator": "a.go" }
+    },
+    {
+      "locator": "sub/c.go",
+      "mapped": { "kind": "go", "locator": "sub/c.go" },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "{\"kind\":\"go\",\"locator\":\"sub/c.go\"}\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": { "exit": 0, "kind": "go", "locator": "sub/c.go" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "1", "action": "input-pipeline" },
+    "discovery": { "root": "testdata/repos/input_pipeline1" },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "lua": {
+      "filterInline": "return string.sub(locator, -3) == \".go\"\n  and string.sub(locator, -8) ~= \"_test.go\"",
+      "mapInline": "return {\n  locator = locator,\n  kind = \"go\",\n}",
+      "postMapInline": "return {\n  locator = locator,\n  kind = mapped and mapped.kind,\n  exit = shell and shell.exitCode,\n}"
+    },
+    "shell": {
+      "enabled": true,
+      "program": "sh",
+      "argsTemplate": ["-c", "printf '%s\\n' '{json}'"],
+      "workingDir": ".",
+      "timeoutMs": 60000,
+      "capture": { "stdout": true, "stderr": true, "maxBytes": 1048576 },
+      "strictTemplating": true,
+      "killProcessGroup": true,
+      "termGraceMs": 2000
+    }
+  }
+}

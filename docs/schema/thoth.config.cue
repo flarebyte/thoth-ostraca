@@ -6,7 +6,14 @@ PipelineConfig: {
   configVersion: string & =~"^[0-9]+$" & "1"
 
   // Action to perform
-  action: "pipeline" | "create" | "update" | "diff" | "validate"
+  action:
+    "pipeline" |
+    "input-pipeline" |
+    "create-meta" |
+    "update-meta" |
+    "diff-meta" |
+    "validate" |
+    "nop"
 
   // File discovery options
   discovery?: {

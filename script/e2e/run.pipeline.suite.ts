@@ -71,6 +71,20 @@ test('thoth run executes shell and postmap', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run input-pipeline works on source files', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('thoth run fails when shell program is missing', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -209,5 +223,7 @@ test('invalid action yields a short error mentioning allowed actions', () => {
   const run = runThoth(bin, ['run', '--config', cfg], root);
   expect(run.status).not.toBe(0);
   expect(run.stdout).toBe('');
-  expect(run.stderr.includes("allowed 'pipeline' or 'validate'")).toBe(true);
+  expect(run.stderr.includes("allowed 'pipeline', 'input-pipeline'")).toBe(
+    true,
+  );
 });

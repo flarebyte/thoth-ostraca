@@ -72,6 +72,8 @@ dup:
 	npx jscpd --format go --min-lines 10 --gitignore .
 	npx jscpd --format typescript --min-lines 15 --gitignore .
 
+review: format test e2e lint
+
 help:
 	@printf "Targets:\n"
 	@printf "  (requires: go, bun, golangci-lint, biome)\n"

@@ -24,7 +24,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	switch action {
 	case "pipeline", "nop":
 		return executeMetaPipeline(ctx, out)
-	case "validate", "create-meta", "update-meta", "diff-meta":
+	case "input-pipeline", "validate", "create-meta", "update-meta", "diff-meta":
 		stages, err := PreparedActionStages(action, out.Meta)
 		if err != nil {
 			return stage.Envelope{}, err

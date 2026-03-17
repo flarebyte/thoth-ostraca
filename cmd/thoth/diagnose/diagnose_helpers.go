@@ -116,7 +116,7 @@ func resolveUntilIndex(stages []string) (int, bool, error) {
 
 func resolvePreparedAction() (string, error) {
 	switch flagPreparePipeline {
-	case "pipeline", "validate", "create-meta", "update-meta", "diff-meta":
+	case "pipeline", "input-pipeline", "validate", "create-meta", "update-meta", "diff-meta":
 		return flagPreparePipeline, nil
 	default:
 		return "", fmt.Errorf("invalid prepare-pipeline action: %s", flagPreparePipeline)

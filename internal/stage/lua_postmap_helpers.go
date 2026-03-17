@@ -58,12 +58,16 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 			shellMap["error"] = *rec.Shell.Error
 		}
 	}
-	ret, violation, err := runLuaScriptWithSandbox(luaPostMapStage, metaCfg, rec.Locator, map[string]any{
-		"locator": rec.Locator,
-		"meta":    rec.Meta,
-		"mapped":  rec.Mapped,
-		"shell":   shellMap,
-	}, code)
+	luaCtx := luaRecordContext(rec)
+	luaCtx["mapped"] = rec.Mapped
+	luaCtx["shell"] = shellMap
+	ret, violation, err := runLuaScriptWithSandbox(
+		luaPostMapStage,
+		metaCfg,
+		rec.Locator,
+		luaCtx,
+		code,
+	)
 	if err != nil {
 		msg := sanitizeErrorMessage(err.Error())
 		if mode == "keep-going" {

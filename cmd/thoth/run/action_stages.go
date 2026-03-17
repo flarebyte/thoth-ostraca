@@ -21,6 +21,22 @@ func PreparedActionStages(action string, meta *stage.Meta) ([]string, error) {
 			"lua-reduce",
 			"write-output",
 		}, nil
+	case "input-pipeline":
+		stages := []string{"discover-input-files"}
+		if fileInfoEnabled(meta) {
+			stages = append(stages, "enrich-fileinfo")
+		}
+		if gitEnabled(meta) {
+			stages = append(stages, "enrich-git")
+		}
+		stages = append(stages,
+			"lua-filter",
+			"lua-map",
+			"shell-exec",
+			"lua-postmap",
+			"write-output",
+		)
+		return stages, nil
 	case "validate":
 		return []string{
 			"discover-meta-files",
