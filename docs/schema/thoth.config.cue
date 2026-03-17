@@ -124,6 +124,7 @@ PipelineConfig: {
   // Persist postMap.meta into sidecars for input-pipeline
   persistMeta?: {
     enabled?: bool | false
+    outDir?: string
   }
 
   // Save options (create)

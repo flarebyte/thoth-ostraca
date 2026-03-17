@@ -51,6 +51,11 @@ func parsePersistMetaSection(v cue.Value) PersistMeta {
 		_ = ev.Decode(&p.Enabled)
 		p.HasEnabled = true
 	}
+	ov := pv.LookupPath(cue.ParsePath("outDir"))
+	if ov.Exists() && ov.Kind() == cue.StringKind {
+		_ = ov.Decode(&p.OutDir)
+		p.HasOutDir = true
+	}
 	return p
 }
 

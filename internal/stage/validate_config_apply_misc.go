@@ -12,6 +12,9 @@ func applyPersistMeta(out *Envelope, min config.Minimal) {
 	if min.PersistMeta.HasEnabled {
 		out.Meta.PersistMeta.Enabled = min.PersistMeta.Enabled
 	}
+	if min.PersistMeta.HasOutDir {
+		out.Meta.PersistMeta.OutDir = min.PersistMeta.OutDir
+	}
 }
 
 func applyUpdateMeta(out *Envelope, min config.Minimal) {

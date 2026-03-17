@@ -161,6 +161,30 @@ func TestDeterminism_InputPipelinePersist_MultiRuns(t *testing.T) {
 	assertInputPipelinePersistDeterminism(t, bin, src, repo, cfgT)
 }
 
+func TestDeterminism_InputPipelinePersistOutDir_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	src := filepath.Join(root, "testdata", "repos", "input_pipeline1")
+	repo := filepath.Join(root, "temp", "input_pipeline_outdir_det_repo")
+	outDir := filepath.Join(root, "temp", "input_pipeline_outdir_det_sidecars")
+	cfgT := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  discovery: { root: \"%s\" }\n" +
+		"  filter: { inline: \"return string.sub(locator, -3) == '.go' and string.sub(locator, -8) ~= '_test.go'\" }\n" +
+		"  map: { inline: \"return { locator = locator, kind = 'go' }\" }\n" +
+		"  shell: { enabled: true, decodeJsonStdout: true, program: \"sh\", argsTemplate: [\"-c\", \"printf '%%s\\\\n' '{json}'\"] }\n" +
+		"  postMap: { inline: \"return { meta = { kind = shell and shell.json and shell.json.kind, shellLocator = shell and shell.json and shell.json.locator } }\" }\n" +
+		"  persistMeta: { enabled: true, outDir: \"%s\" }\n}\n"
+	assertInputPipelinePersistOutDirDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		outDir,
+		cfgT,
+	)
+}
+
 func TestDeterminism_Pipeline_Workers(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)
@@ -282,6 +306,61 @@ func assertInputPipelinePersistDeterminism(
 		}
 		aPath := filepath.Join(repo, "a.go.thoth.yaml")
 		cPath := filepath.Join(repo, "sub", "c.go.thoth.yaml")
+		aBytes, err := os.ReadFile(aPath)
+		if err != nil {
+			t.Fatalf("read a sidecar: %v", err)
+		}
+		cBytes, err := os.ReadFile(cPath)
+		if err != nil {
+			t.Fatalf("read c sidecar: %v", err)
+		}
+		if i == 0 {
+			baseOut = r.stdout
+			baseA = aBytes
+			baseC = cBytes
+		}
+		if !bytes.Equal(r.stdout, baseOut) {
+			t.Fatalf("stdout drift run %d", i)
+		}
+		if !bytes.Equal(aBytes, baseA) {
+			t.Fatalf("a sidecar drift run %d", i)
+		}
+		if !bytes.Equal(cBytes, baseC) {
+			t.Fatalf("c sidecar drift run %d", i)
+		}
+	}
+}
+
+func assertInputPipelinePersistOutDirDeterminism(
+	t *testing.T,
+	bin, src, repo, outDir, cfgTemplate string,
+) {
+	t.Helper()
+	var baseOut []byte
+	var baseA []byte
+	var baseC []byte
+	for i := 0; i < 5; i++ {
+		if err := testutil.CopyTree(src, repo); err != nil {
+			t.Fatalf("copy: %v", err)
+		}
+		_ = os.RemoveAll(outDir)
+		cfg := filepath.Join(repo, "tmp.cue")
+		data := []byte(
+			fmt.Sprintf(cfgTemplate, filepath.ToSlash(repo), "../input_pipeline_outdir_det_sidecars"),
+		)
+		if err := os.WriteFile(cfg, data, 0o644); err != nil {
+			t.Fatalf("write cfg: %v", err)
+		}
+		r := runCmd(t, bin, "run", "--config", cfg)
+		if r.code != 0 || len(r.stderr) != 0 {
+			t.Fatalf(
+				"unexpected status/stderr code=%d stderr=%s",
+				r.code,
+				r.stderr,
+			)
+		}
+		aPath := filepath.Join(outDir, "a.go.thoth.yaml")
+		cPath := filepath.Join(outDir, "sub", "c.go.thoth.yaml")
 		aBytes, err := os.ReadFile(aPath)
 		if err != nil {
 			t.Fatalf("read a sidecar: %v", err)

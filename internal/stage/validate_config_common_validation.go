@@ -2,6 +2,7 @@ package stage
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/flarebyte/thoth-ostraca/internal/config"
 )
@@ -28,6 +29,15 @@ func validateCommonConfig(min config.Minimal) error {
 		return fmt.Errorf(
 			"invalid persistMeta: only supported for action " +
 				"'input-pipeline'",
+		)
+	}
+	if min.PersistMeta.HasOutDir &&
+		strings.TrimSpace(min.PersistMeta.OutDir) == "" {
+		return fmt.Errorf("invalid persistMeta.outDir: must be non-empty")
+	}
+	if min.PersistMeta.HasOutDir && !min.PersistMeta.Enabled {
+		return fmt.Errorf(
+			"invalid persistMeta.outDir: requires persistMeta.enabled=true",
 		)
 	}
 	return nil

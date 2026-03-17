@@ -1,0 +1,4 @@
+{
+  "locators": ["a.go", "sub/c.go"],
+  "metaPaths": ["a.go.thoth.yaml", "sub/c.go.thoth.yaml"]
+}

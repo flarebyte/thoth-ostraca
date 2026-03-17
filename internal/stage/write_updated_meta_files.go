@@ -10,7 +10,10 @@ import (
 const writeUpdatedMetaFilesStage = "write-updated-meta-files"
 
 func writeOneUpdated(root string, r Record) (Record, *Error, error) {
-	// Determine path
+	return writeOneUpdatedWithMeta(nil, root, r)
+}
+
+func writeOneUpdatedWithMeta(meta *Meta, root string, r Record) (Record, *Error, error) {
 	rel := ""
 	if r.Post != nil {
 		if pm, ok := r.Post.(map[string]any); ok {
@@ -20,10 +23,9 @@ func writeOneUpdated(root string, r Record) (Record, *Error, error) {
 		}
 	}
 	if rel == "" {
-		_, rel = metaFilePath(root, r.Locator)
+		_, rel = persistMetaFilePath(meta, root, r.Locator)
 	}
-	abs := filepath.Join(root, filepath.FromSlash(rel))
-	// nextMeta
+	abs := filepath.Join(persistMetaRoot(meta, root), filepath.FromSlash(rel))
 	next := map[string]any{}
 	if r.Post != nil {
 		if pm, ok := r.Post.(map[string]any); ok {
@@ -57,7 +59,7 @@ func writeUpdatedMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (E
 		if r.Error != nil {
 			continue
 		}
-		rr, envE, err := writeOneUpdated(root, r)
+		rr, envE, err := writeOneUpdatedWithMeta(in.Meta, root, r)
 		if envE != nil {
 			envErrs = append(envErrs, *envE)
 		}

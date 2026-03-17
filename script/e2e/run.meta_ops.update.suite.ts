@@ -192,6 +192,130 @@ return {
   expect(fs.existsSync(path.join(tempRepo, 'a.go.thoth.yaml'))).toBe(false);
 });
 
+test('input-pipeline: writes sidecars to dedicated output directory', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(root, 'temp', 'input_pipeline_outdir_repo');
+  const outDir = path.join(root, 'temp', 'input_pipeline_outdir_sidecars');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_outdir_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_outdir_repo').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return string.sub(locator, -3) == ".go"
+  and string.sub(locator, -8) ~= "_test.go"
+"""
+  }
+  map: {
+    inline: """
+return {
+  locator = locator,
+  kind = "go",
+}
+"""
+  }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = {
+    kind = shell and shell.json and shell.json.kind,
+    shellLocator = shell and shell.json and shell.json.locator,
+  },
+}
+"""
+  }
+  persistMeta: {
+    enabled: true
+    outDir: "../input_pipeline_outdir_sidecars"
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-outdir', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const sourceMetaA = path.join(tempRepo, 'a.go.thoth.yaml');
+  const sourceMetaC = path.join(tempRepo, 'sub', 'c.go.thoth.yaml');
+  expect(fs.existsSync(sourceMetaA)).toBe(false);
+  expect(fs.existsSync(sourceMetaC)).toBe(false);
+
+  const outMetaA = path.join(outDir, 'a.go.thoth.yaml');
+  const outMetaC = path.join(outDir, 'sub', 'c.go.thoth.yaml');
+  expect(fs.existsSync(outMetaA)).toBe(true);
+  expect(fs.existsSync(outMetaC)).toBe(true);
+  expect(fs.readFileSync(outMetaA, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_a_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+  expect(fs.readFileSync(outMetaC, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_c_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  const summary = {
+    locators: out.records.map((r) => r.locator),
+    metaPaths: out.records.map((r) => r.post?.metaPath),
+  };
+  const expectedSummary = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/run/input_pipeline_persist_outdir_summary.golden.json',
+      ),
+      'utf8',
+    ),
+  );
+  expect(summary).toEqual(expectedSummary);
+});
+
+test('input-pipeline: invalid persistMeta.outDir config fails early', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_outdir_invalid.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "testdata/repos/input_pipeline1" }
+  persistMeta: {
+    enabled: true
+    outDir: "   "
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-outdir-invalid', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('invalid persistMeta.outDir')).toBe(true);
+});
+
 test('create-meta: second run fails-fast when meta exists', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

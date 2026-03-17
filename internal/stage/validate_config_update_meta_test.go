@@ -53,3 +53,17 @@ func TestValidateConfig_PersistMetaOnlyAllowedForInputPipeline(t *testing.T) {
 		t.Fatalf("expected invalid persistMeta error, got: %v", err)
 	}
 }
+
+func TestValidateConfig_PersistMetaOutDirRequiresEnabledAndNonEmpty(t *testing.T) {
+	content := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  persistMeta: { outDir: \"   \" }\n}\n"
+	_, err := runValidateConfigWithContent(
+		t,
+		"persist_meta_outdir_invalid_validate_test.cue",
+		content,
+	)
+	if err == nil || !strings.Contains(err.Error(), "invalid persistMeta.outDir") {
+		t.Fatalf("expected invalid persistMeta.outDir error, got: %v", err)
+	}
+}

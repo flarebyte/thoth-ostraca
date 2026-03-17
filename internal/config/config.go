@@ -232,8 +232,10 @@ type Reduce struct {
 // PersistMeta enables sidecar persistence from the input pipeline.
 type PersistMeta struct {
 	Enabled    bool
+	OutDir     string
 	HasSection bool
 	HasEnabled bool
+	HasOutDir  bool
 }
 
 // UpdateMeta holds optional update-meta patch config.

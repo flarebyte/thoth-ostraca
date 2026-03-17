@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -12,8 +11,11 @@ import (
 const loadExistingStage = "load-existing-meta"
 
 func loadOneExisting(root string, rec Record) (Record, *Error, error) {
-	_, rel := metaFilePath(root, rec.Locator)
-	abs := filepath.Join(root, filepath.FromSlash(rel))
+	return loadOneExistingWithMeta(nil, root, rec)
+}
+
+func loadOneExistingWithMeta(meta *Meta, root string, rec Record) (Record, *Error, error) {
+	abs, rel := persistMetaFilePath(meta, root, rec.Locator)
 	b, err := os.ReadFile(abs)
 	if err != nil {
 		// Not found → expose path only
@@ -61,7 +63,7 @@ func loadExistingMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 	root := determineRoot(in)
 	mode, embed := errorMode(in.Meta)
 	return runSequentialRecordStage(in, loadExistingStage, mode, embed, func(r Record) (Record, *Error, error) {
-		return loadOneExisting(root, r)
+		return loadOneExistingWithMeta(in.Meta, root, r)
 	})
 }
 
