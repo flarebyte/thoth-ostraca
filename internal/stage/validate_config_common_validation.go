@@ -40,5 +40,19 @@ func validateCommonConfig(min config.Minimal) error {
 			"invalid persistMeta.outDir: requires persistMeta.enabled=true",
 		)
 	}
+	for _, p := range min.Discovery.Include {
+		if strings.TrimSpace(p) == "" {
+			return fmt.Errorf(
+				"invalid discovery.include: patterns must be non-empty",
+			)
+		}
+	}
+	for _, p := range min.Discovery.Exclude {
+		if strings.TrimSpace(p) == "" {
+			return fmt.Errorf(
+				"invalid discovery.exclude: patterns must be non-empty",
+			)
+		}
+	}
 	return nil
 }

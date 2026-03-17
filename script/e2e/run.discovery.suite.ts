@@ -196,3 +196,37 @@ test('thoth run discovery/parse permission errors obey keep-going and fail-fast'
     } catch {}
   }
 });
+
+test('input-pipeline discovery skips unsafe paths by default', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(
+    root,
+    'testdata/configs/input_discovery_safe_default.cue',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_discovery_safe_default_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('input-pipeline discovery include/exclude controls work deterministically', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(
+    root,
+    'testdata/configs/input_discovery_safe_controls.cue',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_discovery_safe_controls_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});

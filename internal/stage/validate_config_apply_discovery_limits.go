@@ -3,12 +3,28 @@ package stage
 import "github.com/flarebyte/thoth-ostraca/internal/config"
 
 func applyDiscoveryMeta(out *Envelope, min config.Minimal) {
-	if min.Discovery.HasRoot || min.Discovery.HasNoGitignore || min.Discovery.HasFollowSymlink {
+	if min.Discovery.HasRoot ||
+		min.Discovery.HasInclude ||
+		min.Discovery.HasExclude ||
+		min.Discovery.HasNoGitignore ||
+		min.Discovery.HasFollowSymlink {
 		if out.Meta.Discovery == nil {
 			out.Meta.Discovery = &DiscoveryMeta{}
 		}
 		if min.Discovery.HasRoot {
 			out.Meta.Discovery.Root = min.Discovery.Root
+		}
+		if min.Discovery.HasInclude {
+			out.Meta.Discovery.Include = append(
+				[]string(nil),
+				min.Discovery.Include...,
+			)
+		}
+		if min.Discovery.HasExclude {
+			out.Meta.Discovery.Exclude = append(
+				[]string(nil),
+				min.Discovery.Exclude...,
+			)
 		}
 		if min.Discovery.HasNoGitignore {
 			out.Meta.Discovery.NoGitignore = min.Discovery.NoGitignore

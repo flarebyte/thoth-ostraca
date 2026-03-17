@@ -1,0 +1,25 @@
+{
+  "records": [
+    {
+      "locator": "src/lib/util.go",
+      "mapped": { "locator": "src/lib/util.go" },
+      "post": { "locator": "src/lib/util.go" }
+    },
+    {
+      "locator": "src/main.go",
+      "mapped": { "locator": "src/main.go" },
+      "post": { "locator": "src/main.go" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "1", "action": "input-pipeline" },
+    "discovery": { "root": "testdata/repos/input_discovery_safe1" },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "lua": {
+      "filterInline": "return true",
+      "mapInline": "return { locator = locator }",
+      "postMapInline": "return { locator = locator }"
+    }
+  }
+}

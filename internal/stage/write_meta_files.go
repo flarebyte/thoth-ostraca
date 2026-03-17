@@ -4,18 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"github.com/flarebyte/thoth-ostraca/internal/metafile"
 )
 
 const writeMetaFilesStage = "write-meta-files"
-
-func metaFilePath(root, locator string) (abs, rel string) {
-	rel = filepath.ToSlash(filepath.Join(locator + ".thoth.yaml"))
-	abs = filepath.Join(root, filepath.FromSlash(rel))
-	return abs, rel
-}
 
 func writeSingleMeta(meta *Meta, root string, rec Record) (Record, *Error, error) {
 	abs, rel := persistMetaFilePath(meta, root, rec.Locator)

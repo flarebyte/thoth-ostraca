@@ -1,19 +1,43 @@
 package config
 
-import "cuelang.org/go/cue"
+import (
+	"fmt"
+
+	"cuelang.org/go/cue"
+)
 
 // parseDiscoverySection extracts optional discovery.* fields.
-func parseDiscoverySection(v cue.Value) Discovery {
+func parseDiscoverySection(v cue.Value) (Discovery, error) {
 	var d Discovery
 	dv := v.LookupPath(cue.ParsePath("discovery"))
 	if !dv.Exists() {
-		return d
+		return d, nil
 	}
 	rv := dv.LookupPath(cue.ParsePath("root"))
 	if rv.Exists() && rv.Kind() == cue.StringKind {
 		if err := rv.Decode(&d.Root); err == nil {
 			d.HasRoot = true
 		}
+	}
+	iv := dv.LookupPath(cue.ParsePath("include"))
+	if iv.Exists() {
+		if iv.Kind() != cue.ListKind {
+			return Discovery{}, fmt.Errorf("invalid discovery.include: must be list of strings")
+		}
+		if err := iv.Decode(&d.Include); err != nil {
+			return Discovery{}, fmt.Errorf("invalid discovery.include: must be list of strings")
+		}
+		d.HasInclude = true
+	}
+	ev := dv.LookupPath(cue.ParsePath("exclude"))
+	if ev.Exists() {
+		if ev.Kind() != cue.ListKind {
+			return Discovery{}, fmt.Errorf("invalid discovery.exclude: must be list of strings")
+		}
+		if err := ev.Decode(&d.Exclude); err != nil {
+			return Discovery{}, fmt.Errorf("invalid discovery.exclude: must be list of strings")
+		}
+		d.HasExclude = true
 	}
 	ngv := dv.LookupPath(cue.ParsePath("noGitignore"))
 	if ngv.Exists() && (ngv.Kind() == cue.BoolKind) {
@@ -27,7 +51,7 @@ func parseDiscoverySection(v cue.Value) Discovery {
 			d.HasFollowSymlink = true
 		}
 	}
-	return d
+	return d, nil
 }
 
 // parseValidationSection extracts optional validation.allowUnknownTopLevel.

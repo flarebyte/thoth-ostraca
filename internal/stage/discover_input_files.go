@@ -12,6 +12,8 @@ import (
 func discoverInputFilesRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, error) {
 	root := determineRoot(in)
 	noGitignore := false
+	includes := discoveryIncludes(in.Meta)
+	excludes := discoveryExcludes(in.Meta)
 	if in.Meta != nil && in.Meta.Discovery != nil {
 		noGitignore = in.Meta.Discovery.NoGitignore
 	}
@@ -31,7 +33,14 @@ func discoverInputFilesRunner(ctx context.Context, in Envelope, deps Deps) (Enve
 		if err != nil {
 			return err
 		}
+		rel = filepath.ToSlash(rel)
 		isDir := d.IsDir()
+		if relHasAlwaysExcludedDir(rel) {
+			if isDir {
+				return fs.SkipDir
+			}
+			return nil
+		}
 		if !noGitignore {
 			if matchIgnore(absRoot, rel, isDir) {
 				if isDir {
@@ -41,8 +50,19 @@ func discoverInputFilesRunner(ctx context.Context, in Envelope, deps Deps) (Enve
 			}
 		}
 		if isDir {
+			if matchesAnyPattern(excludes, rel) {
+				return fs.SkipDir
+			}
+			explicitlyIncluded := dirCouldMatchAnyPattern(includes, rel)
+			if relHasDefaultExcludedDir(rel) && !explicitlyIncluded {
+				return fs.SkipDir
+			}
+			if len(includes) > 0 && !explicitlyIncluded {
+				return fs.SkipDir
+			}
 			return nil
 		}
+		explicitlyIncluded := matchesAnyPattern(includes, rel)
 		// Exclude existing meta files
 		if strings.HasSuffix(d.Name(), ".thoth.yaml") {
 			return nil
@@ -51,7 +71,16 @@ func discoverInputFilesRunner(ctx context.Context, in Envelope, deps Deps) (Enve
 		if d.Name() == ".gitignore" {
 			return nil
 		}
-		locators = append(locators, filepath.ToSlash(rel))
+		if matchesAnyPattern(excludes, rel) {
+			return nil
+		}
+		if relHasDefaultExcludedDir(rel) && !explicitlyIncluded {
+			return nil
+		}
+		if len(includes) > 0 && !explicitlyIncluded {
+			return nil
+		}
+		locators = append(locators, rel)
 		return nil
 	})
 	if err != nil {

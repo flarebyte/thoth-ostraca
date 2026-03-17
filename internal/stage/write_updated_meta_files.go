@@ -9,10 +9,6 @@ import (
 
 const writeUpdatedMetaFilesStage = "write-updated-meta-files"
 
-func writeOneUpdated(root string, r Record) (Record, *Error, error) {
-	return writeOneUpdatedWithMeta(nil, root, r)
-}
-
 func writeOneUpdatedWithMeta(meta *Meta, root string, r Record) (Record, *Error, error) {
 	rel := ""
 	if r.Post != nil {

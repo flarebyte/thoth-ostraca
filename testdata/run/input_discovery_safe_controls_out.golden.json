@@ -1,0 +1,29 @@
+{
+  "records": [
+    {
+      "locator": "fixtures/sample.go",
+      "mapped": { "locator": "fixtures/sample.go" },
+      "post": { "locator": "fixtures/sample.go" }
+    },
+    {
+      "locator": "src/main.go",
+      "mapped": { "locator": "src/main.go" },
+      "post": { "locator": "src/main.go" }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "1", "action": "input-pipeline" },
+    "discovery": {
+      "root": "testdata/repos/input_discovery_safe1",
+      "include": ["src/**", "fixtures/**"],
+      "exclude": ["src/lib/**"]
+    },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "lua": {
+      "filterInline": "return true",
+      "mapInline": "return { locator = locator }",
+      "postMapInline": "return { locator = locator }"
+    }
+  }
+}

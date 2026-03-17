@@ -18,6 +18,8 @@ PipelineConfig: {
   // File discovery options
   discovery?: {
     root?: string | "." // repo root (default ".")
+    include?: [...string]
+    exclude?: [...string]
     noGitignore?: bool | false // default false (respect .gitignore)
     followSymlinks?: bool | false // default false (do not follow for safety)
   }

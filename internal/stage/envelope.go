@@ -11,9 +11,11 @@ type Error struct {
 
 // DiscoveryMeta holds discovery options.
 type DiscoveryMeta struct {
-	Root           string `json:"root,omitempty"`
-	NoGitignore    bool   `json:"noGitignore,omitempty"`
-	FollowSymlinks bool   `json:"followSymlinks,omitempty"`
+	Root           string   `json:"root,omitempty"`
+	Include        []string `json:"include,omitempty"`
+	Exclude        []string `json:"exclude,omitempty"`
+	NoGitignore    bool     `json:"noGitignore,omitempty"`
+	FollowSymlinks bool     `json:"followSymlinks,omitempty"`
 }
 
 // ConfigMeta holds validated config essentials.

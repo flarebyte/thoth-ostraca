@@ -95,7 +95,10 @@ func ParseMinimal(path string) (Minimal, error) {
 		return Minimal{}, fmt.Errorf("invalid value for action: %v", err)
 	}
 	// Optional sections
-	m.Discovery = parseDiscoverySection(v)
+	m.Discovery, err = parseDiscoverySection(v)
+	if err != nil {
+		return Minimal{}, err
+	}
 	m.Validation = parseValidationSection(v)
 	m.Limits = parseLimitsSection(v)
 	m.LuaSandbox = parseLuaSandboxSection(v)
@@ -166,9 +169,13 @@ type LuaSandbox struct {
 // Discovery holds optional discovery config and presence flags.
 type Discovery struct {
 	Root             string
+	Include          []string
+	Exclude          []string
 	NoGitignore      bool
 	FollowSymlinks   bool
 	HasRoot          bool
+	HasInclude       bool
+	HasExclude       bool
 	HasNoGitignore   bool
 	HasFollowSymlink bool
 }

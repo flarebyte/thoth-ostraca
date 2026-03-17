@@ -129,6 +129,22 @@ func TestDeterminism_InputPipeline_MultiRuns(t *testing.T) {
 	assertStable(t, runs)
 }
 
+func TestDeterminism_InputDiscoverySafeDefault_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_discovery_safe_default.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
 func TestDeterminism_InputPipelineJSON_MultiRuns(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)

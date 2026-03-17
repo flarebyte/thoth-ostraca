@@ -10,10 +10,6 @@ import (
 
 const loadExistingStage = "load-existing-meta"
 
-func loadOneExisting(root string, rec Record) (Record, *Error, error) {
-	return loadOneExistingWithMeta(nil, root, rec)
-}
-
 func loadOneExistingWithMeta(meta *Meta, root string, rec Record) (Record, *Error, error) {
 	abs, rel := persistMetaFilePath(meta, root, rec.Locator)
 	b, err := os.ReadFile(abs)
