@@ -271,14 +271,24 @@ reports: [{
   title:       "Use Cases"
   filepath:    "../design/USE_CASES.md"
   description: "Migrated use-case catalog from docs/designs/use_cases.mts."
-  sections: [{
-    title:       "Use Cases"
-    description: "All modeled use cases as individual notes."
-    sections: [{
-      title: "Catalog"
-      notes: #functionCallsTreeUseCaseRefs
-    }]
-  }]
+  sections: [
+    {
+      title:       "Status"
+      description: "Implementation status used in the use-case catalog."
+      sections: [{
+        title: "Legend"
+        notes: ["flow.status.legend"]
+      }]
+    },
+    {
+      title:       "Use Cases"
+      description: "All modeled use cases as individual notes."
+      sections: [{
+        title: "Catalog"
+        notes: #functionCallsTreeUseCaseRefs
+      }]
+    },
+  ]
 },
 {
   title:       "Risks Overview"
