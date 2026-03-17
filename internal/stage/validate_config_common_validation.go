@@ -16,5 +16,13 @@ func validateCommonConfig(min config.Minimal) error {
 	if min.Shell.HasEnabled && min.Shell.Enabled && len(min.Shell.ArgsTemplate) == 0 {
 		return fmt.Errorf("invalid shell.argsTemplate: required when shell.enabled=true")
 	}
+	if min.Shell.DecodeJSONStdout &&
+		min.Shell.HasCaptureStdout &&
+		!min.Shell.CaptureStdout {
+		return fmt.Errorf(
+			"invalid shell.capture.stdout: must be true when " +
+				"shell.decodeJsonStdout=true",
+		)
+	}
 	return nil
 }

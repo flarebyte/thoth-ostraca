@@ -186,6 +186,7 @@ type Map struct {
 // Shell holds optional shell execution configuration.
 type Shell struct {
 	Enabled          bool
+	DecodeJSONStdout bool
 	Program          string
 	ArgsTemplate     []string
 	WorkingDir       string
@@ -199,6 +200,7 @@ type Shell struct {
 	TermGraceMs      int
 	HasSection       bool
 	HasEnabled       bool
+	HasDecodeJSON    bool
 	HasProgram       bool
 	HasArgs          bool
 	HasWorkingDir    bool

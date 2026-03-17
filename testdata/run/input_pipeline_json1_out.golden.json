@@ -5,6 +5,7 @@
       "mapped": { "kind": "go", "locator": "a.go" },
       "shell": {
         "exitCode": 0,
+        "json": { "kind": "go", "locator": "a.go" },
         "stdout": "{\"kind\":\"go\",\"locator\":\"a.go\"}\n",
         "stderr": "",
         "stdoutTruncated": false,
@@ -18,6 +19,7 @@
       "mapped": { "kind": "go", "locator": "sub/c.go" },
       "shell": {
         "exitCode": 0,
+        "json": { "kind": "go", "locator": "sub/c.go" },
         "stdout": "{\"kind\":\"go\",\"locator\":\"sub/c.go\"}\n",
         "stderr": "",
         "stdoutTruncated": false,
@@ -35,11 +37,11 @@
     "lua": {
       "filterInline": "return string.sub(locator, -3) == \".go\"\n  and string.sub(locator, -8) ~= \"_test.go\"",
       "mapInline": "return {\n  locator = locator,\n  kind = \"go\",\n}",
-      "postMapInline": "return {\n  locator = locator,\n  kind = mapped and mapped.kind,\n  exit = shell and shell.exitCode,\n}"
+      "postMapInline": "return {\n  locator = shell and shell.json and shell.json.locator,\n  kind = shell and shell.json and shell.json.kind,\n  exit = shell and shell.exitCode,\n}"
     },
     "shell": {
       "enabled": true,
-      "decodeJsonStdout": false,
+      "decodeJsonStdout": true,
       "program": "sh",
       "argsTemplate": ["-c", "printf '%s\\n' '{json}'"],
       "workingDir": ".",

@@ -177,6 +177,7 @@ type LuaSandboxLibsMeta struct {
 // ShellMeta holds minimal shell execution settings.
 type ShellMeta struct {
 	Enabled          bool              `json:"enabled"`
+	DecodeJSONStdout bool              `json:"decodeJsonStdout"`
 	Program          string            `json:"program"`
 	ArgsTemplate     []string          `json:"argsTemplate,omitempty"`
 	WorkingDir       string            `json:"workingDir"`

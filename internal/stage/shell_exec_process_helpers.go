@@ -41,6 +41,22 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 		rec.Shell.Error = strPtr(msg)
 		runRes.errorMsg = msg
 	}
+	if !runRes.timedOut && runRes.errorMsg == "" && opts.decodeJSONStdout {
+		decoded, err := decodeShellStdoutJSON(runRes.stdout)
+		if err != nil {
+			msg := sanitizeErrorMessage("invalid JSON stdout: " + err.Error())
+			rec.Error = &RecError{Stage: shellExecStage, Message: msg}
+			if mode == "keep-going" {
+				return rec, &Error{
+					Stage:   shellExecStage,
+					Locator: rec.Locator,
+					Message: msg,
+				}, nil
+			}
+			return Record{}, nil, fmt.Errorf("shell-exec: %s", msg)
+		}
+		rec.Shell.JSON = decoded
+	}
 	if runRes.timedOut {
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: shellExecStage, Message: "timeout"}

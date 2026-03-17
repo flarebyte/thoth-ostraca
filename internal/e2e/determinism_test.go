@@ -129,6 +129,22 @@ func TestDeterminism_InputPipeline_MultiRuns(t *testing.T) {
 	assertStable(t, runs)
 }
 
+func TestDeterminism_InputPipelineJSON_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_json1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
 func TestDeterminism_Pipeline_Workers(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)

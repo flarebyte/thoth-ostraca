@@ -16,6 +16,7 @@ type Record struct {
 // ShellResult captures deterministic outputs of a shell execution.
 type ShellResult struct {
 	ExitCode        int     `json:"exitCode"`
+	JSON            any     `json:"json,omitempty"`
 	Stdout          *string `json:"stdout,omitempty"`
 	Stderr          *string `json:"stderr,omitempty"`
 	StdoutTruncated bool    `json:"stdoutTruncated"`

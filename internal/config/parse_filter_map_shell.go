@@ -47,6 +47,11 @@ func parseShellSection(v cue.Value) Shell {
 		_ = ev.Decode(&s.Enabled)
 		s.HasEnabled = true
 	}
+	djv := sv.LookupPath(cue.ParsePath("decodeJsonStdout"))
+	if djv.Exists() && djv.Kind() == cue.BoolKind {
+		_ = djv.Decode(&s.DecodeJSONStdout)
+		s.HasDecodeJSON = true
+	}
 	pv := sv.LookupPath(cue.ParsePath("program"))
 	if pv.Exists() && pv.Kind() == cue.StringKind {
 		_ = pv.Decode(&s.Program)

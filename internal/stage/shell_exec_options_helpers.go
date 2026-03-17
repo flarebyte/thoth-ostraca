@@ -9,6 +9,7 @@ import (
 func buildShellOptions(in Envelope) shellOptions {
 	opts := shellOptions{
 		enabled:          false,
+		decodeJSONStdout: false,
 		program:          defaultShellProgram,
 		argsT:            nil,
 		workingDir:       filepath.Join(".", defaultShellWorkingDir),
@@ -26,6 +27,7 @@ func buildShellOptions(in Envelope) shellOptions {
 	}
 	cfg := in.Meta.Shell
 	opts.enabled = cfg.Enabled
+	opts.decodeJSONStdout = cfg.DecodeJSONStdout
 	if cfg.Program != "" {
 		opts.program = cfg.Program
 	}

@@ -85,6 +85,30 @@ test('thoth run input-pipeline works on source files', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run input-pipeline decodes shell JSON for postMap', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_json1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_json1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run input-pipeline fails on invalid shell JSON when decoding is enabled', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_json_bad.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('shell-exec: invalid JSON stdout:')).toBe(true);
+});
+
 test('thoth run fails when shell program is missing', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

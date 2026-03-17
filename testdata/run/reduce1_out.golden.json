@@ -28,6 +28,7 @@
     },
     "shell": {
       "enabled": true,
+      "decodeJsonStdout": false,
       "program": "sh",
       "argsTemplate": ["-c", "echo '{json}'"],
       "workingDir": ".",

@@ -51,6 +51,9 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 		if rec.Shell.Stdout != nil {
 			shellMap["stdout"] = *rec.Shell.Stdout
 		}
+		if rec.Shell.JSON != nil {
+			shellMap["json"] = rec.Shell.JSON
+		}
 		if rec.Shell.Stderr != nil {
 			shellMap["stderr"] = *rec.Shell.Stderr
 		}

@@ -8,6 +8,7 @@ const shellExecStage = "shell-exec"
 
 type shellOptions struct {
 	enabled          bool
+	decodeJSONStdout bool
 	program          string
 	argsT            []string
 	workingDir       string

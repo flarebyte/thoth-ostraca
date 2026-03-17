@@ -9,6 +9,7 @@ func applyShellMeta(out *Envelope, min config.Minimal) {
 	if out.Meta.Shell == nil {
 		out.Meta.Shell = &ShellMeta{
 			Enabled:          false,
+			DecodeJSONStdout: false,
 			Program:          defaultShellProgram,
 			WorkingDir:       defaultShellWorkingDir,
 			Env:              map[string]string{},
@@ -21,6 +22,9 @@ func applyShellMeta(out *Envelope, min config.Minimal) {
 	}
 	if min.Shell.HasEnabled {
 		out.Meta.Shell.Enabled = min.Shell.Enabled
+	}
+	if min.Shell.HasDecodeJSON {
+		out.Meta.Shell.DecodeJSONStdout = min.Shell.DecodeJSONStdout
 	}
 	if min.Shell.HasProgram {
 		out.Meta.Shell.Program = min.Shell.Program

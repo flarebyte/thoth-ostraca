@@ -96,6 +96,7 @@ PipelineConfig: {
   // Shell execution
   shell?: {
     enabled?: bool | false
+    decodeJsonStdout?: bool | false
     program?: "bash" | "sh" | "zsh" | "bash"
     commandTemplate?: string // exactly one of commandTemplate or argsTemplate
     argsTemplate?: [...string]

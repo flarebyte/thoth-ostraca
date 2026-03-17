@@ -131,3 +131,38 @@ func TestProcessShellRecord_KeepGoingStartFailurePopulatesShell(t *testing.T) {
 		t.Fatalf("expected rec.Error")
 	}
 }
+
+func TestProcessShellRecord_DecodeJSONStdout(t *testing.T) {
+	requirePOSIXShell(t)
+	opts := baseShellOpts()
+	opts.decodeJSONStdout = true
+	opts.argsT = []string{
+		"-c",
+		"printf '%s\\n' '{json}'",
+	}
+	rec, envErr, fatal := processShellRecord(
+		context.Background(),
+		Record{
+			Locator: "x",
+			Mapped: map[string]any{
+				"locator": "x",
+				"kind":    "go",
+			},
+		},
+		opts,
+		"keep-going",
+	)
+	if fatal != nil {
+		t.Fatalf("fatal: %v", fatal)
+	}
+	if envErr != nil {
+		t.Fatalf("unexpected envErr: %+v", envErr)
+	}
+	if rec.Shell == nil || rec.Shell.JSON == nil {
+		t.Fatalf("expected decoded shell json")
+	}
+	decoded, ok := rec.Shell.JSON.(map[string]any)
+	if !ok || decoded["locator"] != "x" {
+		t.Fatalf("unexpected decoded json: %#v", rec.Shell.JSON)
+	}
+}
