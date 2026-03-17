@@ -150,6 +150,53 @@ import "list"
   "flow.usecase.capture-stage-boundary-fixtures",
 ]
 
+#riskNotes: [
+  {
+    name:   "risk.security"
+    title:  "Script and shell execution safety"
+    labels: ["design", "risk", "security"]
+    markdown: """
+Description: Inline scripting and optional shell execution may enable command
+injection, unsafe environment access, or data exfiltration if misused.
+
+Mitigation: Sandbox Lua (limited libs), default strict templating, prefer argv
+over shell parsing, disable os/io by default, validate inputs, and provide
+secure defaults.
+"""
+  },
+  {
+    name:   "risk.performance"
+    title:  "Large repository and I/O scalability"
+    labels: ["design", "risk", "performance"]
+    markdown: """
+Description: Walking large trees, reading many files, and running transforms in
+parallel can exhaust CPU, memory, or I/O bandwidth, causing slowdowns or
+timeouts.
+
+Mitigation: Bounded worker pool, configurable timeouts/limits, deterministic
+ordering for aggregated output, and streaming (--lines) for better throughput.
+"""
+  },
+  {
+    name:   "risk.usability"
+    title:  "Configuration and scripting complexity"
+    labels: ["design", "risk", "usability"]
+    markdown: """
+Description: Users may struggle with config structure, schema errors, or Lua
+script pitfalls, leading to confusion and misconfiguration.
+
+Mitigation: CUE schema validation with clear errors, concise examples, helpful
+CLI flags, and good error messages at each stage.
+"""
+  },
+]
+
+#riskRefs: [
+  "risk.performance",
+  "risk.security",
+  "risk.usability",
+]
+
 #baseNotes: [
   {
     name:   "flow.suggested-go-implementation"
@@ -666,6 +713,7 @@ import "list"
 
 notes: list.Concat([
   #functionCallsTreeUseCaseNotes,
+  #riskNotes,
   #baseNotes,
   #callGraphNotes,
 ])

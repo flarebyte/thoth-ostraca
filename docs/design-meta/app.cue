@@ -266,6 +266,32 @@ reports: [{
       }]
     },
   ]
+},
+{
+  title:       "Use Cases"
+  filepath:    "../design/USE_CASES.md"
+  description: "Migrated use-case catalog from docs/designs/use_cases.mts."
+  sections: [{
+    title:       "Use Cases"
+    description: "All modeled use cases as individual notes."
+    sections: [{
+      title: "Catalog"
+      notes: #functionCallsTreeUseCaseRefs
+    }]
+  }]
+},
+{
+  title:       "Risks Overview"
+  filepath:    "../design/RISKS.md"
+  description: "Migrated risk catalog from docs/designs/risks.mts."
+  sections: [{
+    title:       "Risks"
+    description: "All modeled risks as individual notes."
+    sections: [{
+      title: "Catalog"
+      notes: #riskRefs
+    }]
+  }]
 }]
 
 argumentRegistry: {

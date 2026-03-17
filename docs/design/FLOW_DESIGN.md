@@ -300,173 +300,649 @@ map:    { inline: "return { locator = locator, name = meta and meta.name }" }
 
 #### Enrich files with OS/Git info
 
+- note: conditional files.info and/or files.git enrichment
+- pkg: internal/pipeline
+- func: FilesEnrich
+- file: internal/pipeline/files_enrich.go
+
 #### Filter filenames
+
+- note: Lua-only predicate (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesFilterStep
+- file: internal/pipeline/files_filter_step.go
 
 #### Find files recursively (gitignore)
 
+- note: walk root; .gitignore ON by default; no patterns; do not follow
+  symlinks by default; filenames as inputs
+- pkg: internal/fs
+- func: FsDiscoveryFiles
+- file: internal/fs/discovery_files.go
+
 #### Create meta files flow
 
+- pkg: internal/pipeline
+- func: FlowCreate
+- file: internal/pipeline/flow_create.go
+
 #### Map filenames
+
+- note: Lua-only map (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesMapStep
+- file: internal/pipeline/files_map_step.go
 
 #### Post-map from files
 
+- note: conditional inline Lua transforms {file,input} -> any
+- pkg: internal/pipeline
+- func: FilesMapPost
+- file: internal/pipeline/files_map_post.go
+
 #### Save meta files (*.thoth.yaml)
 
+- note: conditional save; naming convention based on sha256 root+relPath hash
+- pkg: internal/save
+- func: MetaSave
+- file: internal/save/meta_save.go
+
 #### Write JSON result (array/value/lines)
+
+- note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
 
 #### Dump stage input (optional)
 
+- note: --dump-in [path|-]; emit boundary input as JSON/NDJSON
+- pkg: internal
+- func: DiagnoseDumpIn
+- file: internal/dump_in.go
+
 #### Dump stage output (optional)
+
+- note: --dump-out [path|-]; emit stage output boundary for reproducible
+  debugging
+- pkg: internal
+- func: DiagnoseDumpOut
+- file: internal/dump_out.go
 
 #### Emit run header
 
+- note: structured log: { action, executedStep, preparedStages, inputMode,
+  limits }
+- pkg: internal
+- func: DiagnoseHeaderEmit
+- file: internal/header_emit.go
+
 #### Execute target stage
+
+- note: run only the selected step; --dry-shell renders command/env without
+  exec for shell stage
+- pkg: internal
+- func: DiagnoseStageExec
+- file: internal/stage_exec.go
 
 #### Load action config (CUE)
 
-#### Parse args for diagnose
+- note: use existing action config; validate with CUE schema
+- pkg: internal/config
+- func: DiagnoseConfigLoad
+- file: internal/config/config_load.go
 
 #### Parse args for diagnose
+
+- note: diagnose subcommand: --config, --step, input selection flags, dump
+  flags, debug flags
+- pkg: cmd/thoth
+- func: CliDiagnose
+- file: cmd/thoth/cli_diagnose.go
+
+#### Parse args for diagnose
+
+- note: --config, --step, --input-file|--input-inline|--input-stdin,
+  --dump-in, --dump-out, --limit, --seed, --dry-shell
+- pkg: internal
+- func: DiagnoseParseArgs
+- file: internal/parse_args.go
 
 #### Resolve input mode
 
+- note: use explicit JSON or prepare upstream to boundary; apply --limit/--seed
+- pkg: internal
+- func: DiagnoseInputResolve
+- file: internal/input_resolve.go
+
 #### Resolve target step
+
+- note: map stable step name to internal implementation based on action
+- pkg: internal
+- func: DiagnoseStepResolve
+- file: internal/step_resolve.go
 
 #### Diagnose single stage
 
+- pkg: internal/pipeline
+- func: FlowDiagnose
+- file: internal/pipeline/flow_diagnose.go
+
 #### Compute meta diffs
+
+- note: deep diff existing vs patch-applied result; output RFC6902 JSON Patch
+  + summary
+- pkg: internal/diff
+- func: MetaDiffCompute
+- file: internal/diff/diff_compute.go
 
 #### Detect orphan meta files
 
+- note: iterate *.thoth.yaml; if locator is file path and does not exist, flag
+- pkg: internal/diff
+- func: MetaDiffOrphans
+- file: internal/diff/diff_orphans.go
+
 #### Enrich files with OS/Git info
+
+- note: conditional files.info and/or files.git enrichment
+- pkg: internal/pipeline
+- func: FilesEnrich
+- file: internal/pipeline/files_enrich.go
 
 #### Filter filenames
 
+- note: Lua-only predicate (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesFilterStep
+- file: internal/pipeline/files_filter_step.go
+
 #### Find files recursively (update)
+
+- note: walk root; .gitignore ON by default; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscoveryFilesUpdate
+- file: internal/fs/files_update.go
 
 #### Diff meta files flow
 
+- pkg: internal/pipeline
+- func: FlowDiff
+- file: internal/pipeline/flow_diff.go
+
 #### Load existing meta (if any)
+
+- note: compute expected path by naming convention; read YAML if exists
+- pkg: internal/meta
+- func: MetaLoadExisting
+- file: internal/meta/load_existing.go
 
 #### Map filenames
 
+- note: Lua-only map (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesMapStep
+- file: internal/pipeline/files_map_step.go
+
 #### Post-map for update (with existing)
 
+- note: Lua receives {file,input,existing?}; returns either { meta } or
+  { patch } (RFC6902)
+- pkg: internal/pipeline
+- func: FilesMapPostUpdate
+- file: internal/pipeline/files_post_update.go
+
 #### Write JSON result (array/value/lines)
+
+- note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
 
 #### Apply filter predicate
 
+- note: Lua-only predicate (v1)
+- pkg: internal/pipeline
+- func: MetaFilterStep
+- file: internal/pipeline/meta_filter_step.go
+
 #### Apply map transform
+
+- note: Lua-only mapping (v1); parallel by default
+- pkg: internal/pipeline
+- func: MetaMapStep
+- file: internal/pipeline/meta_map_step.go
 
 #### Apply reduce aggregate
 
+- note: Lua-only reduce (v1); parallel feed; single JSON value
+- pkg: internal/pipeline
+- func: MetaReduceStep
+- file: internal/pipeline/meta_reduce_step.go
+
 #### Execute shell per mapped item
 
+- note: conditional shell execution; argv templates preferred; timeout kills
+  process group
+- pkg: internal/shell
+- func: ShellExec
+- file: internal/shell/shell_exec.go
+
 #### Find *.thoth.yaml files
+
+- note: walk root; .gitignore ON by default even outside git repos;
+  --no-gitignore to disable; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscovery
+- file: internal/fs/fs_discovery.go
 
 #### Meta pipeline flow
 
+- pkg: internal/pipeline
+- func: FlowPipeline
+- file: internal/pipeline/flow_pipeline.go
+
 #### Parse and validate YAML records
+
+- note: yaml.v3; strict fields; types; locator canonicalization; top-level
+  unknown = error (unless validation.allowUnknownTopLevel); inside meta:
+  unknown allowed
+- pkg: internal/meta
+- func: MetaParse
+- file: internal/meta/meta_parse.go
 
 #### Post-map shell results
 
+- note: Lua transforms {locator,input,shell:{cmd,exitCode,stdout,stderr,
+  durationMs}}
+- pkg: internal/pipeline
+- func: MetaMapPostShell
+- file: internal/pipeline/meta_post_shell.go
+
 #### Write JSON result (array/value/lines)
+
+- note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
 
 #### Load action config file
 
+- note: --config path; CUE schema-validated .cue; drives entire pipeline
+- pkg: internal/config
+- func: ActionConfigLoad
+- file: internal/config/config_load.go
+
 #### Parse args for run
+
+- note: flags: --config (CUE .cue file). All other options belong in the
+  action config.
+- pkg: cmd/thoth
+- func: CliRun
+- file: cmd/thoth/cli_run.go
 
 #### Route by action type
 
+- note: action: pipeline | create | update | diff
+- pkg: internal/config
+- func: ActionRoute
+- file: internal/config/action_route.go
+
 #### thoth CLI root command
+
+- note: cobra-based command tree
+- pkg: cmd/thoth
+- func: CliRoot
+- file: cmd/thoth/cli_root.go
 
 #### Enrich files with OS/Git info
 
+- note: conditional files.info and/or files.git enrichment
+- pkg: internal/pipeline
+- func: FilesEnrich
+- file: internal/pipeline/files_enrich.go
+
 #### Filter filenames
+
+- note: Lua-only predicate (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesFilterStep
+- file: internal/pipeline/files_filter_step.go
 
 #### Find files recursively (update)
 
+- note: walk root; .gitignore ON by default; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscoveryFilesUpdate
+- file: internal/fs/files_update.go
+
 #### Update meta files flow
+
+- pkg: internal/pipeline
+- func: FlowUpdate
+- file: internal/pipeline/flow_update.go
 
 #### Load existing meta (if any)
 
+- note: compute expected path by naming convention; read YAML if exists
+- pkg: internal/meta
+- func: MetaLoadExisting
+- file: internal/meta/load_existing.go
+
 #### Map filenames
+
+- note: Lua-only map (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesMapStep
+- file: internal/pipeline/files_map_step.go
 
 #### Post-map for update (with existing)
 
+- note: Lua receives {file,input,existing?}; returns either { meta } or
+  { patch } (RFC6902)
+- pkg: internal/pipeline
+- func: FilesMapPostUpdate
+- file: internal/pipeline/files_post_update.go
+
 #### Update meta files (merge/create)
 
+- note: shallow|deep|jsonpatch merge strategy; missing entries can create new
+  sidecars
+- pkg: internal/save
+- func: MetaUpdate
+- file: internal/save/meta_update.go
+
 #### Write JSON result (array/value/lines)
+
+- note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
 
 #### Collect validation results
 
+- note: schema + locator checks only; no filter/map/reduce/shell
+- pkg: internal/pipeline
+- func: MetaValidateOnly
+- file: internal/pipeline/validate_only.go
+
 #### Find *.thoth.yaml files
+
+- note: walk root; .gitignore ON by default even outside git repos;
+  --no-gitignore to disable; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscovery
+- file: internal/fs/fs_discovery.go
 
 #### Validate meta files only
 
+- pkg: internal/pipeline
+- func: FlowValidate
+- file: internal/pipeline/flow_validate.go
+
 #### Parse and validate YAML records
 
+- note: yaml.v3; strict fields; types; locator canonicalization; top-level
+  unknown = error (unless validation.allowUnknownTopLevel); inside meta:
+  unknown allowed
+- pkg: internal/meta
+- func: MetaParse
+- file: internal/meta/meta_parse.go
+
 #### Write JSON result (array/value/lines)
+
+- note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
 
 ## Function calls tree
 
 ### Flow call graph
 
-- <a id="graph-node-call-thoth-cli-root"></a> thoth CLI root command
-  - <a id="graph-node-call-diagnose-parse-args"></a> Parse args for diagnose
-    - <a id="graph-node-call-diagnose-single-stage"></a> Diagnose single stage
-      - <a id="graph-node-call-diagnose-dump-stage-input"></a> Dump stage input (optional)
-      - <a id="graph-node-call-diagnose-dump-stage-output"></a> Dump stage output (optional)
-      - <a id="graph-node-call-diagnose-emit-run-header"></a> Emit run header
-      - <a id="graph-node-call-diagnose-execute-target-stage"></a> Execute target stage
-      - <a id="graph-node-call-diagnose-load-action-config"></a> Load action config (CUE)
-      - <a id="graph-node-call-diagnose-parse-subcommand-args"></a> Parse args for diagnose
-      - <a id="graph-node-call-diagnose-resolve-input-mode"></a> Resolve input mode
-      - <a id="graph-node-call-diagnose-resolve-target-step"></a> Resolve target step
-  - <a id="graph-node-call-run-parse-args"></a> Parse args for run
-    - <a id="graph-node-call-run-load-action-config-file"></a> Load action config file
-    - <a id="graph-node-call-run-route-by-action-type"></a> Route by action type
-      - <a id="graph-node-call-create-flow"></a> Create meta files flow
-        - <a id="graph-node-call-create-enrich-files"></a> Enrich files with OS/Git info
-        - <a id="graph-node-call-create-filter-filenames"></a> Filter filenames
-        - <a id="graph-node-call-create-find-files"></a> Find files recursively (gitignore)
-        - <a id="graph-node-call-create-map-filenames"></a> Map filenames
-        - <a id="graph-node-call-create-post-map-from-files"></a> Post-map from files
-        - <a id="graph-node-call-create-save-meta-files"></a> Save meta files (*.thoth.yaml)
-        - <a id="graph-node-call-create-write-json-result"></a> Write JSON result (array/value/lines)
-      - <a id="graph-node-call-diff-flow"></a> Diff meta files flow
-        - <a id="graph-node-call-diff-compute-meta-diffs"></a> Compute meta diffs
-        - <a id="graph-node-call-diff-detect-orphans"></a> Detect orphan meta files
-        - <a id="graph-node-call-diff-enrich-files"></a> Enrich files with OS/Git info
-        - <a id="graph-node-call-diff-filter-filenames"></a> Filter filenames
-        - <a id="graph-node-call-diff-find-files"></a> Find files recursively (update)
-        - <a id="graph-node-call-diff-load-existing-meta"></a> Load existing meta (if any)
-        - <a id="graph-node-call-diff-map-filenames"></a> Map filenames
-        - <a id="graph-node-call-diff-post-map-for-update"></a> Post-map for update (with existing)
-        - <a id="graph-node-call-diff-write-json-result"></a> Write JSON result (array/value/lines)
-      - <a id="graph-node-call-pipeline-meta-flow"></a> Meta pipeline flow
-        - <a id="graph-node-call-pipeline-apply-filter"></a> Apply filter predicate
-        - <a id="graph-node-call-pipeline-apply-map"></a> Apply map transform
-        - <a id="graph-node-call-pipeline-apply-reduce"></a> Apply reduce aggregate
-        - <a id="graph-node-call-pipeline-execute-shell"></a> Execute shell per mapped item
-        - <a id="graph-node-call-pipeline-find-meta-files"></a> Find *.thoth.yaml files
-        - <a id="graph-node-call-pipeline-parse-validate-yaml"></a> Parse and validate YAML records
-        - <a id="graph-node-call-pipeline-post-map-shell-results"></a> Post-map shell results
-        - <a id="graph-node-call-pipeline-write-json-result"></a> Write JSON result (array/value/lines)
-      - <a id="graph-node-call-update-flow"></a> Update meta files flow
-        - <a id="graph-node-call-update-enrich-files"></a> Enrich files with OS/Git info
-        - <a id="graph-node-call-update-filter-filenames"></a> Filter filenames
-        - <a id="graph-node-call-update-find-files"></a> Find files recursively (update)
-        - <a id="graph-node-call-update-load-existing-meta"></a> Load existing meta (if any)
-        - <a id="graph-node-call-update-map-filenames"></a> Map filenames
-        - <a id="graph-node-call-update-post-map-for-update"></a> Post-map for update (with existing)
-        - <a id="graph-node-call-update-update-meta-files"></a> Update meta files (merge/create)
-        - <a id="graph-node-call-update-write-json-result"></a> Write JSON result (array/value/lines)
-      - <a id="graph-node-call-validate-flow"></a> Validate meta files only
-        - <a id="graph-node-call-validate-collect-validation-results"></a> Collect validation results
-        - <a id="graph-node-call-validate-find-meta-files"></a> Find *.thoth.yaml files
-        - <a id="graph-node-call-validate-parse-validate-yaml"></a> Parse and validate YAML records
-        - <a id="graph-node-call-validate-write-json-result"></a> Write JSON result (array/value/lines)
+- <a id="graph-node-call-thoth-cli-root"></a> thoth CLI root command: - note: cobra-based command tree
+- pkg: cmd/thoth
+- func: CliRoot
+- file: cmd/thoth/cli_root.go
+  - <a id="graph-node-call-diagnose-parse-args"></a> Parse args for diagnose: - note: diagnose subcommand: --config, --step, input selection flags, dump
+  flags, debug flags
+- pkg: cmd/thoth
+- func: CliDiagnose
+- file: cmd/thoth/cli_diagnose.go
+    - <a id="graph-node-call-diagnose-single-stage"></a> Diagnose single stage: - pkg: internal/pipeline
+- func: FlowDiagnose
+- file: internal/pipeline/flow_diagnose.go
+      - <a id="graph-node-call-diagnose-dump-stage-input"></a> Dump stage input (optional): - note: --dump-in [path|-]; emit boundary input as JSON/NDJSON
+- pkg: internal
+- func: DiagnoseDumpIn
+- file: internal/dump_in.go
+      - <a id="graph-node-call-diagnose-dump-stage-output"></a> Dump stage output (optional): - note: --dump-out [path|-]; emit stage output boundary for reproducible
+  debugging
+- pkg: internal
+- func: DiagnoseDumpOut
+- file: internal/dump_out.go
+      - <a id="graph-node-call-diagnose-emit-run-header"></a> Emit run header: - note: structured log: { action, executedStep, preparedStages, inputMode,
+  limits }
+- pkg: internal
+- func: DiagnoseHeaderEmit
+- file: internal/header_emit.go
+      - <a id="graph-node-call-diagnose-execute-target-stage"></a> Execute target stage: - note: run only the selected step; --dry-shell renders command/env without
+  exec for shell stage
+- pkg: internal
+- func: DiagnoseStageExec
+- file: internal/stage_exec.go
+      - <a id="graph-node-call-diagnose-load-action-config"></a> Load action config (CUE): - note: use existing action config; validate with CUE schema
+- pkg: internal/config
+- func: DiagnoseConfigLoad
+- file: internal/config/config_load.go
+      - <a id="graph-node-call-diagnose-parse-subcommand-args"></a> Parse args for diagnose: - note: --config, --step, --input-file|--input-inline|--input-stdin,
+  --dump-in, --dump-out, --limit, --seed, --dry-shell
+- pkg: internal
+- func: DiagnoseParseArgs
+- file: internal/parse_args.go
+      - <a id="graph-node-call-diagnose-resolve-input-mode"></a> Resolve input mode: - note: use explicit JSON or prepare upstream to boundary; apply --limit/--seed
+- pkg: internal
+- func: DiagnoseInputResolve
+- file: internal/input_resolve.go
+      - <a id="graph-node-call-diagnose-resolve-target-step"></a> Resolve target step: - note: map stable step name to internal implementation based on action
+- pkg: internal
+- func: DiagnoseStepResolve
+- file: internal/step_resolve.go
+  - <a id="graph-node-call-run-parse-args"></a> Parse args for run: - note: flags: --config (CUE .cue file). All other options belong in the
+  action config.
+- pkg: cmd/thoth
+- func: CliRun
+- file: cmd/thoth/cli_run.go
+    - <a id="graph-node-call-run-load-action-config-file"></a> Load action config file: - note: --config path; CUE schema-validated .cue; drives entire pipeline
+- pkg: internal/config
+- func: ActionConfigLoad
+- file: internal/config/config_load.go
+    - <a id="graph-node-call-run-route-by-action-type"></a> Route by action type: - note: action: pipeline | create | update | diff
+- pkg: internal/config
+- func: ActionRoute
+- file: internal/config/action_route.go
+      - <a id="graph-node-call-create-flow"></a> Create meta files flow: - pkg: internal/pipeline
+- func: FlowCreate
+- file: internal/pipeline/flow_create.go
+        - <a id="graph-node-call-create-enrich-files"></a> Enrich files with OS/Git info: - note: conditional files.info and/or files.git enrichment
+- pkg: internal/pipeline
+- func: FilesEnrich
+- file: internal/pipeline/files_enrich.go
+        - <a id="graph-node-call-create-filter-filenames"></a> Filter filenames: - note: Lua-only predicate (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesFilterStep
+- file: internal/pipeline/files_filter_step.go
+        - <a id="graph-node-call-create-find-files"></a> Find files recursively (gitignore): - note: walk root; .gitignore ON by default; no patterns; do not follow
+  symlinks by default; filenames as inputs
+- pkg: internal/fs
+- func: FsDiscoveryFiles
+- file: internal/fs/discovery_files.go
+        - <a id="graph-node-call-create-map-filenames"></a> Map filenames: - note: Lua-only map (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesMapStep
+- file: internal/pipeline/files_map_step.go
+        - <a id="graph-node-call-create-post-map-from-files"></a> Post-map from files: - note: conditional inline Lua transforms {file,input} -> any
+- pkg: internal/pipeline
+- func: FilesMapPost
+- file: internal/pipeline/files_map_post.go
+        - <a id="graph-node-call-create-save-meta-files"></a> Save meta files (*.thoth.yaml): - note: conditional save; naming convention based on sha256 root+relPath hash
+- pkg: internal/save
+- func: MetaSave
+- file: internal/save/meta_save.go
+        - <a id="graph-node-call-create-write-json-result"></a> Write JSON result (array/value/lines): - note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
+      - <a id="graph-node-call-diff-flow"></a> Diff meta files flow: - pkg: internal/pipeline
+- func: FlowDiff
+- file: internal/pipeline/flow_diff.go
+        - <a id="graph-node-call-diff-compute-meta-diffs"></a> Compute meta diffs: - note: deep diff existing vs patch-applied result; output RFC6902 JSON Patch
+  + summary
+- pkg: internal/diff
+- func: MetaDiffCompute
+- file: internal/diff/diff_compute.go
+        - <a id="graph-node-call-diff-detect-orphans"></a> Detect orphan meta files: - note: iterate *.thoth.yaml; if locator is file path and does not exist, flag
+- pkg: internal/diff
+- func: MetaDiffOrphans
+- file: internal/diff/diff_orphans.go
+        - <a id="graph-node-call-diff-enrich-files"></a> Enrich files with OS/Git info: - note: conditional files.info and/or files.git enrichment
+- pkg: internal/pipeline
+- func: FilesEnrich
+- file: internal/pipeline/files_enrich.go
+        - <a id="graph-node-call-diff-filter-filenames"></a> Filter filenames: - note: Lua-only predicate (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesFilterStep
+- file: internal/pipeline/files_filter_step.go
+        - <a id="graph-node-call-diff-find-files"></a> Find files recursively (update): - note: walk root; .gitignore ON by default; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscoveryFilesUpdate
+- file: internal/fs/files_update.go
+        - <a id="graph-node-call-diff-load-existing-meta"></a> Load existing meta (if any): - note: compute expected path by naming convention; read YAML if exists
+- pkg: internal/meta
+- func: MetaLoadExisting
+- file: internal/meta/load_existing.go
+        - <a id="graph-node-call-diff-map-filenames"></a> Map filenames: - note: Lua-only map (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesMapStep
+- file: internal/pipeline/files_map_step.go
+        - <a id="graph-node-call-diff-post-map-for-update"></a> Post-map for update (with existing): - note: Lua receives {file,input,existing?}; returns either { meta } or
+  { patch } (RFC6902)
+- pkg: internal/pipeline
+- func: FilesMapPostUpdate
+- file: internal/pipeline/files_post_update.go
+        - <a id="graph-node-call-diff-write-json-result"></a> Write JSON result (array/value/lines): - note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
+      - <a id="graph-node-call-pipeline-meta-flow"></a> Meta pipeline flow: - pkg: internal/pipeline
+- func: FlowPipeline
+- file: internal/pipeline/flow_pipeline.go
+        - <a id="graph-node-call-pipeline-apply-filter"></a> Apply filter predicate: - note: Lua-only predicate (v1)
+- pkg: internal/pipeline
+- func: MetaFilterStep
+- file: internal/pipeline/meta_filter_step.go
+        - <a id="graph-node-call-pipeline-apply-map"></a> Apply map transform: - note: Lua-only mapping (v1); parallel by default
+- pkg: internal/pipeline
+- func: MetaMapStep
+- file: internal/pipeline/meta_map_step.go
+        - <a id="graph-node-call-pipeline-apply-reduce"></a> Apply reduce aggregate: - note: Lua-only reduce (v1); parallel feed; single JSON value
+- pkg: internal/pipeline
+- func: MetaReduceStep
+- file: internal/pipeline/meta_reduce_step.go
+        - <a id="graph-node-call-pipeline-execute-shell"></a> Execute shell per mapped item: - note: conditional shell execution; argv templates preferred; timeout kills
+  process group
+- pkg: internal/shell
+- func: ShellExec
+- file: internal/shell/shell_exec.go
+        - <a id="graph-node-call-pipeline-find-meta-files"></a> Find *.thoth.yaml files: - note: walk root; .gitignore ON by default even outside git repos;
+  --no-gitignore to disable; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscovery
+- file: internal/fs/fs_discovery.go
+        - <a id="graph-node-call-pipeline-parse-validate-yaml"></a> Parse and validate YAML records: - note: yaml.v3; strict fields; types; locator canonicalization; top-level
+  unknown = error (unless validation.allowUnknownTopLevel); inside meta:
+  unknown allowed
+- pkg: internal/meta
+- func: MetaParse
+- file: internal/meta/meta_parse.go
+        - <a id="graph-node-call-pipeline-post-map-shell-results"></a> Post-map shell results: - note: Lua transforms {locator,input,shell:{cmd,exitCode,stdout,stderr,
+  durationMs}}
+- pkg: internal/pipeline
+- func: MetaMapPostShell
+- file: internal/pipeline/meta_post_shell.go
+        - <a id="graph-node-call-pipeline-write-json-result"></a> Write JSON result (array/value/lines): - note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
+      - <a id="graph-node-call-update-flow"></a> Update meta files flow: - pkg: internal/pipeline
+- func: FlowUpdate
+- file: internal/pipeline/flow_update.go
+        - <a id="graph-node-call-update-enrich-files"></a> Enrich files with OS/Git info: - note: conditional files.info and/or files.git enrichment
+- pkg: internal/pipeline
+- func: FilesEnrich
+- file: internal/pipeline/files_enrich.go
+        - <a id="graph-node-call-update-filter-filenames"></a> Filter filenames: - note: Lua-only predicate (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesFilterStep
+- file: internal/pipeline/files_filter_step.go
+        - <a id="graph-node-call-update-find-files"></a> Find files recursively (update): - note: walk root; .gitignore ON by default; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscoveryFilesUpdate
+- file: internal/fs/files_update.go
+        - <a id="graph-node-call-update-load-existing-meta"></a> Load existing meta (if any): - note: compute expected path by naming convention; read YAML if exists
+- pkg: internal/meta
+- func: MetaLoadExisting
+- file: internal/meta/load_existing.go
+        - <a id="graph-node-call-update-map-filenames"></a> Map filenames: - note: Lua-only map (v1) over {file}
+- pkg: internal/pipeline
+- func: FilesMapStep
+- file: internal/pipeline/files_map_step.go
+        - <a id="graph-node-call-update-post-map-for-update"></a> Post-map for update (with existing): - note: Lua receives {file,input,existing?}; returns either { meta } or
+  { patch } (RFC6902)
+- pkg: internal/pipeline
+- func: FilesMapPostUpdate
+- file: internal/pipeline/files_post_update.go
+        - <a id="graph-node-call-update-update-meta-files"></a> Update meta files (merge/create): - note: shallow|deep|jsonpatch merge strategy; missing entries can create new
+  sidecars
+- pkg: internal/save
+- func: MetaUpdate
+- file: internal/save/meta_update.go
+        - <a id="graph-node-call-update-write-json-result"></a> Write JSON result (array/value/lines): - note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
+      - <a id="graph-node-call-validate-flow"></a> Validate meta files only: - pkg: internal/pipeline
+- func: FlowValidate
+- file: internal/pipeline/flow_validate.go
+        - <a id="graph-node-call-validate-collect-validation-results"></a> Collect validation results: - note: schema + locator checks only; no filter/map/reduce/shell
+- pkg: internal/pipeline
+- func: MetaValidateOnly
+- file: internal/pipeline/validate_only.go
+        - <a id="graph-node-call-validate-find-meta-files"></a> Find *.thoth.yaml files: - note: walk root; .gitignore ON by default even outside git repos;
+  --no-gitignore to disable; do not follow symlinks by default
+- pkg: internal/fs
+- func: FsDiscovery
+- file: internal/fs/fs_discovery.go
+        - <a id="graph-node-call-validate-parse-validate-yaml"></a> Parse and validate YAML records: - note: yaml.v3; strict fields; types; locator canonicalization; top-level
+  unknown = error (unless validation.allowUnknownTopLevel); inside meta:
+  unknown allowed
+- pkg: internal/meta
+- func: MetaParse
+- file: internal/meta/meta_parse.go
+        - <a id="graph-node-call-validate-write-json-result"></a> Write JSON result (array/value/lines): - note: aggregated JSON array by default; --lines streams nondeterministically;
+  reduce -> single value
+- pkg: internal/output
+- func: OutputJsonResult
+- file: internal/output/json_result.go
 
 ### Supported use cases
 
