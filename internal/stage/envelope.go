@@ -24,29 +24,30 @@ type ConfigMeta struct {
 
 // Meta holds optional metadata with deterministic JSON field order.
 type Meta struct {
-	ContractVersion string          `json:"contractVersion,omitempty"`
-	Stage           string          `json:"stage,omitempty"`
-	ConfigPath      string          `json:"configPath,omitempty"`
-	Config          *ConfigMeta     `json:"config,omitempty"`
-	Discovery       *DiscoveryMeta  `json:"discovery,omitempty"`
-	Validation      *ValidationMeta `json:"validation,omitempty"`
-	Limits          *LimitsMeta     `json:"limits,omitempty"`
-	LocatorPolicy   *LocatorPolicy  `json:"locatorPolicy,omitempty"`
-	FileInfo        *FileInfoMeta   `json:"fileInfo,omitempty"`
-	Git             *GitMeta        `json:"git,omitempty"`
-	Inputs          []string        `json:"inputs,omitempty"`
-	MetaFiles       []string        `json:"metaFiles,omitempty"`
-	Diff            *DiffReport     `json:"diff,omitempty"`
-	Lua             *LuaMeta        `json:"lua,omitempty"`
-	LuaSandbox      *LuaSandboxMeta `json:"luaSandbox,omitempty"`
-	Shell           *ShellMeta      `json:"shell,omitempty"`
-	Output          *OutputMeta     `json:"output,omitempty"`
-	UpdateMeta      *UpdateMetaMeta `json:"updateMeta,omitempty"`
-	DiffMeta        *DiffMetaMeta   `json:"diffMeta,omitempty"`
-	Reduced         any             `json:"reduced,omitempty"`
-	Errors          *ErrorsMeta     `json:"errors,omitempty"`
-	Workers         int             `json:"workers,omitempty"`
-	UI              *UIMeta         `json:"ui,omitempty"`
+	ContractVersion string           `json:"contractVersion,omitempty"`
+	Stage           string           `json:"stage,omitempty"`
+	ConfigPath      string           `json:"configPath,omitempty"`
+	Config          *ConfigMeta      `json:"config,omitempty"`
+	Discovery       *DiscoveryMeta   `json:"discovery,omitempty"`
+	Validation      *ValidationMeta  `json:"validation,omitempty"`
+	Limits          *LimitsMeta      `json:"limits,omitempty"`
+	LocatorPolicy   *LocatorPolicy   `json:"locatorPolicy,omitempty"`
+	FileInfo        *FileInfoMeta    `json:"fileInfo,omitempty"`
+	Git             *GitMeta         `json:"git,omitempty"`
+	Inputs          []string         `json:"inputs,omitempty"`
+	MetaFiles       []string         `json:"metaFiles,omitempty"`
+	Diff            *DiffReport      `json:"diff,omitempty"`
+	Lua             *LuaMeta         `json:"lua,omitempty"`
+	LuaSandbox      *LuaSandboxMeta  `json:"luaSandbox,omitempty"`
+	Shell           *ShellMeta       `json:"shell,omitempty"`
+	Output          *OutputMeta      `json:"output,omitempty"`
+	PersistMeta     *PersistMetaMeta `json:"persistMeta,omitempty"`
+	UpdateMeta      *UpdateMetaMeta  `json:"updateMeta,omitempty"`
+	DiffMeta        *DiffMetaMeta    `json:"diffMeta,omitempty"`
+	Reduced         any              `json:"reduced,omitempty"`
+	Errors          *ErrorsMeta      `json:"errors,omitempty"`
+	Workers         int              `json:"workers,omitempty"`
+	UI              *UIMeta          `json:"ui,omitempty"`
 }
 
 // ValidationMeta controls strictness for top-level YAML fields.
@@ -201,6 +202,11 @@ type OutputMeta struct {
 	Out    string `json:"out,omitempty"`
 	Pretty bool   `json:"pretty,omitempty"`
 	Lines  bool   `json:"lines,omitempty"`
+}
+
+// PersistMetaMeta enables sidecar persistence from input-pipeline records.
+type PersistMetaMeta struct {
+	Enabled bool `json:"enabled"`
 }
 
 // UpdateMetaMeta holds update-meta patch settings.

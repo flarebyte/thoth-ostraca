@@ -47,6 +47,151 @@ test('create-meta: creates .thoth.yaml files and prints expected envelope', () =
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('input-pipeline: writes .thoth.yaml sidecars from postMap meta', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(root, 'temp', 'input_pipeline_persist_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_persist_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_persist_repo').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return string.sub(locator, -3) == ".go"
+  and string.sub(locator, -8) ~= "_test.go"
+"""
+  }
+  map: {
+    inline: """
+return {
+  locator = locator,
+  kind = "go",
+}
+"""
+  }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = {
+    kind = shell and shell.json and shell.json.kind,
+    shellLocator = shell and shell.json and shell.json.locator,
+  },
+}
+"""
+  }
+  persistMeta: { enabled: true }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-persist', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const metaA = path.join(tempRepo, 'a.go.thoth.yaml');
+  const metaC = path.join(tempRepo, 'sub', 'c.go.thoth.yaml');
+  const metaTest = path.join(tempRepo, 'a_test.go.thoth.yaml');
+  expect(fs.existsSync(metaA)).toBe(true);
+  expect(fs.existsSync(metaC)).toBe(true);
+  expect(fs.existsSync(metaTest)).toBe(false);
+
+  expect(fs.readFileSync(metaA, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_a_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+  expect(fs.readFileSync(metaC, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_c_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  const summary = {
+    locators: out.records.map((r) => r.locator),
+    metaPaths: out.records.map((r) => r.post?.metaPath),
+  };
+  const expectedSummary = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/run/input_pipeline_persist_summary.golden.json',
+      ),
+      'utf8',
+    ),
+  );
+  expect(summary).toEqual(expectedSummary);
+});
+
+test('input-pipeline: malformed postMap meta fails before sidecar writes', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(
+    root,
+    'temp',
+    'input_pipeline_persist_invalid_repo',
+  );
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(
+    root,
+    'temp',
+    'input_pipeline_persist_invalid_tmp.cue',
+  );
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_persist_invalid_repo').replaceAll('\\', '\\\\')}" }
+  filter: { inline: "return locator == \\"a.go\\"" }
+  map: { inline: "return { locator = locator }" }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = "bad",
+}
+"""
+  }
+  persistMeta: { enabled: true }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-persist-invalid', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('merge-meta: post.meta must be object')).toBe(
+    true,
+  );
+  expect(fs.existsSync(path.join(tempRepo, 'a.go.thoth.yaml'))).toBe(false);
+});
+
 test('create-meta: second run fails-fast when meta exists', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

@@ -39,3 +39,17 @@ func TestValidateConfig_UpdateMetaExpectedLuaMustBeString(t *testing.T) {
 		t.Fatalf("expected invalid updateMeta.expectedLua.inline error, got: %v", err)
 	}
 }
+
+func TestValidateConfig_PersistMetaOnlyAllowedForInputPipeline(t *testing.T) {
+	content := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"update-meta\"\n  persistMeta: { enabled: true }\n}\n"
+	_, err := runValidateConfigWithContent(
+		t,
+		"persist_meta_invalid_action_validate_test.cue",
+		content,
+	)
+	if err == nil || !strings.Contains(err.Error(), "invalid persistMeta") {
+		t.Fatalf("expected invalid persistMeta error, got: %v", err)
+	}
+}

@@ -93,3 +93,29 @@ end`,
 		t.Fatalf("unexpected b nextMeta: %+v", bNext)
 	}
 }
+
+func TestMergeMetaRunner_UsesPostMetaWhenPersistEnabled(t *testing.T) {
+	in := Envelope{
+		Records: []Record{{
+			Locator: "a.go",
+			Post: map[string]any{
+				"existingMeta": map[string]any{"x": 1},
+				"meta": map[string]any{
+					"kind": "go",
+				},
+			},
+		}},
+		Meta: &Meta{
+			PersistMeta: &PersistMetaMeta{Enabled: true},
+		},
+	}
+	out, err := mergeMetaRunner(context.Background(), in, Deps{})
+	if err != nil {
+		t.Fatalf("merge-meta: %v", err)
+	}
+	pm, _ := out.Records[0].Post.(map[string]any)
+	next, _ := pm["nextMeta"].(map[string]any)
+	if next["x"] != 1 || next["kind"] != "go" {
+		t.Fatalf("unexpected nextMeta: %+v", next)
+	}
+}

@@ -38,6 +38,22 @@ func parseReduceSection(v cue.Value) Reduce {
 	return r
 }
 
+// parsePersistMetaSection extracts optional persistMeta.enabled.
+func parsePersistMetaSection(v cue.Value) PersistMeta {
+	var p PersistMeta
+	pv := v.LookupPath(cue.ParsePath("persistMeta"))
+	if !pv.Exists() {
+		return p
+	}
+	p.HasSection = true
+	ev := pv.LookupPath(cue.ParsePath("enabled"))
+	if ev.Exists() && ev.Kind() == cue.BoolKind {
+		_ = ev.Decode(&p.Enabled)
+		p.HasEnabled = true
+	}
+	return p
+}
+
 // parseUpdateMetaSection extracts optional updateMeta.patch object.
 func parseUpdateMetaSection(v cue.Value) (UpdateMeta, error) {
 	var u UpdateMeta

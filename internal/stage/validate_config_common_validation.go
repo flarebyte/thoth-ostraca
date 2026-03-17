@@ -24,5 +24,11 @@ func validateCommonConfig(min config.Minimal) error {
 				"shell.decodeJsonStdout=true",
 		)
 	}
+	if min.PersistMeta.Enabled && min.Action != "input-pipeline" {
+		return fmt.Errorf(
+			"invalid persistMeta: only supported for action " +
+				"'input-pipeline'",
+		)
+	}
 	return nil
 }

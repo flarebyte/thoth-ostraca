@@ -34,8 +34,15 @@ func PreparedActionStages(action string, meta *stage.Meta) ([]string, error) {
 			"lua-map",
 			"shell-exec",
 			"lua-postmap",
-			"write-output",
 		)
+		if persistMetaEnabled(meta) {
+			stages = append(stages,
+				"load-existing-meta",
+				"merge-meta",
+				"write-updated-meta-files",
+			)
+		}
+		stages = append(stages, "write-output")
 		return stages, nil
 	case "validate":
 		return []string{
@@ -84,4 +91,8 @@ func fileInfoEnabled(meta *stage.Meta) bool {
 
 func gitEnabled(meta *stage.Meta) bool {
 	return meta != nil && meta.Git != nil && meta.Git.Enabled
+}
+
+func persistMetaEnabled(meta *stage.Meta) bool {
+	return meta != nil && meta.PersistMeta != nil && meta.PersistMeta.Enabled
 }

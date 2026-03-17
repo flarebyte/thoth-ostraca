@@ -2,6 +2,18 @@ package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"
 
+func applyPersistMeta(out *Envelope, min config.Minimal) {
+	if !min.PersistMeta.HasSection {
+		return
+	}
+	if out.Meta.PersistMeta == nil {
+		out.Meta.PersistMeta = &PersistMetaMeta{}
+	}
+	if min.PersistMeta.HasEnabled {
+		out.Meta.PersistMeta.Enabled = min.PersistMeta.Enabled
+	}
+}
+
 func applyUpdateMeta(out *Envelope, min config.Minimal) {
 	if !min.UpdateMeta.HasPatch && !min.UpdateMeta.HasExpectedLuaCode {
 		return

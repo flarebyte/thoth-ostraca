@@ -61,6 +61,7 @@ type Minimal struct {
 	Shell         Shell
 	PostMap       PostMap
 	Reduce        Reduce
+	PersistMeta   PersistMeta
 	UpdateMeta    UpdateMeta
 	DiffMeta      DiffMeta
 	Output        Output
@@ -106,6 +107,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Shell = parseShellSection(v)
 	m.PostMap = parsePostMapSection(v)
 	m.Reduce = parseReduceSection(v)
+	m.PersistMeta = parsePersistMetaSection(v)
 	m.UpdateMeta, err = parseUpdateMetaSection(v)
 	if err != nil {
 		return Minimal{}, err
@@ -225,6 +227,13 @@ type PostMap struct {
 type Reduce struct {
 	Inline    string
 	HasInline bool
+}
+
+// PersistMeta enables sidecar persistence from the input pipeline.
+type PersistMeta struct {
+	Enabled    bool
+	HasSection bool
+	HasEnabled bool
 }
 
 // UpdateMeta holds optional update-meta patch config.

@@ -48,6 +48,7 @@ func applyMinimalToMeta(out *Envelope, min config.Minimal) {
 	applyLuaSandboxMeta(out, min)
 	applyShellMeta(out, min)
 	applyOutputMeta(out, min)
+	applyPersistMeta(out, min)
 	applyUpdateMeta(out, min)
 	applyDiffMeta(out, min)
 	applyErrorsMeta(out, min)

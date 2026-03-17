@@ -1,6 +1,9 @@
 package stage
 
-import "context"
+import (
+	"context"
+	"fmt"
+)
 
 const mergeMetaStage = "merge-meta"
 const updateMetaExpectedLuaStage = "update-meta-expectedLua"
@@ -9,6 +12,9 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	out := in
 	mode, embed := errorMode(in.Meta)
 	var envErrs []Error
+	persistEnabled := in.Meta != nil &&
+		in.Meta.PersistMeta != nil &&
+		in.Meta.PersistMeta.Enabled
 	derived := map[string]any{}
 	expectedLuaInline := ""
 	if in.Meta != nil && in.Meta.UpdateMeta != nil {
@@ -30,6 +36,34 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 					existing = em
 				}
 			}
+		}
+		if persistEnabled {
+			derivedPerRecord, handled, outErr := mergeMetaFromPost(
+				&out,
+				&envErrs,
+				i,
+				r,
+				mode,
+				embed,
+			)
+			if outErr != nil {
+				return Envelope{}, outErr
+			}
+			if handled {
+				continue
+			}
+			next := deepMerge(existing, derivedPerRecord)
+			m := map[string]any{"nextMeta": next}
+			if r.Post != nil {
+				if pm, ok := r.Post.(map[string]any); ok {
+					for k, v := range pm {
+						m[k] = v
+					}
+				}
+			}
+			r.Post = m
+			out.Records[i] = r
+			continue
 		}
 		derivedPerRecord := derived
 		if expectedLuaInline != "" {
@@ -68,6 +102,80 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	}
 	appendSanitizedErrors(&out, envErrs)
 	return out, nil
+}
+
+func mergeMetaFromPost(
+	out *Envelope,
+	envErrs *[]Error,
+	idx int,
+	rec Record,
+	mode string,
+	embed bool,
+) (map[string]any, bool, error) {
+	pm, ok := rec.Post.(map[string]any)
+	if !ok {
+		msg := "post.meta missing or invalid"
+		return nil, true, handleMergeMetaFailure(
+			out,
+			envErrs,
+			idx,
+			rec,
+			mode,
+			embed,
+			msg,
+		)
+	}
+	rawMeta, ok := pm["meta"]
+	if !ok {
+		msg := "post.meta missing or invalid"
+		return nil, true, handleMergeMetaFailure(
+			out,
+			envErrs,
+			idx,
+			rec,
+			mode,
+			embed,
+			msg,
+		)
+	}
+	patch, ok := asStringMap(rawMeta)
+	if !ok {
+		msg := "post.meta must be object"
+		return nil, true, handleMergeMetaFailure(
+			out,
+			envErrs,
+			idx,
+			rec,
+			mode,
+			embed,
+			msg,
+		)
+	}
+	if cp, ok := deepCopyAny(patch).(map[string]any); ok {
+		return cp, false, nil
+	}
+	return map[string]any{}, false, nil
+}
+
+func handleMergeMetaFailure(
+	out *Envelope,
+	envErrs *[]Error,
+	idx int,
+	rec Record,
+	mode string,
+	embed bool,
+	rawMsg string,
+) error {
+	msg := sanitizeErrorMessage(rawMsg)
+	if mode == "keep-going" {
+		rr, envE := recordFailure(rec, mergeMetaStage, msg, embed)
+		out.Records[idx] = rr
+		if envE != nil {
+			*envErrs = append(*envErrs, *envE)
+		}
+		return nil
+	}
+	return fmt.Errorf("%s: %s", mergeMetaStage, msg)
 }
 
 func handleUpdateMetaLuaFailure(out *Envelope, envErrs *[]Error, idx int, rec Record, mode string, embed bool, rawMsg string) (bool, error) {

@@ -121,6 +121,11 @@ PipelineConfig: {
     out?: string | "-"
   }
 
+  // Persist postMap.meta into sidecars for input-pipeline
+  persistMeta?: {
+    enabled?: bool | false
+  }
+
   // Save options (create)
   save?: {
     enabled?: bool | false
