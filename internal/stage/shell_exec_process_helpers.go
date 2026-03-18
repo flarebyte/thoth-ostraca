@@ -39,12 +39,14 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 	if runRes.errorMsg != "" {
 		msg := sanitizeErrorMessage(runRes.errorMsg)
 		rec.Shell.Error = strPtr(msg)
+		attachShellDiagnostics(rec.Shell, runRes)
 		runRes.errorMsg = msg
 	}
 	if !runRes.timedOut && runRes.errorMsg == "" && opts.decodeJSONStdout {
 		decoded, err := decodeShellStdoutJSON(runRes.stdout)
 		if err != nil {
 			msg := sanitizeErrorMessage("invalid JSON stdout: " + err.Error())
+			attachShellDiagnostics(rec.Shell, runRes)
 			rec.Error = &RecError{Stage: shellExecStage, Message: msg}
 			if mode == "keep-going" {
 				return rec, &Error{
@@ -58,6 +60,7 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 		rec.Shell.JSON = decoded
 	}
 	if runRes.timedOut {
+		attachShellDiagnostics(rec.Shell, runRes)
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: shellExecStage, Message: "timeout"}
 			return rec, &Error{Stage: shellExecStage, Locator: rec.Locator, Message: "timeout"}, nil
@@ -72,4 +75,15 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 		return Record{}, nil, fmt.Errorf("shell-exec: %s", runRes.errorMsg)
 	}
 	return rec, nil, nil
+}
+
+func attachShellDiagnostics(shell *ShellResult, runRes shellRunResult) {
+	if shell == nil {
+		return
+	}
+	shell.Program = runRes.program
+	shell.WorkingDir = runRes.workingDir
+	if len(runRes.args) > 0 {
+		shell.Args = append([]string(nil), runRes.args...)
+	}
 }

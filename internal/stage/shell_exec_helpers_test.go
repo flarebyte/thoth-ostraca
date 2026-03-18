@@ -131,8 +131,34 @@ func TestProcessShellRecord_KeepGoingStartFailurePopulatesShell(t *testing.T) {
 	if rec.Shell == nil || rec.Shell.Error == nil || rec.Shell.ExitCode != -1 || rec.Shell.TimedOut {
 		t.Fatalf("unexpected rec shell: %+v", rec.Shell)
 	}
+	if rec.Shell.Program != "this-program-does-not-exist-xyz" {
+		t.Fatalf("expected shell program diagnostics, got %+v", rec.Shell)
+	}
+	if len(rec.Shell.Args) != 2 || rec.Shell.Args[0] != "-c" {
+		t.Fatalf("expected rendered args diagnostics, got %+v", rec.Shell)
+	}
 	if rec.Error == nil {
 		t.Fatalf("expected rec.Error")
+	}
+}
+
+func TestRunCommand_StartFailurePreservesUnderlyingError(t *testing.T) {
+	requirePOSIXShell(t)
+	opts := baseShellOpts()
+	opts.program = "/bin/sh"
+	opts.workingDir = "does-not-exist"
+	r, err := runCommand(context.Background(), opts, Record{})
+	if err != nil {
+		t.Fatalf("runCommand err: %v", err)
+	}
+	if r.exitCode != -1 {
+		t.Fatalf("expected exitCode=-1, got %+v", r)
+	}
+	if !strings.Contains(r.errorMsg, "start failed:") {
+		t.Fatalf("expected start failure details, got %q", r.errorMsg)
+	}
+	if !strings.Contains(r.errorMsg, "does-not-exist") {
+		t.Fatalf("expected working dir in error, got %q", r.errorMsg)
 	}
 }
 

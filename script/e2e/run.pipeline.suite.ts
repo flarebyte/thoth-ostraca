@@ -162,6 +162,19 @@ test('thoth run fails when shell program is missing', () => {
   expect(run.stderr.includes('shell-exec')).toBe(true);
 });
 
+test('thoth run shell start failure preserves the real cause', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/shell_bad_workdir.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('shell-exec: program /bin/sh start failed:')).toBe(
+    true,
+  );
+  expect(run.stderr.includes('does-not-exist')).toBe(true);
+});
+
 test('thoth run reduces to count and prints full envelope', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

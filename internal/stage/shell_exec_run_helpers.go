@@ -46,6 +46,9 @@ type shellRunResult struct {
 	stderrTruncated bool
 	timedOut        bool
 	errorMsg        string
+	program         string
+	workingDir      string
+	args            []string
 }
 
 func strPtr(s string) *string { return &s }
@@ -55,6 +58,33 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 	args, err := renderArgs(opts.argsT, rec, opts.strictTemplating)
 	if err != nil {
 		return shellRunResult{}, err
+	}
+	baseRes := shellRunResult{
+		program:    opts.program,
+		workingDir: opts.workingDir,
+		args:       append([]string(nil), args...),
+	}
+	if opts.workingDir != "" {
+		info, statErr := os.Stat(opts.workingDir)
+		if statErr != nil {
+			baseRes.exitCode = -1
+			baseRes.errorMsg = fmt.Sprintf(
+				"program %s start failed: workingDir %s: %v",
+				opts.program,
+				opts.workingDir,
+				statErr,
+			)
+			return baseRes, nil
+		}
+		if !info.IsDir() {
+			baseRes.exitCode = -1
+			baseRes.errorMsg = fmt.Sprintf(
+				"program %s start failed: workingDir %s: not a directory",
+				opts.program,
+				opts.workingDir,
+			)
+			return baseRes, nil
+		}
 	}
 	cmd := exec.Command(opts.program, args...)
 	cmd.Dir = opts.workingDir
@@ -79,9 +109,21 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 	if err := cmd.Start(); err != nil {
 		var ee *exec.Error
 		if errors.As(err, &ee) {
-			return shellRunResult{exitCode: -1, errorMsg: fmt.Sprintf("program %s not found", opts.program)}, nil
+			baseRes.exitCode = -1
+			baseRes.errorMsg = fmt.Sprintf(
+				"program %s not found: %v",
+				opts.program,
+				err,
+			)
+			return baseRes, nil
 		}
-		return shellRunResult{exitCode: -1, errorMsg: fmt.Sprintf("program %s start failed", opts.program)}, nil
+		baseRes.exitCode = -1
+		baseRes.errorMsg = fmt.Sprintf(
+			"program %s start failed: %v",
+			opts.program,
+			err,
+		)
+		return baseRes, nil
 	}
 
 	done := make(chan error, 1)
@@ -114,6 +156,9 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 		stdoutTruncated: outBuf.truncated,
 		stderrTruncated: errBuf.truncated,
 		timedOut:        timedOut,
+		program:         opts.program,
+		workingDir:      opts.workingDir,
+		args:            append([]string(nil), args...),
 	}
 	if opts.captureStdout {
 		res.stdout = strPtr(outBuf.String())
@@ -132,7 +177,11 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 			return res, nil
 		}
 		res.exitCode = -1
-		res.errorMsg = fmt.Sprintf("program %s execution failed", opts.program)
+		res.errorMsg = fmt.Sprintf(
+			"program %s execution failed: %v",
+			opts.program,
+			runErr,
+		)
 		return res, nil
 	}
 	return res, nil
