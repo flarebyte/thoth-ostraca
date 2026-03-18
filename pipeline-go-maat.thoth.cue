@@ -29,12 +29,12 @@
   shell: {
     enabled: true
     decodeJsonStdout: true
-    program: "sh"
-    workingDir: "internal"
+    program: "/bin/sh"
+    workingDir: "."
     argsTemplate: [
       "-c",
       "npx maat-ostraca analyse " +
-      "--in '{locator}' " +
+      "--in 'internal/{locator}' " +
       "--rules 'import_files_list,package_imports_list' " +
       "--language go " +
       "--json",
