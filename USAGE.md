@@ -62,12 +62,26 @@ What it cannot do:
 
 ## Current Limitation
 
-The shipped CLI does not currently provide a `thoth run` action for:
+The shipped CLI now provides `action: "input-pipeline"` for the practical
+file workflow.
 
-- discovering arbitrary input files
-- filtering them
-- mapping them
-- optionally running shell commands
-- saving the final results somewhere
+What `input-pipeline` can do:
+
+- discover arbitrary input files
+- filter them with `lua-filter`
+- map them with `lua-map`
+- run `shell-exec` per file
+- consume decoded shell JSON in `postMap`
+- emit JSON output
+- write/update `.thoth.yaml` sidecars
+- write sidecars to a dedicated output directory
+- preview writes with `persistMeta.dryRun`
+- emit progress on stderr with `ui.progress`
+
+What is still narrower than the broader design:
+
+- `input-pipeline` does not currently include `reduce`
+- `create-meta` and `update-meta` remain narrower metadata maintenance actions
+- shell JSON decoding is opt-in via `shell.decodeJsonStdout`
 
 That is the main gap between the current metadata actions and the broader file-processing workflow.
