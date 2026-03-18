@@ -1,5 +1,7 @@
 locator: internal/stage/shell_exec_json_helpers.go
 meta:
+  function_list:
+    - decodeShellStdoutJSON
   import_files_list:
     - encoding/json
     - fmt

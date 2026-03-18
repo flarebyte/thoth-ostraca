@@ -1,4 +1,5 @@
 locator: internal/stage/shell_exec_helpers.go
 meta:
+  function_list: []
   import_files_list: []
   language: go

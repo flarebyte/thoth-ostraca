@@ -1,4 +1,6 @@
 locator: internal/stage/stage_error_accumulator.go
 meta:
+  function_list:
+    - accumulateStageError
   import_files_list: []
   language: go

@@ -1,5 +1,9 @@
 locator: internal/config/parse_discovery_validation_limits.go
 meta:
+  function_list:
+    - parseDiscoverySection
+    - parseLimitsSection
+    - parseValidationSection
   import_files_list:
     - cuelang.org/go/cue
     - fmt

@@ -1,4 +1,6 @@
 locator: internal/stage/lua_record_context.go
 meta:
+  function_list:
+    - luaRecordContext
   import_files_list: []
   language: go

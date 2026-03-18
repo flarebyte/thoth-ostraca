@@ -1,4 +1,5 @@
 locator: cli/cli.go
 meta:
+  function_list: []
   import_files_list: []
   language: go

@@ -1,4 +1,6 @@
 locator: internal/stage/record_parallel_results.go
 meta:
+  function_list:
+    - mergeRecordParallelResults
   import_files_list: []
   language: go

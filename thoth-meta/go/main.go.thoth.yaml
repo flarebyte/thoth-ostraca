@@ -1,5 +1,7 @@
 locator: main.go
 meta:
+  function_list:
+    - main
   import_files_list:
     - fmt
     - os

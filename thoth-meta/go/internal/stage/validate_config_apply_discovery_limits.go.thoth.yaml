@@ -1,5 +1,9 @@
 locator: internal/stage/validate_config_apply_discovery_limits.go
 meta:
+  function_list:
+    - applyDiscoveryMeta
+    - applyLimitsMeta
+    - applyValidationMeta
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/internal/config
   language: go

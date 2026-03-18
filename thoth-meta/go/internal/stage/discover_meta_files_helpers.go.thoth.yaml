@@ -1,5 +1,15 @@
 locator: internal/stage/discover_meta_files_helpers.go
 meta:
+  function_list:
+    - addDiscoveryError
+    - dirsForRel
+    - discoveryFatal
+    - displayDiscoveryPath
+    - findThothYAMLs
+    - hasThothYAML
+    - matchIgnore
+    - readGitignorePatterns
+    - shouldIgnore
   import_files_list:
     - fmt
     - github.com/go-git/go-git/v5/plumbing/format/gitignore

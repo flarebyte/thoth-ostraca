@@ -1,5 +1,10 @@
 locator: internal/stage/load_existing_meta.go
 meta:
+  function_list:
+    - init
+    - loadExistingMetaRunner
+    - loadOneExistingWithMeta
+    - mergePostMap
   import_files_list:
     - context
     - fmt

@@ -1,5 +1,7 @@
 locator: internal/config/parse_locator_policy.go
 meta:
+  function_list:
+    - parseLocatorPolicySection
   import_files_list:
     - cuelang.org/go/cue
   language: go

@@ -1,5 +1,9 @@
 locator: internal/stage/write_meta_files.go
 meta:
+  function_list:
+    - init
+    - writeMetaFilesRunner
+    - writeSingleMeta
   import_files_list:
     - context
     - fmt

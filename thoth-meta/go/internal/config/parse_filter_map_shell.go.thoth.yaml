@@ -1,5 +1,9 @@
 locator: internal/config/parse_filter_map_shell.go
 meta:
+  function_list:
+    - parseFilterSection
+    - parseMapSection
+    - parseShellSection
   import_files_list:
     - cuelang.org/go/cue
   language: go

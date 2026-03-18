@@ -1,5 +1,9 @@
 locator: internal/stage/enrich_git_commit_lookup.go
 meta:
+  function_list:
+    - lookupBlobInTree
+    - parseAuthorLine
+    - parseCommitMeta
   import_files_list:
     - encoding/hex
     - errors

@@ -1,5 +1,8 @@
 locator: internal/stage/error_text.go
 meta:
+  function_list:
+    - sanitizeErrorMessage
+    - sanitizedError
   import_files_list:
     - strings
   language: go

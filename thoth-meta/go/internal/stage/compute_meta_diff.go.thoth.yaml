@@ -1,5 +1,14 @@
 locator: internal/stage/compute_meta_diff.go
 meta:
+  function_list:
+    - arrayDiffHasChanges
+    - computeMetaDiffRunner
+    - detailHasChanges
+    - emitDiffSummary
+    - filterDiffDetails
+    - handleDiffMetaExpectedLuaFailure
+    - init
+    - outRecordFallback
   import_files_list:
     - context
     - fmt

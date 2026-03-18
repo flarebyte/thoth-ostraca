@@ -1,5 +1,8 @@
 locator: internal/stage/validate_config_apply_shell_output.go
 meta:
+  function_list:
+    - applyOutputMeta
+    - applyShellMeta
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/internal/config
   language: go

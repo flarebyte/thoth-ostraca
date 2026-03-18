@@ -1,5 +1,8 @@
 locator: internal/stage/parallel.go
 meta:
+  function_list:
+    - SortEnvelopeErrors
+    - getWorkers
   import_files_list:
     - runtime
     - sort

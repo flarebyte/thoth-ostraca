@@ -1,5 +1,10 @@
 locator: internal/stage/lua_filter_helpers.go
 meta:
+  function_list:
+    - buildLuaPredicate
+    - containsReturn
+    - processLuaFilterRecord
+    - toLValue
   import_files_list:
     - fmt
     - github.com/yuin/gopher-lua

@@ -1,5 +1,7 @@
 locator: internal/buildinfo/buildinfo.go
 meta:
+  function_list:
+    - Summary
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/cli
     - strings

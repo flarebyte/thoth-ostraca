@@ -1,4 +1,6 @@
 locator: internal/stage/record_error_helpers.go
 meta:
+  function_list:
+    - recordFailure
   import_files_list: []
   language: go

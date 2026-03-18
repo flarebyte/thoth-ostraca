@@ -1,5 +1,9 @@
 locator: internal/stage/lua_map.go
 meta:
+  function_list:
+    - fromLValue
+    - init
+    - luaMapRunner
   import_files_list:
     - context
     - github.com/yuin/gopher-lua

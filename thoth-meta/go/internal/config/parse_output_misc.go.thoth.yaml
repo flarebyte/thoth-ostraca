@@ -1,5 +1,12 @@
 locator: internal/config/parse_output_misc.go
 meta:
+  function_list:
+    - parseErrorsSection
+    - parseFileInfoSection
+    - parseGitSection
+    - parseOutputSection
+    - parseUISection
+    - parseWorkersSection
   import_files_list:
     - cuelang.org/go/cue
   language: go

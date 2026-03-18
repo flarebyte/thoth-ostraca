@@ -1,5 +1,11 @@
 locator: internal/config/parse_post_reduce_actions.go
 meta:
+  function_list:
+    - parseDiffMetaSection
+    - parsePersistMetaSection
+    - parsePostMapSection
+    - parseReduceSection
+    - parseUpdateMetaSection
   import_files_list:
     - cuelang.org/go/cue
     - fmt

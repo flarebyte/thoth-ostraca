@@ -1,5 +1,21 @@
 locator: cmd/thoth/diagnose/diagnose_helpers.go
 meta:
+  function_list:
+    - baseDiscoveryOverrides
+    - dumpStageBoundary
+    - findStageIndexByName
+    - maybeDumpIn
+    - maybeDumpOut
+    - resolvePreparedAction
+    - resolveStageByIndex
+    - resolveTargetStage
+    - resolveUntilIndex
+    - runDiagnoseDefault
+    - runDiagnoseWithIn
+    - runDiagnoseWithPrepare
+    - runDiagnoseWithPreparedPipeline
+    - runStageSequence
+    - runStagesAndRender
   import_files_list:
     - context
     - fmt

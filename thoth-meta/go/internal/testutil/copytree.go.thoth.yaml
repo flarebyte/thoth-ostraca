@@ -1,5 +1,7 @@
 locator: internal/testutil/copytree.go
 meta:
+  function_list:
+    - CopyTree
   import_files_list:
     - io/fs
     - os

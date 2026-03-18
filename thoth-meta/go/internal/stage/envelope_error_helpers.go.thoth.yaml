@@ -1,4 +1,6 @@
 locator: internal/stage/envelope_error_helpers.go
 meta:
+  function_list:
+    - appendSanitizedErrors
   import_files_list: []
   language: go

@@ -1,5 +1,8 @@
 locator: internal/stage/enrich_git_types.go
 meta:
+  function_list:
+    - normalizeAuthor
+    - normalizeRFC3339
   import_files_list:
     - strings
     - time

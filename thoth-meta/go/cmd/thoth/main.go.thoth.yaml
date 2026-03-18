@@ -1,5 +1,7 @@
 locator: cmd/thoth/main.go
 meta:
+  function_list:
+    - main
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/cmd/thoth/root
     - os

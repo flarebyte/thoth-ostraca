@@ -1,5 +1,15 @@
 locator: cmd/thoth/run/exit_rules.go
 meta:
+  function_list:
+    - actionName
+    - countRecordResults
+    - driftDetectionEnabled
+    - evaluateRunExit
+    - hasActionFailures
+    - hasDiffChanges
+    - hasExecutionErrors
+    - hasMeaningfulAggregateOutput
+    - keepGoingMode
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/internal/stage
   language: go

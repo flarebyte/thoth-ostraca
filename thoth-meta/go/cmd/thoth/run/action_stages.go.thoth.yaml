@@ -1,5 +1,10 @@
 locator: cmd/thoth/run/action_stages.go
 meta:
+  function_list:
+    - PreparedActionStages
+    - fileInfoEnabled
+    - gitEnabled
+    - persistMetaEnabled
   import_files_list:
     - fmt
     - github.com/flarebyte/thoth-ostraca/internal/stage

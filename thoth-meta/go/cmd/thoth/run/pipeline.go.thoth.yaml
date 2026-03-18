@@ -1,5 +1,14 @@
 locator: cmd/thoth/run/pipeline.go
 meta:
+  function_list:
+    - enforceBufferedRecordLimit
+    - executeMetaPipeline
+    - executePipeline
+    - forceBufferedOutput
+    - maxRecordsInMemory
+    - outputLinesEnabled
+    - reduceInlineEnabled
+    - runStreamingNDJSONPipeline
   import_files_list:
     - context
     - fmt

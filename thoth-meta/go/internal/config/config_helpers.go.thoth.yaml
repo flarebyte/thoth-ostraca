@@ -1,5 +1,7 @@
 locator: internal/config/config_helpers.go
 meta:
+  function_list:
+    - compileCUE
   import_files_list:
     - cuelang.org/go/cue
     - cuelang.org/go/cue/cuecontext

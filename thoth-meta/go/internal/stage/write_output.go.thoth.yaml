@@ -1,5 +1,16 @@
 locator: internal/stage/write_output.go
 meta:
+  function_list:
+    - encodeJSONCompact
+    - encodeJSONPretty
+    - getOutputSettings
+    - init
+    - openWriter
+    - stripErrorsIfNeeded
+    - stripRecordErrorIfNeeded
+    - writeLinesFromStream
+    - writeOutputRunner
+    - writeTo
   import_files_list:
     - bytes
     - context

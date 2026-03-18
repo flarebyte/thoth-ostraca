@@ -1,5 +1,12 @@
 locator: internal/metafile/write.go
 meta:
+  function_list:
+    - Marshal
+    - Write
+    - canonicalMapNode
+    - canonicalNode
+    - scalarFrom
+    - scalarNode
   import_files_list:
     - bytes
     - gopkg.in/yaml.v3

@@ -1,5 +1,10 @@
 locator: internal/stage/shell_exec_run_helpers.go
 meta:
+  function_list:
+    - applyEnvOverlay
+    - runCommand
+    - signalProcess
+    - strPtr
   import_files_list:
     - bytes
     - context

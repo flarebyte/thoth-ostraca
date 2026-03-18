@@ -1,5 +1,8 @@
 locator: internal/stage/persist_meta_paths.go
 meta:
+  function_list:
+    - persistMetaFilePath
+    - persistMetaRoot
   import_files_list:
     - path/filepath
   language: go

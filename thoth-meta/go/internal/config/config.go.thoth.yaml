@@ -1,5 +1,9 @@
 locator: internal/config/config.go
 meta:
+  function_list:
+    - LoadAndValidate
+    - ParseMinimal
+    - requireStringField
   import_files_list:
     - cuelang.org/go/cue
     - fmt

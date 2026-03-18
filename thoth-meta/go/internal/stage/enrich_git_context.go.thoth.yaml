@@ -1,5 +1,9 @@
 locator: internal/stage/enrich_git_context.go
 meta:
+  function_list:
+    - blobHashBytes
+    - hashEq
+    - newGitContext
   import_files_list:
     - crypto/sha1
     - fmt

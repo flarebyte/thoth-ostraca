@@ -1,5 +1,8 @@
 locator: internal/config/version_policy.go
 meta:
+  function_list:
+    - IsSupportedConfigVersion
+    - SupportedConfigVersionsCSV
   import_files_list:
     - strings
   language: go

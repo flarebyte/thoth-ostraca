@@ -1,5 +1,9 @@
 locator: internal/stage/write_updated_meta_files.go
 meta:
+  function_list:
+    - init
+    - writeOneUpdatedWithMeta
+    - writeUpdatedMetaFilesRunner
   import_files_list:
     - context
     - github.com/flarebyte/thoth-ostraca/internal/metafile

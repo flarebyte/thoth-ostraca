@@ -1,5 +1,11 @@
 locator: internal/stage/shell_exec_render_helpers.go
 meta:
+  function_list:
+    - lookupMappedValue
+    - placeholderValueString
+    - renderArg
+    - renderArgs
+    - resolvePlaceholder
   import_files_list:
     - encoding/json
     - fmt

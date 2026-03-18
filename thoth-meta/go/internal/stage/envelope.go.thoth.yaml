@@ -1,5 +1,7 @@
 locator: internal/stage/envelope.go
 meta:
+  function_list:
+    - ValidateEnvelope
   import_files_list:
     - fmt
   language: go

@@ -1,5 +1,7 @@
 locator: internal/stage/validate_config_test_helpers.go
 meta:
+  function_list:
+    - runValidateConfigWithContent
   import_files_list:
     - context
     - os

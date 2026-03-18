@@ -1,5 +1,9 @@
 locator: internal/stage/lua_reduce_helpers.go
 meta:
+  function_list:
+    - buildLuaReduceCode
+    - reduceItemFromRecord
+    - runLuaReduce
   import_files_list:
     - fmt
   language: go

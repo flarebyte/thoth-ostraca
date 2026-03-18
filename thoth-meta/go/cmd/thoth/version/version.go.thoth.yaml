@@ -1,5 +1,7 @@
 locator: cmd/thoth/version/version.go
 meta:
+  function_list:
+    - init
   import_files_list:
     - fmt
     - github.com/flarebyte/thoth-ostraca/internal/buildinfo

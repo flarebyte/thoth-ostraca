@@ -1,5 +1,7 @@
 locator: internal/stage/record_sequential_runner.go
 meta:
+  function_list:
+    - runSequentialRecordStage
   import_files_list:
     - fmt
   language: go

@@ -1,5 +1,17 @@
 locator: internal/stage/discovery_filters.go
 meta:
+  function_list:
+    - dirCouldMatchAnyPattern
+    - dirCouldMatchPattern
+    - discoveryExcludes
+    - discoveryIncludes
+    - matchesAnyPattern
+    - matchesDiscoveryPattern
+    - normalizeDiscoveryPath
+    - relHasAlwaysExcludedDir
+    - relHasDefaultExcludedDir
+    - relHasDirName
+    - staticPatternPrefix
   import_files_list:
     - path
     - strings

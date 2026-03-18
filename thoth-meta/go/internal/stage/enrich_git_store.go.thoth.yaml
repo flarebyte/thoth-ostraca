@@ -1,5 +1,13 @@
 locator: internal/stage/enrich_git_store.go
 meta:
+  function_list:
+    - bytesIndex
+    - gitDirForRepo
+    - objectPayload
+    - parseIndex
+    - readHEAD
+    - readLooseObject
+    - resolveRef
   import_files_list:
     - bufio
     - compress/zlib

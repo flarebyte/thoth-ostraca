@@ -1,5 +1,15 @@
 locator: internal/stage/validate_config_apply_misc.go
 meta:
+  function_list:
+    - applyDiffMeta
+    - applyErrorsMeta
+    - applyFileInfoMeta
+    - applyGitMeta
+    - applyLocatorPolicyMeta
+    - applyPersistMeta
+    - applyUIMeta
+    - applyUpdateMeta
+    - applyWorkersMeta
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/internal/config
   language: go

@@ -1,5 +1,9 @@
 locator: internal/stage/enrich_fileinfo.go
 meta:
+  function_list:
+    - enrichFileInfoRunner
+    - init
+    - statToRecInfo
   import_files_list:
     - context
     - fmt

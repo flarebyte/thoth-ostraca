@@ -1,5 +1,17 @@
 locator: internal/stage/lua_sandbox.go
 meta:
+  function_list:
+    - deterministicSeed
+    - estimateValueSize
+    - installDeterministicRandom
+    - isInstructionLimitError
+    - isTimeoutError
+    - luaSandboxFromMeta
+    - luaViolationFailFast
+    - newDeterministicRNG
+    - newSandboxLuaState
+    - registryMaxFromMemory
+    - runLuaScriptWithSandbox
   import_files_list:
     - context
     - fmt

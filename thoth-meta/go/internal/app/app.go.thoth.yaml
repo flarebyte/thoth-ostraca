@@ -1,5 +1,7 @@
 locator: internal/app/app.go
 meta:
+  function_list:
+    - RunHello
   import_files_list:
     - fmt
   language: go

@@ -1,5 +1,7 @@
 locator: internal/config/parse_lua.go
 meta:
+  function_list:
+    - parseLuaSandboxSection
   import_files_list:
     - cuelang.org/go/cue
   language: go

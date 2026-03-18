@@ -1,5 +1,8 @@
 locator: internal/stage/shell_exec_options_helpers.go
 meta:
+  function_list:
+    - buildShellOptions
+    - validateShellOptions
   import_files_list:
     - errors
     - path/filepath

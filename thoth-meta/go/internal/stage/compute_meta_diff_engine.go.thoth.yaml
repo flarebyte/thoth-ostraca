@@ -1,5 +1,22 @@
 locator: internal/stage/compute_meta_diff_engine.go
 meta:
+  function_list:
+    - collectDiffMetaJSONPatchOps
+    - diffMetaJSONPatch
+    - diffMetaMaps
+    - diffMetaMapsV3
+    - diffMetaMapsV3Detailed
+    - diffMetaMapsV3JSONPatch
+    - escapeJSONPointer
+    - joinJSONPointer
+    - jsonType
+    - metaScalarEqual
+    - normalizeArrayDiffs
+    - sortDiffChanges
+    - sortedMergedKeys
+    - toFloat64
+    - uniqueSortedInts
+    - uniqueSortedStrings
   import_files_list:
     - fmt
     - reflect

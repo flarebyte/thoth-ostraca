@@ -1,5 +1,10 @@
 locator: internal/stage/lua_postmap_helpers.go
 meta:
+  function_list:
+    - buildLuaPostMapCode
+    - processDefaultPostMapRecord
+    - processLuaPostMapRecord
+    - runPostMapParallel
   import_files_list:
     - fmt
   language: go

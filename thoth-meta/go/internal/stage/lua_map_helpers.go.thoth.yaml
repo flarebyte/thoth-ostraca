@@ -1,5 +1,8 @@
 locator: internal/stage/lua_map_helpers.go
 meta:
+  function_list:
+    - buildLuaMapCode
+    - processLuaMapRecord
   import_files_list:
     - fmt
   language: go

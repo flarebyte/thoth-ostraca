@@ -1,5 +1,11 @@
 locator: cmd/thoth/diagnose/diagnose.go
 meta:
+  function_list:
+    - init
+    - prepareDiagnoseInput
+    - printEnvelopeOneLine
+    - relativizeRoot
+    - writeJSONFile
   import_files_list:
     - encoding/json
     - errors

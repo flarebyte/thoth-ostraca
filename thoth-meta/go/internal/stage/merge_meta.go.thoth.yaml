@@ -1,5 +1,14 @@
 locator: internal/stage/merge_meta.go
 meta:
+  function_list:
+    - asStringMap
+    - deepMerge
+    - handleMergeMetaFailure
+    - handleUpdateMetaLuaFailure
+    - init
+    - mergeMetaFromPost
+    - mergeMetaRunner
+    - withNextMeta
   import_files_list:
     - context
     - fmt

@@ -1,5 +1,7 @@
 locator: cmd/thoth/run/progress.go
 meta:
+  function_list:
+    - newProgressReporter
   import_files_list:
     - context
     - fmt
