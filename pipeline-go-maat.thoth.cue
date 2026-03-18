@@ -3,7 +3,7 @@
   action: "input-pipeline"
 
   discovery: {
-    root: "internal"
+    root: "."
   }
 
   errors: {
@@ -13,7 +13,8 @@
 
   filter: {
     inline: """
-      return string.sub(locator, -3) == ".go"
+      return string.sub(locator, 1, 9) == "internal/"
+        and string.sub(locator, -3) == ".go"
         and string.sub(locator, -8) ~= "_test.go"
       """
   }
@@ -34,7 +35,7 @@
     argsTemplate: [
       "-c",
       "npx maat-ostraca analyse " +
-      "--in 'internal/{locator}' " +
+      "--in '{locator}' " +
       "--rules 'import_files_list,package_imports_list' " +
       "--language go " +
       "--json",
