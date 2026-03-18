@@ -1,0 +1,4 @@
+locator: internal/stage/record_error_helpers.go
+meta:
+  import_files_list: []
+  language: go

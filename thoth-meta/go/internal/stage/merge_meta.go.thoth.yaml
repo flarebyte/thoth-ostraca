@@ -1,0 +1,6 @@
+locator: internal/stage/merge_meta.go
+meta:
+  import_files_list:
+    - context
+    - fmt
+  language: go

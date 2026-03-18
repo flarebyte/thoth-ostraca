@@ -1,0 +1,6 @@
+locator: internal/stage/discovery_filters.go
+meta:
+  import_files_list:
+    - path
+    - strings
+  language: go

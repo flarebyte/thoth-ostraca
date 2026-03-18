@@ -1,0 +1,7 @@
+locator: internal/stage/validate_config_common_validation.go
+meta:
+  import_files_list:
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - strings
+  language: go

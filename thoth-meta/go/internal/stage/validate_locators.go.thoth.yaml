@@ -1,0 +1,9 @@
+locator: internal/stage/validate_locators.go
+meta:
+  import_files_list:
+    - context
+    - net
+    - net/url
+    - sort
+    - strings
+  language: go

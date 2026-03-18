@@ -1,0 +1,5 @@
+locator: internal/stage/error_text.go
+meta:
+  import_files_list:
+    - strings
+  language: go

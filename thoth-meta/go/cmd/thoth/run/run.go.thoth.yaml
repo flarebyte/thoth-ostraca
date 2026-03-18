@@ -1,0 +1,7 @@
+locator: cmd/thoth/run/run.go
+meta:
+  import_files_list:
+    - context
+    - fmt
+    - github.com/spf13/cobra
+  language: go

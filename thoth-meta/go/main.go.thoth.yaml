@@ -1,0 +1,6 @@
+locator: main.go
+meta:
+  import_files_list:
+    - fmt
+    - os
+  language: go

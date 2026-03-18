@@ -1,0 +1,5 @@
+locator: internal/stage/validate_config_apply_lua.go
+meta:
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/config
+  language: go

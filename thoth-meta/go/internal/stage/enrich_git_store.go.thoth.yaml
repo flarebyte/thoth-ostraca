@@ -1,0 +1,12 @@
+locator: internal/stage/enrich_git_store.go
+meta:
+  import_files_list:
+    - bufio
+    - compress/zlib
+    - encoding/binary
+    - errors
+    - io
+    - os
+    - path/filepath
+    - strings
+  language: go

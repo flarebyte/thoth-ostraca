@@ -1,0 +1,5 @@
+locator: internal/config/parse_locator_policy.go
+meta:
+  import_files_list:
+    - cuelang.org/go/cue
+  language: go

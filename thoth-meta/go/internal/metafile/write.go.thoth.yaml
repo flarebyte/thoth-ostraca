@@ -1,0 +1,9 @@
+locator: internal/metafile/write.go
+meta:
+  import_files_list:
+    - bytes
+    - gopkg.in/yaml.v3
+    - os
+    - path/filepath
+    - sort
+  language: go

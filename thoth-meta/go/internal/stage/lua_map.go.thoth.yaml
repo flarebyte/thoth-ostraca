@@ -1,0 +1,6 @@
+locator: internal/stage/lua_map.go
+meta:
+  import_files_list:
+    - context
+    - github.com/yuin/gopher-lua
+  language: go

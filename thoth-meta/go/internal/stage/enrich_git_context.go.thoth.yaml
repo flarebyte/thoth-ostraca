@@ -1,0 +1,9 @@
+locator: internal/stage/enrich_git_context.go
+meta:
+  import_files_list:
+    - crypto/sha1
+    - fmt
+    - os
+    - path/filepath
+    - strings
+  language: go

@@ -1,0 +1,11 @@
+locator: internal/stage/write_output.go
+meta:
+  import_files_list:
+    - bytes
+    - context
+    - encoding/json
+    - fmt
+    - io
+    - os
+    - path/filepath
+  language: go

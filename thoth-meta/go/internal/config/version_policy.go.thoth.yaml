@@ -1,0 +1,5 @@
+locator: internal/config/version_policy.go
+meta:
+  import_files_list:
+    - strings
+  language: go

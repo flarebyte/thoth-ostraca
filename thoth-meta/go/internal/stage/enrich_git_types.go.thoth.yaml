@@ -1,0 +1,6 @@
+locator: internal/stage/enrich_git_types.go
+meta:
+  import_files_list:
+    - strings
+    - time
+  language: go

@@ -1,0 +1,5 @@
+locator: internal/stage/parallel_helpers.go
+meta:
+  import_files_list:
+    - sync
+  language: go

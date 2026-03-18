@@ -1,0 +1,6 @@
+locator: internal/stage/parallel.go
+meta:
+  import_files_list:
+    - runtime
+    - sort
+  language: go

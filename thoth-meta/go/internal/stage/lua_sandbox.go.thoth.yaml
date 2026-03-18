@@ -1,0 +1,10 @@
+locator: internal/stage/lua_sandbox.go
+meta:
+  import_files_list:
+    - context
+    - fmt
+    - github.com/yuin/gopher-lua
+    - hash/fnv
+    - strings
+    - time
+  language: go

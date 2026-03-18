@@ -1,0 +1,4 @@
+locator: internal/stage/record_parallel_results.go
+meta:
+  import_files_list: []
+  language: go

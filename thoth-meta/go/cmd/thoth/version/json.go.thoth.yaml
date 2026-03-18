@@ -1,0 +1,6 @@
+locator: cmd/thoth/version/json.go
+meta:
+  import_files_list:
+    - encoding/json
+    - io
+  language: go

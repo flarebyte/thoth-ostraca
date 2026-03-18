@@ -1,0 +1,5 @@
+locator: internal/stage/expected_lua.go
+meta:
+  import_files_list:
+    - fmt
+  language: go

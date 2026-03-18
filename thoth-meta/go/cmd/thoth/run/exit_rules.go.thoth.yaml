@@ -1,0 +1,5 @@
+locator: cmd/thoth/run/exit_rules.go
+meta:
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+  language: go

@@ -1,0 +1,9 @@
+locator: internal/stage/enrich_git_commit_lookup.go
+meta:
+  import_files_list:
+    - encoding/hex
+    - errors
+    - strconv
+    - strings
+    - time
+  language: go

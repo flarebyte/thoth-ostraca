@@ -1,0 +1,5 @@
+locator: internal/stage/lua_reduce.go
+meta:
+  import_files_list:
+    - context
+  language: go

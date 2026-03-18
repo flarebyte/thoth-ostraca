@@ -1,0 +1,6 @@
+locator: internal/config/parse_discovery_validation_limits.go
+meta:
+  import_files_list:
+    - cuelang.org/go/cue
+    - fmt
+  language: go

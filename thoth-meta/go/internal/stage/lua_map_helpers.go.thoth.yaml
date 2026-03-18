@@ -1,0 +1,5 @@
+locator: internal/stage/lua_map_helpers.go
+meta:
+  import_files_list:
+    - fmt
+  language: go

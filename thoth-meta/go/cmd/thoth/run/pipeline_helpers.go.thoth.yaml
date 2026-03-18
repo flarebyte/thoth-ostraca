@@ -1,0 +1,7 @@
+locator: cmd/thoth/run/pipeline_helpers.go
+meta:
+  import_files_list:
+    - context
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - os
+  language: go

@@ -1,0 +1,10 @@
+locator: cmd/thoth/version/version.go
+meta:
+  import_files_list:
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/buildinfo
+    - github.com/spf13/cobra
+    - os
+    - runtime
+    - time
+  language: go

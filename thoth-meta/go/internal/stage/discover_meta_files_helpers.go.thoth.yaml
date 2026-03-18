@@ -1,0 +1,10 @@
+locator: internal/stage/discover_meta_files_helpers.go
+meta:
+  import_files_list:
+    - fmt
+    - github.com/go-git/go-git/v5/plumbing/format/gitignore
+    - os
+    - path/filepath
+    - sort
+    - strings
+  language: go

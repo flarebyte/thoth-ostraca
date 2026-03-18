@@ -1,0 +1,6 @@
+locator: internal/config/config.go
+meta:
+  import_files_list:
+    - cuelang.org/go/cue
+    - fmt
+  language: go

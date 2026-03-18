@@ -1,0 +1,9 @@
+locator: internal/stage/discover_input_files.go
+meta:
+  import_files_list:
+    - context
+    - io/fs
+    - path/filepath
+    - sort
+    - strings
+  language: go

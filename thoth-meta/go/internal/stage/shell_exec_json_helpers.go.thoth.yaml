@@ -1,0 +1,6 @@
+locator: internal/stage/shell_exec_json_helpers.go
+meta:
+  import_files_list:
+    - encoding/json
+    - fmt
+  language: go

@@ -1,0 +1,4 @@
+locator: cli/cli.go
+meta:
+  import_files_list: []
+  language: go

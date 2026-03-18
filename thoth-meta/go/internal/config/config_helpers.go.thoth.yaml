@@ -1,0 +1,10 @@
+locator: internal/config/config_helpers.go
+meta:
+  import_files_list:
+    - cuelang.org/go/cue
+    - cuelang.org/go/cue/cuecontext
+    - errors
+    - fmt
+    - os
+    - path/filepath
+  language: go

@@ -1,0 +1,5 @@
+locator: internal/stage/persist_meta_paths.go
+meta:
+  import_files_list:
+    - path/filepath
+  language: go

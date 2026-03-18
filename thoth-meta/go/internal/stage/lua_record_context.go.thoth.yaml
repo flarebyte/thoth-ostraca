@@ -1,0 +1,4 @@
+locator: internal/stage/lua_record_context.go
+meta:
+  import_files_list: []
+  language: go

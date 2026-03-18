@@ -13,8 +13,7 @@
 
   filter: {
     inline: """
-      return string.sub(locator, 1, 9) == "internal/"
-        and string.sub(locator, -3) == ".go"
+      return string.sub(locator, -3) == ".go"
         and string.sub(locator, -8) ~= "_test.go"
       """
   }
@@ -36,7 +35,7 @@
       "-c",
       "npx maat-ostraca analyse " +
       "--in '{locator}' " +
-      "--rules 'import_files_list,package_imports_list' " +
+      "--rules 'import_files_list' " +
       "--language go " +
       "--json",
     ]
@@ -49,7 +48,6 @@
         meta = {
           language = mapped and mapped.language or "go",
           import_files_list = rules.import_files_list or {},
-          package_imports_list = rules.package_imports_list or {},
         },
       }
       """
@@ -57,7 +55,7 @@
 
   persistMeta: {
     enabled: true
-    outDir: "./temp/pipeline-go-maat-sidecars"
+    outDir: "./thoth-meta/go"
   }
 
   output: {

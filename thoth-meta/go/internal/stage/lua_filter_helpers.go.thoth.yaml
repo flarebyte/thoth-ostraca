@@ -1,0 +1,6 @@
+locator: internal/stage/lua_filter_helpers.go
+meta:
+  import_files_list:
+    - fmt
+    - github.com/yuin/gopher-lua
+  language: go

@@ -1,0 +1,7 @@
+locator: internal/stage/parse_validate_yaml.go
+meta:
+  import_files_list:
+    - context
+    - sort
+    - sync
+  language: go

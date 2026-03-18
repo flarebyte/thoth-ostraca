@@ -1,0 +1,7 @@
+locator: internal/stage/test_helpers.go
+meta:
+  import_files_list:
+    - encoding/json
+    - os
+    - testing
+  language: go

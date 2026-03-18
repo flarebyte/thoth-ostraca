@@ -1,0 +1,8 @@
+locator: internal/stage/compute_meta_diff_engine.go
+meta:
+  import_files_list:
+    - fmt
+    - reflect
+    - sort
+    - strings
+  language: go

@@ -1,0 +1,7 @@
+locator: cmd/thoth/main.go
+meta:
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/root
+    - os
+    - strings
+  language: go

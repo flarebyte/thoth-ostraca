@@ -1,0 +1,7 @@
+locator: internal/testutil/copytree.go
+meta:
+  import_files_list:
+    - io/fs
+    - os
+    - path/filepath
+  language: go
