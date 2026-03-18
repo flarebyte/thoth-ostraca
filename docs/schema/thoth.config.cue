@@ -42,7 +42,7 @@ PipelineConfig: {
   // Lua sandbox + runtime
   lua?: {
     timeoutMs?: int & >=0 | 2000
-    instructionLimit?: int & >=0 | 1000000
+    instructionLimit?: int & >=0 | 1000000 // runtime VM instruction ceiling; 0 disables
     memoryLimitBytes?: int & >=0 | 8*1024*1024
     libs?: {
       base?: bool | true

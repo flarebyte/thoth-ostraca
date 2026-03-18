@@ -34,8 +34,13 @@ func TestLuaSandbox_Timeout(t *testing.T) {
 func TestLuaSandbox_InstructionLimit(t *testing.T) {
 	meta := defaultLuaSandboxForTest()
 	meta.LuaSandbox.TimeoutMs = 2000
-	meta.LuaSandbox.InstructionLimit = 10
-	_, _, err := processLuaMapRecord(Record{Locator: "a", Meta: map[string]any{}}, "while true do end", "fail-fast", meta)
+	meta.LuaSandbox.InstructionLimit = 50
+	_, _, err := processLuaMapRecord(
+		Record{Locator: "a", Meta: map[string]any{}},
+		"local sum = 0; for i = 1, 1000 do sum = sum + i end; return sum",
+		"fail-fast",
+		meta,
+	)
 	if err == nil || err.Error() != "lua-map: sandbox instruction limit" {
 		t.Fatalf("expected instruction limit, got %v", err)
 	}
@@ -94,8 +99,13 @@ func TestLuaSandbox_DeterministicRandom(t *testing.T) {
 
 func TestLuaSandbox_KeepGoingViolationShape(t *testing.T) {
 	meta := defaultLuaSandboxForTest()
-	meta.LuaSandbox.InstructionLimit = 10
-	rec, envE, err := processLuaMapRecord(Record{Locator: "a", Meta: map[string]any{}}, "while true do end", "keep-going", meta)
+	meta.LuaSandbox.InstructionLimit = 50
+	rec, envE, err := processLuaMapRecord(
+		Record{Locator: "a", Meta: map[string]any{}},
+		"local sum = 0; for i = 1, 1000 do sum = sum + i end; return sum",
+		"keep-going",
+		meta,
+	)
 	if err != nil {
 		t.Fatalf("unexpected fatal: %v", err)
 	}
@@ -104,5 +114,25 @@ func TestLuaSandbox_KeepGoingViolationShape(t *testing.T) {
 	}
 	if rec.Error == nil || rec.Error.Message != sandboxInstructionViolation {
 		t.Fatalf("expected keep-going record error, got %+v", rec.Error)
+	}
+}
+
+func TestLuaSandbox_OrdinaryLoopAllowedByDefault(t *testing.T) {
+	meta := defaultLuaSandboxForTest()
+	rec, _, err := processLuaMapRecord(
+		Record{Locator: "a", Meta: map[string]any{}},
+		"local chars = {}; for i = 1, string.len(locator) do chars[i] = string.sub(locator, i, i) end; return { chars = chars, count = #chars }",
+		"fail-fast",
+		meta,
+	)
+	if err != nil {
+		t.Fatalf("expected ordinary loop to succeed, got %v", err)
+	}
+	mapped, ok := rec.Mapped.(map[string]any)
+	if !ok {
+		t.Fatalf("expected mapped object, got %#v", rec.Mapped)
+	}
+	if mapped["count"] != float64(1) {
+		t.Fatalf("expected count=1, got %#v", mapped["count"])
 	}
 }

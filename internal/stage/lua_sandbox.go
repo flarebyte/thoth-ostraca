@@ -167,18 +167,6 @@ func (r *deterministicRNG) Intn(n int) int {
 	return int(r.nextUint64() % uint64(n))
 }
 
-func instructionLimitWouldTrip(code string, instructionLimit int) bool {
-	if instructionLimit <= 0 {
-		return false
-	}
-	cost := len(code) * 10
-	lower := strings.ToLower(code)
-	if strings.Contains(lower, "while ") || strings.Contains(lower, "repeat") || strings.Contains(lower, "for ") {
-		cost += 1000000
-	}
-	return cost > instructionLimit
-}
-
 func isTimeoutError(err error) bool {
 	if err == nil {
 		return false
@@ -187,6 +175,16 @@ func isTimeoutError(err error) bool {
 		return true
 	}
 	return strings.Contains(strings.ToLower(err.Error()), "deadline") || strings.Contains(strings.ToLower(err.Error()), "context canceled")
+}
+
+func isInstructionLimitError(err error) bool {
+	if err == nil {
+		return false
+	}
+	return strings.Contains(
+		strings.ToLower(err.Error()),
+		"instruction limit exceeded",
+	)
 }
 
 func estimateValueSize(v any, depth int) int {
@@ -226,12 +224,10 @@ func estimateValueSize(v any, depth int) int {
 
 func runLuaScriptWithSandbox(stage string, meta *Meta, locator string, globals map[string]any, code string) (any, string, error) {
 	cfg := luaSandboxFromMeta(meta)
-	if instructionLimitWouldTrip(code, cfg.InstructionLimit) {
-		return nil, sandboxInstructionViolation, nil
-	}
 
 	L := newSandboxLuaState(stage, locator, cfg)
 	defer L.Close()
+	L.SetInstructionLimit(cfg.InstructionLimit)
 
 	if cfg.TimeoutMs > 0 {
 		ctx, cancel := context.WithTimeout(context.Background(), time.Duration(cfg.TimeoutMs)*time.Millisecond)
@@ -251,6 +247,9 @@ func runLuaScriptWithSandbox(stage string, meta *Meta, locator string, globals m
 	if err := L.PCall(0, 1, nil); err != nil {
 		if isTimeoutError(err) {
 			return nil, sandboxTimeoutViolation, nil
+		}
+		if isInstructionLimitError(err) {
+			return nil, sandboxInstructionViolation, nil
 		}
 		if strings.Contains(strings.ToLower(err.Error()), "registry overflow") {
 			return nil, sandboxMemoryViolation, nil

@@ -193,6 +193,22 @@ func TestDeterminism_InputPipelineProgress_MultiRuns(t *testing.T) {
 	assertStable(t, runs)
 }
 
+func TestDeterminism_InputPipelineLuaLoop_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_lua_loop1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
 func TestDeterminism_InputPipelinePersist_MultiRuns(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)

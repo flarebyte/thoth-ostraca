@@ -1,0 +1,77 @@
+{
+  "records": [
+    {
+      "locator": "a.go",
+      "mapped": {
+        "locator": "a.go",
+        "meta": []
+      },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "a.go\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": {
+        "chars": ["a", ".", "g", "o"],
+        "count": 4,
+        "locator": "a.go"
+      }
+    },
+    {
+      "locator": "sub/c.go",
+      "mapped": {
+        "locator": "sub/c.go",
+        "meta": []
+      },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "sub/c.go\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": {
+        "chars": ["s", "u", "b", "/", "c", ".", "g", "o"],
+        "count": 8,
+        "locator": "sub/c.go"
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": {
+      "configVersion": "1",
+      "action": "input-pipeline"
+    },
+    "discovery": {
+      "root": "testdata/repos/input_pipeline1"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
+    "lua": {
+      "filterInline": "return string.sub(locator, -3) == \".go\"\n  and string.sub(locator, -8) ~= \"_test.go\"",
+      "postMapInline": "local raw = shell and shell.stdout or \"\"\nlocal clean = string.gsub(raw, \"\\n\", \"\")\nlocal chars = {}\nfor i = 1, string.len(clean) do\n  chars[i] = string.sub(clean, i, i)\nend\nreturn {\n  locator = locator,\n  count = #chars,\n  chars = chars,\n}"
+    },
+    "shell": {
+      "enabled": true,
+      "decodeJsonStdout": false,
+      "program": "sh",
+      "argsTemplate": ["-c", "printf '%s\\n' '{locator}'"],
+      "workingDir": ".",
+      "timeoutMs": 60000,
+      "capture": {
+        "stdout": true,
+        "stderr": true,
+        "maxBytes": 1048576
+      },
+      "strictTemplating": true,
+      "killProcessGroup": true,
+      "termGraceMs": 2000
+    }
+  }
+}
