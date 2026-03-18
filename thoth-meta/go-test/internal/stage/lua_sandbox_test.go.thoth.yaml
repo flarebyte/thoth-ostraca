@@ -1,0 +1,14 @@
+locator: internal/stage/lua_sandbox_test.go
+meta:
+  function_list:
+    - TestLuaSandbox_DeterministicRandom
+    - TestLuaSandbox_InstructionLimit
+    - TestLuaSandbox_KeepGoingViolationShape
+    - TestLuaSandbox_LibAllowlist
+    - TestLuaSandbox_MemoryLimit
+    - TestLuaSandbox_OrdinaryLoopAllowedByDefault
+    - TestLuaSandbox_Timeout
+    - defaultLuaSandboxForTest
+  import_files_list:
+    - testing
+  language: go

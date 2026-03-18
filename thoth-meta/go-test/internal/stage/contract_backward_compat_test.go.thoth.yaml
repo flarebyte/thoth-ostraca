@@ -1,0 +1,9 @@
+locator: internal/stage/contract_backward_compat_test.go
+meta:
+  function_list:
+    - TestContractBackwardCompatSnapshots
+  import_files_list:
+    - encoding/json
+    - os
+    - testing
+  language: go

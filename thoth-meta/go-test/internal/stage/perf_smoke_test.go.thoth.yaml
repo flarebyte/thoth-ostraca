@@ -1,0 +1,13 @@
+locator: internal/stage/perf_smoke_test.go
+meta:
+  function_list:
+    - TestPerfSmoke_DiscoveryAndParse
+  import_files_list:
+    - context
+    - fmt
+    - os
+    - path/filepath
+    - runtime
+    - testing
+    - time
+  language: go

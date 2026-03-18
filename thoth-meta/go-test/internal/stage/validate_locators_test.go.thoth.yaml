@@ -1,0 +1,7 @@
+locator: internal/stage/validate_locators_test.go
+meta:
+  function_list:
+    - TestNormalizeHTTPURLLocator
+  import_files_list:
+    - testing
+  language: go

@@ -1,0 +1,8 @@
+locator: internal/metafile/write_test.go
+meta:
+  function_list:
+    - TestMarshal_RewriteStable
+  import_files_list:
+    - bytes
+    - testing
+  language: go

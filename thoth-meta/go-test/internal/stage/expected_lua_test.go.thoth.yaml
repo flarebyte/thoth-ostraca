@@ -1,0 +1,10 @@
+locator: internal/stage/expected_lua_test.go
+meta:
+  function_list:
+    - TestRunExpectedLuaInline_Deterministic
+    - TestRunExpectedLuaInline_ReturnsFunction
+    - TestRunExpectedLuaInline_ReturnsObject
+  import_files_list:
+    - encoding/json
+    - testing
+  language: go

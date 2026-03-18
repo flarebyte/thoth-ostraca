@@ -1,0 +1,7 @@
+locator: internal/stage/error_sort_test.go
+meta:
+  function_list:
+    - TestSortEnvelopeErrors_ByStageLocatorMessage
+  import_files_list:
+    - testing
+  language: go

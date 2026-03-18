@@ -1,0 +1,22 @@
+locator: internal/stage/shell_exec_helpers_test.go
+meta:
+  function_list:
+    - TestProcessShellRecord_DecodeJSONStdout
+    - TestProcessShellRecord_KeepGoingStartFailurePopulatesShell
+    - TestRenderArgs_DirectPlaceholders
+    - TestRenderArgs_MissingMappedValueFailsClearly
+    - TestRenderArgs_StrictTemplatingRejectsUnknownPlaceholder
+    - TestRunCommand_CaptureDisabledOmitsStream
+    - TestRunCommand_NonZeroExitNoErrorField
+    - TestRunCommand_StartFailurePreservesUnderlyingError
+    - TestRunCommand_SuccessCanonical
+    - TestRunCommand_TimeoutSetsDeterministicFields
+    - TestRunCommand_TruncationExactMaxBytes
+    - baseShellOpts
+    - requirePOSIXShell
+  import_files_list:
+    - context
+    - runtime
+    - strings
+    - testing
+  language: go

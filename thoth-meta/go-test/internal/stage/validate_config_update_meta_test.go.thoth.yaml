@@ -1,0 +1,14 @@
+locator: internal/stage/validate_config_update_meta_test.go
+meta:
+  function_list:
+    - TestValidateConfig_ExposesUpdateMetaPatch
+    - TestValidateConfig_PersistMetaDryRunRequiresEnabled
+    - TestValidateConfig_PersistMetaOnlyAllowedForInputPipeline
+    - TestValidateConfig_PersistMetaOutDirRequiresEnabledAndNonEmpty
+    - TestValidateConfig_UpdateMetaExpectedLuaMustBeString
+    - TestValidateConfig_UpdateMetaPatchMustBeObject
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - strings
+    - testing
+  language: go

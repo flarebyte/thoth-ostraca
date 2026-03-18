@@ -1,0 +1,8 @@
+locator: internal/stage/parse_validate_yaml_helpers_test.go
+meta:
+  function_list:
+    - TestYAMLParser_DuplicateTopLevelKeyBehavior
+  import_files_list:
+    - gopkg.in/yaml.v3
+    - testing
+  language: go
