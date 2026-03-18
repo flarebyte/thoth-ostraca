@@ -22,7 +22,7 @@ func runStages(ctx context.Context, in stage.Envelope, stages []string) (stage.E
 }
 
 func runStage(ctx context.Context, name string, in stage.Envelope, deps stage.Deps) (stage.Envelope, error) {
-	if reporter := progressReporterFromContext(ctx); reporter != nil {
+	if reporter, _ := stage.ProgressReporterFromContext(ctx).(*progressReporter); reporter != nil {
 		return reporter.runStage(ctx, name, in, deps)
 	}
 	return stage.Run(ctx, name, in, deps)

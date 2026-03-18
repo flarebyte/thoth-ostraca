@@ -19,11 +19,25 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 	mode, _ := errorMode(in.Meta)
 	n := len(in.Records)
 	workers := getWorkers(in.Meta)
+	reporter := ProgressReporterFromContext(ctx)
+	completed := 0
 	results := runIndexedParallel(n, workers, func(idx int) recordParallelRes {
 		r := in.Records[idx]
 		rec, envE, fatal := processShellRecord(ctx, r, opts, mode)
 		return recordParallelRes{idx: idx, rec: rec, envE: envE, fatal: fatal}
 	})
+	if reporter != nil {
+		for range results {
+			completed++
+			reporter.ReportProgress(ProgressEvent{
+				Stage:     "shell-exec",
+				Event:     "progress",
+				Completed: completed,
+				Total:     n,
+				Errors:    0,
+			})
+		}
+	}
 	return mergeRecordParallelResults(out, results)
 }
 

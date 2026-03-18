@@ -192,6 +192,31 @@ return {
   expect(fs.existsSync(path.join(tempRepo, 'a.go.thoth.yaml'))).toBe(false);
 });
 
+test('input-pipeline: progress writes structured stderr and keeps stdout clean', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(
+    root,
+    'testdata/configs/input_pipeline_progress1.cue',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_progress1_out.golden.json',
+  );
+  const expectedProgress = fs.readFileSync(
+    path.join(
+      root,
+      'testdata/run/input_pipeline_progress1_progress.golden.txt',
+    ),
+    'utf8',
+  );
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-progress', run);
+  expect(run.status).toBe(0);
+  expect(run.stdout).toBe(expectedOut);
+  expect(run.stderr).toBe(expectedProgress);
+});
+
 test('input-pipeline: writes sidecars to dedicated output directory', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

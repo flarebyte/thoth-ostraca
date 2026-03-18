@@ -126,6 +126,12 @@ PipelineConfig: {
     out?: string | "-"
   }
 
+  // User-visible progress lines on stderr for long-running workflows
+  ui?: {
+    progress?: bool | false
+    progressIntervalMs?: int & >=0 | 500
+  }
+
   // Persist postMap.meta into sidecars for input-pipeline
   persistMeta?: {
     enabled?: bool | false

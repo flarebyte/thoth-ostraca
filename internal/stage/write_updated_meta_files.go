@@ -58,6 +58,9 @@ func writeUpdatedMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (E
 	root := determineRoot(in)
 	out := in
 	mode, embed := errorMode(in.Meta)
+	reporter := ProgressReporterFromContext(ctx)
+	total := len(in.Records)
+	completed := 0
 	var envErrs []Error
 	for i, r := range in.Records {
 		if r.Error != nil {
@@ -83,6 +86,16 @@ func writeUpdatedMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (E
 			return Envelope{}, err
 		}
 		out.Records[i] = rr
+		completed++
+		if reporter != nil {
+			reporter.ReportProgress(ProgressEvent{
+				Stage:     writeUpdatedMetaFilesStage,
+				Event:     "progress",
+				Completed: completed,
+				Total:     total,
+				Errors:    len(envErrs),
+			})
+		}
 	}
 	if len(envErrs) > 0 {
 		for _, e := range envErrs {

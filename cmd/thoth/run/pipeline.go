@@ -16,7 +16,10 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	if err != nil {
 		return stage.Envelope{}, err
 	}
-	ctx = withProgressReporter(ctx, newProgressReporter(out.Meta, os.Stderr))
+	ctx = stage.WithProgressReporter(
+		ctx,
+		newProgressReporter(out.Meta, os.Stderr),
+	)
 	action := "pipeline"
 	if out.Meta != nil && out.Meta.Config != nil && out.Meta.Config.Action != "" {
 		action = out.Meta.Config.Action
