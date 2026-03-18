@@ -9,6 +9,24 @@ import {
   saveOutputs,
 } from './helpers';
 
+function expectPersistSummary(
+  root: string,
+  stdout: string,
+  goldenRelPath: string,
+): void {
+  const out = JSON.parse(stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  const summary = {
+    locators: out.records.map((r) => r.locator),
+    metaPaths: out.records.map((r) => r.post?.metaPath),
+  };
+  const expectedSummary = JSON.parse(
+    fs.readFileSync(path.join(root, goldenRelPath), 'utf8'),
+  );
+  expect(summary).toEqual(expectedSummary);
+}
+
 test('create-meta: creates .thoth.yaml files and prints expected envelope', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -124,23 +142,11 @@ return {
     ),
   );
 
-  const out = JSON.parse(run.stdout) as {
-    records: Array<{ locator: string; post?: { metaPath?: string } }>;
-  };
-  const summary = {
-    locators: out.records.map((r) => r.locator),
-    metaPaths: out.records.map((r) => r.post?.metaPath),
-  };
-  const expectedSummary = JSON.parse(
-    fs.readFileSync(
-      path.join(
-        root,
-        'testdata/run/input_pipeline_persist_summary.golden.json',
-      ),
-      'utf8',
-    ),
+  expectPersistSummary(
+    root,
+    run.stdout,
+    'testdata/run/input_pipeline_persist_summary.golden.json',
   );
-  expect(summary).toEqual(expectedSummary);
 });
 
 test('input-pipeline: malformed postMap meta fails before sidecar writes', () => {
@@ -301,23 +307,11 @@ return {
     ),
   );
 
-  const out = JSON.parse(run.stdout) as {
-    records: Array<{ locator: string; post?: { metaPath?: string } }>;
-  };
-  const summary = {
-    locators: out.records.map((r) => r.locator),
-    metaPaths: out.records.map((r) => r.post?.metaPath),
-  };
-  const expectedSummary = JSON.parse(
-    fs.readFileSync(
-      path.join(
-        root,
-        'testdata/run/input_pipeline_persist_outdir_summary.golden.json',
-      ),
-      'utf8',
-    ),
+  expectPersistSummary(
+    root,
+    run.stdout,
+    'testdata/run/input_pipeline_persist_outdir_summary.golden.json',
   );
-  expect(summary).toEqual(expectedSummary);
 });
 
 test('input-pipeline: invalid persistMeta.outDir config fails early', () => {

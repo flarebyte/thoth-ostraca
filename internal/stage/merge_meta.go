@@ -53,15 +53,7 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 				continue
 			}
 			next := deepMerge(existing, derivedPerRecord)
-			m := map[string]any{"nextMeta": next}
-			if r.Post != nil {
-				if pm, ok := r.Post.(map[string]any); ok {
-					for k, v := range pm {
-						m[k] = v
-					}
-				}
-			}
-			r.Post = m
+			r.Post = withNextMeta(next, r.Post)
 			out.Records[i] = r
 			continue
 		}
@@ -89,19 +81,23 @@ func mergeMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 			derivedPerRecord = next
 		}
 		next := deepMerge(existing, derivedPerRecord)
-		m := map[string]any{"nextMeta": next}
-		if r.Post != nil {
-			if pm, ok := r.Post.(map[string]any); ok {
-				for k, v := range pm {
-					m[k] = v
-				}
-			}
-		}
-		r.Post = m
+		r.Post = withNextMeta(next, r.Post)
 		out.Records[i] = r
 	}
 	appendSanitizedErrors(&out, envErrs)
 	return out, nil
+}
+
+func withNextMeta(next map[string]any, post any) map[string]any {
+	m := map[string]any{"nextMeta": next}
+	pm, ok := post.(map[string]any)
+	if !ok {
+		return m
+	}
+	for k, v := range pm {
+		m[k] = v
+	}
+	return m
 }
 
 func mergeMetaFromPost(

@@ -336,27 +336,15 @@ func TestDeterminism_UpdateMeta(t *testing.T) {
 
 func assertMetaActionDeterminism(t *testing.T, bin, src, repo, cfgTemplate string) {
 	t.Helper()
-	var baseOut []byte
-	for i := 0; i < 5; i++ {
-		if err := testutil.CopyTree(src, repo); err != nil {
-			t.Fatalf("copy: %v", err)
-		}
-		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
-		if err := os.WriteFile(cfg, data, 0o644); err != nil {
-			t.Fatalf("write cfg: %v", err)
-		}
-		r := runCmd(t, bin, "run", "--config", cfg)
-		if i == 0 {
-			baseOut = r.stdout
-		}
-		if !bytes.Equal(r.stdout, baseOut) {
-			t.Fatalf("stdout drift run %d", i)
-		}
-		if r.code != 0 || len(r.stderr) != 0 {
-			t.Fatalf("unexpected status/stderr")
-		}
-	}
+	assertStdoutDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		func() string { return fmtSprintf(cfgTemplate, filepath.ToSlash(repo)) },
+		nil,
+		nil,
+	)
 }
 
 func assertInputPipelinePersistDeterminism(
@@ -364,51 +352,17 @@ func assertInputPipelinePersistDeterminism(
 	bin, src, repo, cfgTemplate string,
 ) {
 	t.Helper()
-	var baseOut []byte
-	var baseA []byte
-	var baseC []byte
-	for i := 0; i < 5; i++ {
-		if err := testutil.CopyTree(src, repo); err != nil {
-			t.Fatalf("copy: %v", err)
-		}
-		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
-		if err := os.WriteFile(cfg, data, 0o644); err != nil {
-			t.Fatalf("write cfg: %v", err)
-		}
-		r := runCmd(t, bin, "run", "--config", cfg)
-		if r.code != 0 || len(r.stderr) != 0 {
-			t.Fatalf(
-				"unexpected status/stderr code=%d stderr=%s",
-				r.code,
-				r.stderr,
-			)
-		}
-		aPath := filepath.Join(repo, "a.go.thoth.yaml")
-		cPath := filepath.Join(repo, "sub", "c.go.thoth.yaml")
-		aBytes, err := os.ReadFile(aPath)
-		if err != nil {
-			t.Fatalf("read a sidecar: %v", err)
-		}
-		cBytes, err := os.ReadFile(cPath)
-		if err != nil {
-			t.Fatalf("read c sidecar: %v", err)
-		}
-		if i == 0 {
-			baseOut = r.stdout
-			baseA = aBytes
-			baseC = cBytes
-		}
-		if !bytes.Equal(r.stdout, baseOut) {
-			t.Fatalf("stdout drift run %d", i)
-		}
-		if !bytes.Equal(aBytes, baseA) {
-			t.Fatalf("a sidecar drift run %d", i)
-		}
-		if !bytes.Equal(cBytes, baseC) {
-			t.Fatalf("c sidecar drift run %d", i)
-		}
-	}
+	assertPersistSidecarDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		repo,
+		func() string {
+			return fmtSprintf(cfgTemplate, filepath.ToSlash(repo))
+		},
+		nil,
+	)
 }
 
 func assertInputPipelinePersistOutDirDeterminism(
@@ -416,54 +370,23 @@ func assertInputPipelinePersistOutDirDeterminism(
 	bin, src, repo, outDir, cfgTemplate string,
 ) {
 	t.Helper()
-	var baseOut []byte
-	var baseA []byte
-	var baseC []byte
-	for i := 0; i < 5; i++ {
-		if err := testutil.CopyTree(src, repo); err != nil {
-			t.Fatalf("copy: %v", err)
-		}
-		_ = os.RemoveAll(outDir)
-		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(
-			fmt.Sprintf(cfgTemplate, filepath.ToSlash(repo), "../input_pipeline_outdir_det_sidecars"),
-		)
-		if err := os.WriteFile(cfg, data, 0o644); err != nil {
-			t.Fatalf("write cfg: %v", err)
-		}
-		r := runCmd(t, bin, "run", "--config", cfg)
-		if r.code != 0 || len(r.stderr) != 0 {
-			t.Fatalf(
-				"unexpected status/stderr code=%d stderr=%s",
-				r.code,
-				r.stderr,
+	assertPersistSidecarDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		outDir,
+		func() string {
+			return fmt.Sprintf(
+				cfgTemplate,
+				filepath.ToSlash(repo),
+				"../input_pipeline_outdir_det_sidecars",
 			)
-		}
-		aPath := filepath.Join(outDir, "a.go.thoth.yaml")
-		cPath := filepath.Join(outDir, "sub", "c.go.thoth.yaml")
-		aBytes, err := os.ReadFile(aPath)
-		if err != nil {
-			t.Fatalf("read a sidecar: %v", err)
-		}
-		cBytes, err := os.ReadFile(cPath)
-		if err != nil {
-			t.Fatalf("read c sidecar: %v", err)
-		}
-		if i == 0 {
-			baseOut = r.stdout
-			baseA = aBytes
-			baseC = cBytes
-		}
-		if !bytes.Equal(r.stdout, baseOut) {
-			t.Fatalf("stdout drift run %d", i)
-		}
-		if !bytes.Equal(aBytes, baseA) {
-			t.Fatalf("a sidecar drift run %d", i)
-		}
-		if !bytes.Equal(cBytes, baseC) {
-			t.Fatalf("c sidecar drift run %d", i)
-		}
-	}
+		},
+		func() {
+			_ = os.RemoveAll(outDir)
+		},
+	)
 }
 
 func assertInputPipelinePersistDryRunDeterminism(
@@ -471,36 +394,141 @@ func assertInputPipelinePersistDryRunDeterminism(
 	bin, src, repo, cfgTemplate string,
 ) {
 	t.Helper()
+	assertStdoutDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		func() string { return fmtSprintf(cfgTemplate, filepath.ToSlash(repo)) },
+		nil,
+		func() {
+			if _, err := os.Stat(filepath.Join(repo, "a.go.thoth.yaml")); !os.IsNotExist(err) {
+				t.Fatalf("a sidecar should not exist in dry-run")
+			}
+			if _, err := os.Stat(filepath.Join(repo, "sub", "c.go.thoth.yaml")); !os.IsNotExist(err) {
+				t.Fatalf("c sidecar should not exist in dry-run")
+			}
+		},
+	)
+}
+
+func assertPersistSidecarDeterminism(
+	t *testing.T,
+	bin, src, repo, sidecarRoot string,
+	cfgBody func() string,
+	beforeRun func(),
+) {
+	t.Helper()
 	var baseOut []byte
+	var baseA []byte
+	var baseC []byte
 	for i := 0; i < 5; i++ {
-		if err := testutil.CopyTree(src, repo); err != nil {
-			t.Fatalf("copy: %v", err)
-		}
-		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
-		if err := os.WriteFile(cfg, data, 0o644); err != nil {
-			t.Fatalf("write cfg: %v", err)
-		}
-		r := runCmd(t, bin, "run", "--config", cfg)
-		if r.code != 0 || len(r.stderr) != 0 {
-			t.Fatalf(
-				"unexpected status/stderr code=%d stderr=%s",
-				r.code,
-				r.stderr,
-			)
-		}
-		if _, err := os.Stat(filepath.Join(repo, "a.go.thoth.yaml")); !os.IsNotExist(err) {
-			t.Fatalf("a sidecar should not exist in dry-run")
-		}
-		if _, err := os.Stat(filepath.Join(repo, "sub", "c.go.thoth.yaml")); !os.IsNotExist(err) {
-			t.Fatalf("c sidecar should not exist in dry-run")
-		}
+		r := runDeterminismConfigRun(
+			t,
+			bin,
+			src,
+			repo,
+			cfgBody(),
+			beforeRun,
+		)
+		aBytes, cBytes := readTwoSidecars(
+			t,
+			filepath.Join(sidecarRoot, "a.go.thoth.yaml"),
+			filepath.Join(sidecarRoot, "sub", "c.go.thoth.yaml"),
+		)
 		if i == 0 {
 			baseOut = r.stdout
+			baseA = aBytes
+			baseC = cBytes
 		}
-		if !bytes.Equal(r.stdout, baseOut) {
-			t.Fatalf("stdout drift run %d", i)
+		assertStableStdout(t, i, r.stdout, &baseOut)
+		assertStableBytes(t, i, "a sidecar", aBytes, baseA)
+		assertStableBytes(t, i, "c sidecar", cBytes, baseC)
+	}
+}
+
+func assertStdoutDeterminism(
+	t *testing.T,
+	bin, src, repo string,
+	cfgBody func() string,
+	beforeRun func(),
+	afterRun func(),
+) {
+	t.Helper()
+	var baseOut []byte
+	for i := 0; i < 5; i++ {
+		r := runDeterminismConfigRun(
+			t,
+			bin,
+			src,
+			repo,
+			cfgBody(),
+			beforeRun,
+		)
+		if afterRun != nil {
+			afterRun()
 		}
+		assertStableStdout(t, i, r.stdout, &baseOut)
+	}
+}
+
+func runDeterminismConfigRun(
+	t *testing.T,
+	bin, src, repo, cfgBody string,
+	beforeRun func(),
+) runResult {
+	t.Helper()
+	if err := testutil.CopyTree(src, repo); err != nil {
+		t.Fatalf("copy: %v", err)
+	}
+	if beforeRun != nil {
+		beforeRun()
+	}
+	cfg := filepath.Join(repo, "tmp.cue")
+	if err := os.WriteFile(cfg, []byte(cfgBody), 0o644); err != nil {
+		t.Fatalf("write cfg: %v", err)
+	}
+	r := runCmd(t, bin, "run", "--config", cfg)
+	if r.code != 0 || len(r.stderr) != 0 {
+		t.Fatalf(
+			"unexpected status/stderr code=%d stderr=%s",
+			r.code,
+			r.stderr,
+		)
+	}
+	return r
+}
+
+func readTwoSidecars(t *testing.T, aPath, cPath string) ([]byte, []byte) {
+	t.Helper()
+	aBytes, err := os.ReadFile(aPath)
+	if err != nil {
+		t.Fatalf("read a sidecar: %v", err)
+	}
+	cBytes, err := os.ReadFile(cPath)
+	if err != nil {
+		t.Fatalf("read c sidecar: %v", err)
+	}
+	return aBytes, cBytes
+}
+
+func assertStableStdout(t *testing.T, run int, got []byte, base *[]byte) {
+	t.Helper()
+	if run == 0 {
+		*base = got
+	}
+	assertStableBytes(t, run, "stdout", got, *base)
+}
+
+func assertStableBytes(
+	t *testing.T,
+	run int,
+	label string,
+	got, want []byte,
+) {
+	t.Helper()
+	if !bytes.Equal(got, want) {
+		t.Fatalf("%s drift run %d", label, run)
 	}
 }
 
