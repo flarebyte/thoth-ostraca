@@ -101,6 +101,9 @@ PipelineConfig: {
     decodeJsonStdout?: bool | false
     program?: "bash" | "sh" | "zsh" | "bash"
     commandTemplate?: string // exactly one of commandTemplate or argsTemplate
+    // Supported placeholders in argsTemplate:
+    // {json}, {locator}, {file.base}, {file.dir},
+    // {file.stem}, {file.ext}, {mapped.<path>}
     argsTemplate?: [...string]
     workingDir?: string | "."
     env?: [string]: string

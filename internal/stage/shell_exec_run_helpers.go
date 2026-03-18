@@ -51,8 +51,8 @@ type shellRunResult struct {
 func strPtr(s string) *string { return &s }
 
 // runCommand executes the command with timeout/termination and returns result or error.
-func runCommand(ctx context.Context, opts shellOptions, mapped any) (shellRunResult, error) {
-	args, err := renderArgs(opts.argsT, mapped, opts.strictTemplating)
+func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunResult, error) {
+	args, err := renderArgs(opts.argsT, rec, opts.strictTemplating)
 	if err != nil {
 		return shellRunResult{}, err
 	}

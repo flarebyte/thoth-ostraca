@@ -1,9 +1,5 @@
 package stage
 
-import (
-	"regexp"
-)
-
 const shellExecStage = "shell-exec"
 
 type shellOptions struct {
@@ -21,5 +17,3 @@ type shellOptions struct {
 	killProcessGroup bool
 	termGraceMs      int
 }
-
-var placeholderPattern = regexp.MustCompile(`\{[^{}]+\}`)

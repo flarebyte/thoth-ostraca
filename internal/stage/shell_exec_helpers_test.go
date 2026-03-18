@@ -34,7 +34,11 @@ func baseShellOpts() shellOptions {
 func TestRunCommand_SuccessCanonical(t *testing.T) {
 	requirePOSIXShell(t)
 	opts := baseShellOpts()
-	r, err := runCommand(context.Background(), opts, map[string]any{"a": 1})
+	r, err := runCommand(
+		context.Background(),
+		opts,
+		Record{Mapped: map[string]any{"a": 1}},
+	)
 	if err != nil {
 		t.Fatalf("runCommand err: %v", err)
 	}
@@ -56,7 +60,7 @@ func TestRunCommand_NonZeroExitNoErrorField(t *testing.T) {
 	requirePOSIXShell(t)
 	opts := baseShellOpts()
 	opts.argsT = []string{"-c", "printf 'bad' >&2; exit 7"}
-	r, err := runCommand(context.Background(), opts, nil)
+	r, err := runCommand(context.Background(), opts, Record{})
 	if err != nil {
 		t.Fatalf("runCommand err: %v", err)
 	}
@@ -71,7 +75,7 @@ func TestRunCommand_TimeoutSetsDeterministicFields(t *testing.T) {
 	opts.timeout = 20
 	opts.termGraceMs = 10
 	opts.argsT = []string{"-c", "sleep 2"}
-	r, err := runCommand(context.Background(), opts, nil)
+	r, err := runCommand(context.Background(), opts, Record{})
 	if err != nil {
 		t.Fatalf("runCommand err: %v", err)
 	}
@@ -85,7 +89,7 @@ func TestRunCommand_TruncationExactMaxBytes(t *testing.T) {
 	opts := baseShellOpts()
 	opts.captureMaxBytes = 5
 	opts.argsT = []string{"-c", "printf '0123456789'"}
-	r, err := runCommand(context.Background(), opts, nil)
+	r, err := runCommand(context.Background(), opts, Record{})
 	if err != nil {
 		t.Fatalf("runCommand err: %v", err)
 	}
@@ -102,7 +106,7 @@ func TestRunCommand_CaptureDisabledOmitsStream(t *testing.T) {
 	opts := baseShellOpts()
 	opts.captureStdout = false
 	opts.argsT = []string{"-c", "printf 'hello'"}
-	r, err := runCommand(context.Background(), opts, nil)
+	r, err := runCommand(context.Background(), opts, Record{})
 	if err != nil {
 		t.Fatalf("runCommand err: %v", err)
 	}
@@ -164,5 +168,76 @@ func TestProcessShellRecord_DecodeJSONStdout(t *testing.T) {
 	decoded, ok := rec.Shell.JSON.(map[string]any)
 	if !ok || decoded["locator"] != "x" {
 		t.Fatalf("unexpected decoded json: %#v", rec.Shell.JSON)
+	}
+}
+
+func TestRenderArgs_DirectPlaceholders(t *testing.T) {
+	rec := Record{
+		Locator: "sub/c.go",
+		Mapped: map[string]any{
+			"kind": "go",
+			"nested": map[string]any{
+				"name": "write",
+			},
+		},
+	}
+	args, err := renderArgs(
+		[]string{
+			"{locator}",
+			"{file.base}",
+			"{file.dir}",
+			"{file.stem}",
+			"{file.ext}",
+			"{mapped.kind}",
+			"{mapped.nested.name}",
+			"{json}",
+		},
+		rec,
+		true,
+	)
+	if err != nil {
+		t.Fatalf("renderArgs err: %v", err)
+	}
+	want := []string{
+		"sub/c.go",
+		"c.go",
+		"sub",
+		"c",
+		".go",
+		"go",
+		"write",
+		`{"kind":"go","nested":{"name":"write"}}`,
+	}
+	if len(args) != len(want) {
+		t.Fatalf("len(args)=%d want %d", len(args), len(want))
+	}
+	for i := range want {
+		if args[i] != want[i] {
+			t.Fatalf("arg[%d]=%q want %q", i, args[i], want[i])
+		}
+	}
+}
+
+func TestRenderArgs_StrictTemplatingRejectsUnknownPlaceholder(t *testing.T) {
+	_, err := renderArgs([]string{"{nope}"}, Record{}, true)
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if got := err.Error(); got != "strict templating: invalid placeholder {nope}" {
+		t.Fatalf("unexpected error: %q", got)
+	}
+}
+
+func TestRenderArgs_MissingMappedValueFailsClearly(t *testing.T) {
+	_, err := renderArgs(
+		[]string{"{mapped.kind}"},
+		Record{Mapped: map[string]any{"name": "x"}},
+		true,
+	)
+	if err == nil {
+		t.Fatalf("expected error")
+	}
+	if got := err.Error(); got != "template placeholder {mapped.kind} missing value" {
+		t.Fatalf("unexpected error: %q", got)
 	}
 }

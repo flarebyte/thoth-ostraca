@@ -10,7 +10,7 @@ func processShellRecord(ctx context.Context, rec Record, opts shellOptions, mode
 	if rec.Error != nil {
 		return rec, nil, nil
 	}
-	runRes, err := runCommand(ctx, opts, rec.Mapped)
+	runRes, err := runCommand(ctx, opts, rec)
 	if err != nil {
 		msg := sanitizeErrorMessage(err.Error())
 		if mode == "keep-going" {
