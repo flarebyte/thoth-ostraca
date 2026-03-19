@@ -34,6 +34,7 @@ func shellExecRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 				Event:     "progress",
 				Completed: completed,
 				Total:     n,
+				Rejected:  0,
 				Errors:    0,
 			})
 		}

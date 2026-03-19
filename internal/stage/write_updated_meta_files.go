@@ -93,6 +93,7 @@ func writeUpdatedMetaFilesRunner(ctx context.Context, in Envelope, deps Deps) (E
 				Event:     "progress",
 				Completed: completed,
 				Total:     total,
+				Rejected:  0,
 				Errors:    len(envErrs),
 			})
 		}

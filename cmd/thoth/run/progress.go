@@ -40,6 +40,7 @@ func (p *progressReporter) runStage(
 		Event:     "start",
 		Completed: 0,
 		Total:     len(in.Records),
+		Rejected:  0,
 		Errors:    len(in.Errors),
 	})
 
@@ -50,6 +51,7 @@ func (p *progressReporter) runStage(
 			Event:     "failed",
 			Completed: 0,
 			Total:     len(in.Records),
+			Rejected:  0,
 			Errors:    len(in.Errors) + 1,
 		})
 		return stage.Envelope{}, err
@@ -58,7 +60,8 @@ func (p *progressReporter) runStage(
 		Stage:     name,
 		Event:     "done",
 		Completed: len(out.Records),
-		Total:     len(out.Records),
+		Total:     stageTotal(len(in.Records), len(out.Records)),
+		Rejected:  rejectedCount(stageTotal(len(in.Records), len(out.Records)), len(out.Records)),
 		Errors:    len(out.Errors),
 	})
 	return out, nil
@@ -72,11 +75,26 @@ func (p *progressReporter) ReportProgress(ev stage.ProgressEvent) {
 	defer p.mu.Unlock()
 	_, _ = fmt.Fprintf(
 		p.w,
-		"progress stage=%s event=%s completed=%d total=%d errors=%d\n",
+		"progress stage=%s event=%s completed=%d total=%d rejected=%d errors=%d\n",
 		ev.Stage,
 		ev.Event,
 		ev.Completed,
 		ev.Total,
+		ev.Rejected,
 		ev.Errors,
 	)
+}
+
+func rejectedCount(total, completed int) int {
+	if total <= completed {
+		return 0
+	}
+	return total - completed
+}
+
+func stageTotal(inCount, outCount int) int {
+	if inCount == 0 && outCount > 0 {
+		return outCount
+	}
+	return inCount
 }

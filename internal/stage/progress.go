@@ -8,6 +8,7 @@ type ProgressEvent struct {
 	Event     string
 	Completed int
 	Total     int
+	Rejected  int
 	Errors    int
 }
 
