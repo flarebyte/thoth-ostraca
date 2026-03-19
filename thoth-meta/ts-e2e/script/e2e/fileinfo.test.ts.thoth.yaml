@@ -1,0 +1,12 @@
+locator: script/e2e/fileinfo.test.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+    - node:url
+  language: typescript
+  testcase_titles_list:
+    - enrich-fileinfo attaches deterministic fields for create-meta
+    - enrich-fileinfo keep-going embeds record error and envelope error on missing file

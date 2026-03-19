@@ -74,6 +74,9 @@ dup:
 
 review: format test e2e lint
 
+thoth-meta-ts-e2e:
+	./.e2e-bin/thoth run --config ./pipeline-ts-e2e-maat.thoth.cue 
+
 help:
 	@printf "Targets:\n"
 	@printf "  (requires: go, bun, golangci-lint, biome)\n"

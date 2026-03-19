@@ -1,0 +1,14 @@
+locator: script/e2e/run.ux_phase4.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - phase4 ux output.out empty string is treated as stdout
+    - phase4 ux progress writes to stderr and keeps stdout deterministic
+    - phase4 ux validate-config rejects maxRecordsInMemory<1
+    - phase4 ux validate-config rejects shell enabled without argsTemplate
+    - phase4 ux validate-config rejects workers<1

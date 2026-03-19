@@ -1,0 +1,11 @@
+locator: script/e2e/run.streaming_phase4.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - phase4 buffered mode fails when maxRecordsInMemory would overflow
+    - phase4 streaming ndjson respects low maxRecordsInMemory and is deterministic

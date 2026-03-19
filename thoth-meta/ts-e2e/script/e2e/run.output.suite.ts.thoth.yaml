@@ -1,0 +1,19 @@
+locator: script/e2e/run.output.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'write-output determinism: compact/pretty/lines stdout are byte-identical across reruns'
+    - 'write-output determinism: file modes are byte-identical across reruns'
+    - 'write-output determinism: lines stdout workers=1 and workers=8 are byte-identical'
+    - 'write-output: compact envelope to file writes expected golden and keeps stdout empty'
+    - 'write-output: compact envelope to stdout matches golden'
+    - 'write-output: NDJSON lines to file writes expected golden and keeps stdout empty'
+    - 'write-output: NDJSON lines to stdout matches golden exactly'
+    - 'write-output: pretty envelope to file writes expected golden and keeps stdout empty'
+    - 'write-output: pretty envelope to stdout matches pretty golden'

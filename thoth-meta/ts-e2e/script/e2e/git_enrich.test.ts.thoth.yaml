@@ -1,0 +1,15 @@
+locator: script/e2e/git_enrich.test.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./shell_helpers
+    - bun:test
+    - node:child_process
+    - node:fs
+    - node:path
+    - node:url
+  language: typescript
+  testcase_titles_list:
+    - enrich-git marks ignored files and discovery-input-files respects .gitignore
+    - enrich-git output is byte-identical across reruns and workers=1 vs workers=8
+    - enrich-git resolves repo root above discovery.root and reports tracked/modified/untracked

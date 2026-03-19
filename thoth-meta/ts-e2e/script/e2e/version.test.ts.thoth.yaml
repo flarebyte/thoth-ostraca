@@ -1,0 +1,10 @@
+locator: script/e2e/version.test.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:path
+    - node:url
+  language: typescript
+  testcase_titles_list:
+    - thoth version prints dev

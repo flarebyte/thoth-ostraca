@@ -1,0 +1,12 @@
+locator: script/e2e/run.locators.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'validate-locators: default policy flags invalid parent refs and backslashes'
+    - 'validate-locators: relaxed policy allows parent refs and backslashes'
+    - 'validate-locators: URL locators are accepted and normalized when enabled'
+    - 'validate-locators: URL locators are rejected by default policy'

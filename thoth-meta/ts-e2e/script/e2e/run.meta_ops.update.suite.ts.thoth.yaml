@@ -1,0 +1,25 @@
+locator: script/e2e/run.meta_ops.update.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'create-meta: creates .thoth.yaml files and prints expected envelope'
+    - 'create-meta: second run fails-fast when meta exists'
+    - 'input-pipeline: dry-run reports intended writes and creates no sidecars'
+    - 'input-pipeline: invalid persistMeta.outDir config fails early'
+    - 'input-pipeline: malformed postMap meta fails before sidecar writes'
+    - 'input-pipeline: progress writes structured stderr and keeps stdout clean'
+    - 'input-pipeline: writes .thoth.yaml sidecars from postMap meta'
+    - 'input-pipeline: writes sidecars to dedicated output directory'
+    - 'update-meta: deep-merge patch updates existing and creates missing meta'
+    - 'update-meta: expectedLua derives per-locator patch and merges (golden)'
+    - 'update-meta: expectedLua keep-going continues when one locator fails'
+    - 'update-meta: invalid existing meta embeds errors in keep-going and still creates others'
+    - 'update-meta: invalid existing meta fails fast'
+    - 'update-meta: keep-going with invalid existing meta still updates valid file with patch'
+    - 'update-meta: preserves existing meta and creates missing'
+    - 'update-meta: rewrite-stable canonical YAML (run twice, exact golden)'
