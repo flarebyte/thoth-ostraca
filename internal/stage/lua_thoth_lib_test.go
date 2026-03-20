@@ -6,6 +6,13 @@ import (
 	lua "github.com/yuin/gopher-lua"
 )
 
+func newLuaStateWithThothLib(t *testing.T) *lua.LState {
+	t.Helper()
+	L := lua.NewState()
+	L.SetGlobal("thoth", newThothLibTable(L))
+	return L
+}
+
 func TestLuaThothEndsWith(t *testing.T) {
 	t.Parallel()
 
@@ -303,6 +310,122 @@ func TestLuaThothIsEmpty(t *testing.T) {
 	}
 }
 
+func TestLuaThothFind(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"alpha", "beta", "gamma"}
+    result = thoth.find(items, function(item)
+      return item == "beta"
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	got, ok := L.GetGlobal("result").(lua.LString)
+	if !ok {
+		t.Fatalf("expected string result, got %T", L.GetGlobal("result"))
+	}
+	if string(got) != "beta" {
+		t.Fatalf("find = %q, want %q", string(got), "beta")
+	}
+}
+
+func TestLuaThothFindNotFound(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"alpha", "beta", "gamma"}
+    result = thoth.find(items, function(item)
+      return item == "delta"
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	if L.GetGlobal("result") != lua.LNil {
+		t.Fatalf("expected nil result, got %T", L.GetGlobal("result"))
+	}
+}
+
+func TestLuaThothAny(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"alpha", "beta", "gamma"}
+    result = thoth.any(items, function(item)
+      return item == "beta"
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	got, ok := L.GetGlobal("result").(lua.LBool)
+	if !ok {
+		t.Fatalf("expected bool result, got %T", L.GetGlobal("result"))
+	}
+	if !bool(got) {
+		t.Fatalf("any = false, want true")
+	}
+}
+
+func TestLuaThothAll(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"alpha", "beta", "gamma"}
+    result = thoth.all(items, function(item)
+      return string.len(item) >= 4
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	got, ok := L.GetGlobal("result").(lua.LBool)
+	if !ok {
+		t.Fatalf("expected bool result, got %T", L.GetGlobal("result"))
+	}
+	if !bool(got) {
+		t.Fatalf("all = false, want true")
+	}
+}
+
+func TestLuaThothAllFalse(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"alpha", "beta", "gamma"}
+    result = thoth.all(items, function(item)
+      return item == "beta"
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	got, ok := L.GetGlobal("result").(lua.LBool)
+	if !ok {
+		t.Fatalf("expected bool result, got %T", L.GetGlobal("result"))
+	}
+	if bool(got) {
+		t.Fatalf("all = true, want false")
+	}
+}
+
 func TestInstallThothLib(t *testing.T) {
 	t.Parallel()
 
@@ -315,11 +438,20 @@ func TestInstallThothLib(t *testing.T) {
 	if !ok || thoth == nil {
 		t.Fatalf("expected global thoth table, got %T", L.GetGlobal("thoth"))
 	}
+	if thoth.RawGetString("all").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.all function to be registered")
+	}
+	if thoth.RawGetString("any").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.any function to be registered")
+	}
 	if thoth.RawGetString("contains").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.contains function to be registered")
 	}
 	if thoth.RawGetString("ends_with").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.ends_with function to be registered")
+	}
+	if thoth.RawGetString("find").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.find function to be registered")
 	}
 	if thoth.RawGetString("is_empty").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.is_empty function to be registered")

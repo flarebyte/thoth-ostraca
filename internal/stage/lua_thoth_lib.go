@@ -8,15 +8,22 @@ import (
 )
 
 func installThothLib(L *lua.LState) {
+	L.SetGlobal("thoth", newThothLibTable(L))
+}
+
+func newThothLibTable(L *lua.LState) *lua.LTable {
 	thoth := L.NewTable()
+	thoth.RawSetString("all", L.NewFunction(luaThothAll))
+	thoth.RawSetString("any", L.NewFunction(luaThothAny))
 	thoth.RawSetString("contains", L.NewFunction(luaThothContains))
 	thoth.RawSetString("ends_with", L.NewFunction(luaThothEndsWith))
+	thoth.RawSetString("find", L.NewFunction(luaThothFind))
 	thoth.RawSetString("is_empty", L.NewFunction(luaThothIsEmpty))
 	thoth.RawSetString("push", L.NewFunction(luaThothPush))
 	thoth.RawSetString("split", L.NewFunction(luaThothSplit))
 	thoth.RawSetString("sort_keys", L.NewFunction(luaThothSortKeys))
 	thoth.RawSetString("trim", L.NewFunction(luaThothTrim))
-	L.SetGlobal("thoth", thoth)
+	return thoth
 }
 
 func luaThothEndsWith(L *lua.LState) int {
@@ -64,6 +71,78 @@ func luaThothPush(L *lua.LState) int {
 	value := L.CheckAny(2)
 	list.Append(value)
 	L.Push(list)
+	return 1
+}
+
+func luaThothFind(L *lua.LState) int {
+	list := L.CheckTable(1)
+	predicate := L.CheckFunction(2)
+	var found lua.LValue = lua.LNil
+	stop := false
+	list.ForEach(func(_, item lua.LValue) {
+		if stop {
+			return
+		}
+		L.Push(predicate)
+		L.Push(item)
+		if err := L.PCall(1, 1, nil); err != nil {
+			panic(err)
+		}
+		if lua.LVAsBool(L.Get(-1)) {
+			found = item
+			stop = true
+		}
+		L.Pop(1)
+	})
+	L.Push(found)
+	return 1
+}
+
+func luaThothAny(L *lua.LState) int {
+	list := L.CheckTable(1)
+	predicate := L.CheckFunction(2)
+	found := false
+	stop := false
+	list.ForEach(func(_, item lua.LValue) {
+		if stop {
+			return
+		}
+		L.Push(predicate)
+		L.Push(item)
+		if err := L.PCall(1, 1, nil); err != nil {
+			panic(err)
+		}
+		if lua.LVAsBool(L.Get(-1)) {
+			found = true
+			stop = true
+		}
+		L.Pop(1)
+	})
+	L.Push(lua.LBool(found))
+	return 1
+}
+
+func luaThothAll(L *lua.LState) int {
+	list := L.CheckTable(1)
+	predicate := L.CheckFunction(2)
+	all := true
+	stop := false
+	list.ForEach(func(_, item lua.LValue) {
+		if stop {
+			return
+		}
+		L.Push(predicate)
+		L.Push(item)
+		if err := L.PCall(1, 1, nil); err != nil {
+			panic(err)
+		}
+		if !lua.LVAsBool(L.Get(-1)) {
+			all = false
+			stop = true
+		}
+		L.Pop(1)
+	})
+	L.Push(lua.LBool(all))
 	return 1
 }
 
