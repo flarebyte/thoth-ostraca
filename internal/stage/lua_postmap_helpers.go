@@ -72,7 +72,7 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 		code,
 	)
 	if err != nil {
-		msg := sanitizeErrorMessage(err.Error())
+		msg := formatLuaError(luaPostMapStage, rec.Locator, code, err.Error())
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaPostMapStage, Message: msg}
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: msg}, nil
@@ -80,7 +80,7 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 		return Record{}, nil, fmt.Errorf("lua-postmap: %s", msg)
 	}
 	if violation != "" {
-		msg := sanitizeErrorMessage(violation)
+		msg := formatLuaError(luaPostMapStage, rec.Locator, code, violation)
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaPostMapStage, Message: msg}
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: msg}, nil

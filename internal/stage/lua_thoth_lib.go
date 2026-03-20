@@ -104,7 +104,7 @@ func luaThothFlatten(L *lua.LState) int {
 func luaThothFind(L *lua.LState) int {
 	list := L.CheckTable(1)
 	predicate := L.CheckFunction(2)
-	var found lua.LValue = lua.LNil
+	found := lua.LValue(lua.LNil)
 	stop := false
 	list.ForEach(func(_, item lua.LValue) {
 		if stop {

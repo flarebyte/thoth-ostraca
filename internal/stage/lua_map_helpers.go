@@ -36,7 +36,7 @@ func processLuaMapRecord(rec Record, code string, mode string, metaCfg *Meta) (R
 		code,
 	)
 	if err != nil {
-		msg := sanitizeErrorMessage(err.Error())
+		msg := formatLuaError(luaMapStage, locator, code, err.Error())
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaMapStage, Message: msg}
 			return rec, &Error{Stage: luaMapStage, Locator: locator, Message: msg}, nil
@@ -44,7 +44,7 @@ func processLuaMapRecord(rec Record, code string, mode string, metaCfg *Meta) (R
 		return Record{}, nil, fmt.Errorf("lua-map: %s", msg)
 	}
 	if violation != "" {
-		msg := sanitizeErrorMessage(violation)
+		msg := formatLuaError(luaMapStage, locator, code, violation)
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaMapStage, Message: msg}
 			return rec, &Error{Stage: luaMapStage, Locator: locator, Message: msg}, nil

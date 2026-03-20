@@ -63,10 +63,16 @@ func runLuaReduce(in Envelope, code string) (any, error) {
 			"item": item,
 		}, code)
 		if err != nil {
-			return nil, fmt.Errorf("lua-reduce: %v", err)
+			return nil, fmt.Errorf(
+				"lua-reduce: %s",
+				formatLuaError(luaReduceStage, locator, code, err.Error()),
+			)
 		}
 		if violation != "" {
-			return nil, luaViolationFailFast(luaReduceStage, violation)
+			return nil, luaViolationFailFast(
+				luaReduceStage,
+				formatLuaError(luaReduceStage, locator, code, violation),
+			)
 		}
 		acc = ret
 	}

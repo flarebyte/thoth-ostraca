@@ -51,7 +51,7 @@ func processLuaFilterRecord(rec Record, pred string, mode string, metaCfg *Meta)
 		pred,
 	)
 	if err != nil {
-		msg := sanitizeErrorMessage(err.Error())
+		msg := formatLuaError(luaFilterStage, locator, pred, err.Error())
 		if mode == "keep-going" {
 			rr, envErr := recordFailure(rec, luaFilterStage, msg, true)
 			return true, rr, envErr, nil
@@ -59,7 +59,7 @@ func processLuaFilterRecord(rec Record, pred string, mode string, metaCfg *Meta)
 		return false, Record{}, nil, fmt.Errorf("lua-filter: %s", msg)
 	}
 	if violation != "" {
-		msg := sanitizeErrorMessage(violation)
+		msg := formatLuaError(luaFilterStage, locator, pred, violation)
 		if mode == "keep-going" {
 			rr, envErr := recordFailure(Record{Locator: locator, Meta: meta}, luaFilterStage, msg, true)
 			return true, rr, envErr, nil

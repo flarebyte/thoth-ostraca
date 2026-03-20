@@ -18,7 +18,7 @@
       "meta": { "enabled": true, "name": "LuaErr" },
       "error": {
         "stage": "lua-map",
-        "message": "<string>:1: boom stack traceback: [G]: in function 'error' <string>:1: in main chunk [G]: ?"
+        "message": "<string>:1: boom stack traceback: [G]: in function 'error' <string>:1: in main chunk [G]: ?\n> 1 | if (meta and meta.name) == \"LuaErr\" then error(\"boom\") end; return { locator = locator, name = meta and meta.name }"
       }
     }
   ],
@@ -38,7 +38,7 @@
     {
       "stage": "lua-map",
       "locator": "luaerr",
-      "message": "<string>:1: boom stack traceback: [G]: in function 'error' <string>:1: in main chunk [G]: ?"
+      "message": "<string>:1: boom stack traceback: [G]: in function 'error' <string>:1: in main chunk [G]: ? > 1 | if (meta and meta.name) == \"LuaErr\" then error(\"boom\") end; return { locator = locator, name = meta and meta.name }"
     },
     {
       "stage": "parse-validate-yaml",
