@@ -426,6 +426,94 @@ func TestLuaThothAllFalse(t *testing.T) {
 	}
 }
 
+func TestLuaThothMap(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"go", "lua", "cue"}
+    result = thoth.map(items, function(item)
+      return string.upper(item)
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	gotTbl, ok := L.GetGlobal("result").(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.GetGlobal("result"))
+	}
+	want := []string{"GO", "LUA", "CUE"}
+	for i, exp := range want {
+		if gotTbl.RawGetInt(i+1).String() != exp {
+			t.Fatalf(
+				"map[%d] = %q, want %q",
+				i,
+				gotTbl.RawGetInt(i+1).String(),
+				exp,
+			)
+		}
+	}
+}
+
+func TestLuaThothFilter(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"write.go", "write_test.go", "read.go"}
+    result = thoth.filter(items, function(item)
+      return not thoth.ends_with(item, "_test.go")
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	gotTbl, ok := L.GetGlobal("result").(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.GetGlobal("result"))
+	}
+	want := []string{"write.go", "read.go"}
+	for i, exp := range want {
+		if gotTbl.RawGetInt(i+1).String() != exp {
+			t.Fatalf(
+				"filter[%d] = %q, want %q",
+				i,
+				gotTbl.RawGetInt(i+1).String(),
+				exp,
+			)
+		}
+	}
+}
+
+func TestLuaThothReduce(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {10, 20, 30}
+    result = thoth.reduce(items, 0, function(acc, item)
+      return acc + item
+    end)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	got, ok := L.GetGlobal("result").(lua.LNumber)
+	if !ok {
+		t.Fatalf("expected numeric result, got %T", L.GetGlobal("result"))
+	}
+	if float64(got) != 60 {
+		t.Fatalf("reduce = %v, want 60", float64(got))
+	}
+}
+
 func TestInstallThothLib(t *testing.T) {
 	t.Parallel()
 
@@ -450,14 +538,23 @@ func TestInstallThothLib(t *testing.T) {
 	if thoth.RawGetString("ends_with").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.ends_with function to be registered")
 	}
+	if thoth.RawGetString("filter").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.filter function to be registered")
+	}
 	if thoth.RawGetString("find").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.find function to be registered")
 	}
 	if thoth.RawGetString("is_empty").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.is_empty function to be registered")
 	}
+	if thoth.RawGetString("map").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.map function to be registered")
+	}
 	if thoth.RawGetString("push").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.push function to be registered")
+	}
+	if thoth.RawGetString("reduce").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.reduce function to be registered")
 	}
 	if thoth.RawGetString("split").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.split function to be registered")

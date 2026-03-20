@@ -17,9 +17,12 @@ func newThothLibTable(L *lua.LState) *lua.LTable {
 	thoth.RawSetString("any", L.NewFunction(luaThothAny))
 	thoth.RawSetString("contains", L.NewFunction(luaThothContains))
 	thoth.RawSetString("ends_with", L.NewFunction(luaThothEndsWith))
+	thoth.RawSetString("filter", L.NewFunction(luaThothFilter))
 	thoth.RawSetString("find", L.NewFunction(luaThothFind))
 	thoth.RawSetString("is_empty", L.NewFunction(luaThothIsEmpty))
+	thoth.RawSetString("map", L.NewFunction(luaThothMap))
 	thoth.RawSetString("push", L.NewFunction(luaThothPush))
+	thoth.RawSetString("reduce", L.NewFunction(luaThothReduce))
 	thoth.RawSetString("split", L.NewFunction(luaThothSplit))
 	thoth.RawSetString("sort_keys", L.NewFunction(luaThothSortKeys))
 	thoth.RawSetString("trim", L.NewFunction(luaThothTrim))
@@ -119,6 +122,60 @@ func luaThothAny(L *lua.LState) int {
 		L.Pop(1)
 	})
 	L.Push(lua.LBool(found))
+	return 1
+}
+
+func luaThothMap(L *lua.LState) int {
+	list := L.CheckTable(1)
+	fn := L.CheckFunction(2)
+	out := L.NewTable()
+	list.ForEach(func(_, item lua.LValue) {
+		L.Push(fn)
+		L.Push(item)
+		if err := L.PCall(1, 1, nil); err != nil {
+			panic(err)
+		}
+		out.Append(L.Get(-1))
+		L.Pop(1)
+	})
+	L.Push(out)
+	return 1
+}
+
+func luaThothFilter(L *lua.LState) int {
+	list := L.CheckTable(1)
+	fn := L.CheckFunction(2)
+	out := L.NewTable()
+	list.ForEach(func(_, item lua.LValue) {
+		L.Push(fn)
+		L.Push(item)
+		if err := L.PCall(1, 1, nil); err != nil {
+			panic(err)
+		}
+		if lua.LVAsBool(L.Get(-1)) {
+			out.Append(item)
+		}
+		L.Pop(1)
+	})
+	L.Push(out)
+	return 1
+}
+
+func luaThothReduce(L *lua.LState) int {
+	list := L.CheckTable(1)
+	acc := L.CheckAny(2)
+	fn := L.CheckFunction(3)
+	list.ForEach(func(_, item lua.LValue) {
+		L.Push(fn)
+		L.Push(acc)
+		L.Push(item)
+		if err := L.PCall(2, 1, nil); err != nil {
+			panic(err)
+		}
+		acc = L.Get(-1)
+		L.Pop(1)
+	})
+	L.Push(acc)
 	return 1
 }
 
