@@ -75,6 +75,68 @@ func TestLuaThothEndsWith(t *testing.T) {
 	}
 }
 
+func TestLuaThothStartsWith(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name   string
+		s      string
+		prefix string
+		want   bool
+	}{
+		{
+			name:   "match prefix",
+			s:      "internal/metafile/write.go",
+			prefix: "internal/",
+			want:   true,
+		},
+		{
+			name:   "reject non matching prefix",
+			s:      "internal/metafile/write.go",
+			prefix: "script/",
+			want:   false,
+		},
+		{
+			name:   "empty prefix matches",
+			s:      "write.go",
+			prefix: "",
+			want:   true,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			L := lua.NewState()
+			defer L.Close()
+
+			L.Push(lua.LString(tc.s))
+			L.Push(lua.LString(tc.prefix))
+
+			gotN := luaThothStartsWith(L)
+			if gotN != 1 {
+				t.Fatalf("expected 1 return value, got %d", gotN)
+			}
+
+			got, ok := L.Get(-1).(lua.LBool)
+			if !ok {
+				t.Fatalf("expected boolean result, got %T", L.Get(-1))
+			}
+			if bool(got) != tc.want {
+				t.Fatalf(
+					"luaThothStartsWith(%q, %q) = %v, want %v",
+					tc.s,
+					tc.prefix,
+					bool(got),
+					tc.want,
+				)
+			}
+		})
+	}
+}
+
 func TestLuaThothCopy(t *testing.T) {
 	t.Parallel()
 
@@ -696,6 +758,9 @@ func TestInstallThothLib(t *testing.T) {
 	}
 	if thoth.RawGetString("sort_values").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.sort_values function to be registered")
+	}
+	if thoth.RawGetString("starts_with").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.starts_with function to be registered")
 	}
 	if thoth.RawGetString("trim").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.trim function to be registered")

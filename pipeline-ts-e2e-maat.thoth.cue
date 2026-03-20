@@ -13,10 +13,10 @@
 
   filter: {
     inline: """
-      return string.sub(locator, 1, 11) == "script/e2e/"
+      return thoth.starts_with(locator, "script/e2e/")
         and (
-          string.sub(locator, -8) == ".test.ts"
-          or string.sub(locator, -9) == ".suite.ts"
+          thoth.ends_with(locator, ".test.ts")
+          or thoth.ends_with(locator, ".suite.ts")
         )
       """
   }

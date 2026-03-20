@@ -29,6 +29,7 @@ func newThothLibTable(L *lua.LState) *lua.LTable {
 	thoth.RawSetString("split", L.NewFunction(luaThothSplit))
 	thoth.RawSetString("sort_keys", L.NewFunction(luaThothSortKeys))
 	thoth.RawSetString("sort_values", L.NewFunction(luaThothSortValues))
+	thoth.RawSetString("starts_with", L.NewFunction(luaThothStartsWith))
 	thoth.RawSetString("trim", L.NewFunction(luaThothTrim))
 	return thoth
 }
@@ -37,6 +38,13 @@ func luaThothEndsWith(L *lua.LState) int {
 	s := L.CheckString(1)
 	suffix := L.CheckString(2)
 	L.Push(lua.LBool(strings.HasSuffix(s, suffix)))
+	return 1
+}
+
+func luaThothStartsWith(L *lua.LState) int {
+	s := L.CheckString(1)
+	prefix := L.CheckString(2)
+	L.Push(lua.LBool(strings.HasPrefix(s, prefix)))
 	return 1
 }
 

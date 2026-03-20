@@ -13,8 +13,8 @@
 
   filter: {
     inline: """
-      return string.sub(locator, -3) == ".go"
-        and string.sub(locator, -8) ~= "_test.go"
+      return thoth.ends_with(locator, ".go")
+        and not thoth.ends_with(locator, "_test.go")
       """
   }
 
@@ -43,20 +43,12 @@
 
   postMap: {
     inline: """
-      local function getKeysSorted(t)
-        local keys = {}
-        for key, _ in pairs(t) do
-          table.insert(keys, key)
-        end
-        table.sort(keys)
-        return keys
-      end
       local rules = shell and shell.json and shell.json.rules or {}
       return {
         meta = {
           language = mapped and mapped.language or "go",
           import_files_list = rules.import_files_list or {},
-          function_list = getKeysSorted(rules.function_map or  {}),
+          function_list = thoth.sort_keys(rules.function_map or {}),
         },
       }
       """
