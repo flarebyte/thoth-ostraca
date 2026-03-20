@@ -189,6 +189,120 @@ func TestLuaThothPush(t *testing.T) {
 	}
 }
 
+func TestLuaThothSplit(t *testing.T) {
+	t.Parallel()
+
+	L := lua.NewState()
+	defer L.Close()
+
+	L.Push(lua.LString("alpha,beta,gamma"))
+	L.Push(lua.LString(","))
+
+	gotN := luaThothSplit(L)
+	if gotN != 1 {
+		t.Fatalf("expected 1 return value, got %d", gotN)
+	}
+
+	gotTbl, ok := L.Get(-1).(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.Get(-1))
+	}
+	want := []string{"alpha", "beta", "gamma"}
+	for i, exp := range want {
+		if gotTbl.RawGetInt(i+1).String() != exp {
+			t.Fatalf(
+				"split[%d] = %q, want %q",
+				i,
+				gotTbl.RawGetInt(i+1).String(),
+				exp,
+			)
+		}
+	}
+}
+
+func TestLuaThothTrim(t *testing.T) {
+	t.Parallel()
+
+	L := lua.NewState()
+	defer L.Close()
+
+	L.Push(lua.LString("  alpha beta  \n"))
+
+	gotN := luaThothTrim(L)
+	if gotN != 1 {
+		t.Fatalf("expected 1 return value, got %d", gotN)
+	}
+
+	got, ok := L.Get(-1).(lua.LString)
+	if !ok {
+		t.Fatalf("expected string result, got %T", L.Get(-1))
+	}
+	if string(got) != "alpha beta" {
+		t.Fatalf("trim = %q, want %q", string(got), "alpha beta")
+	}
+}
+
+func TestLuaThothIsEmpty(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		name string
+		fill func(*lua.LState) *lua.LTable
+		want bool
+	}{
+		{
+			name: "empty table",
+			fill: func(L *lua.LState) *lua.LTable {
+				return L.NewTable()
+			},
+			want: true,
+		},
+		{
+			name: "array table",
+			fill: func(L *lua.LState) *lua.LTable {
+				tbl := L.NewTable()
+				tbl.Append(lua.LString("alpha"))
+				return tbl
+			},
+			want: false,
+		},
+		{
+			name: "map table",
+			fill: func(L *lua.LState) *lua.LTable {
+				tbl := L.NewTable()
+				tbl.RawSetString("alpha", lua.LString("beta"))
+				return tbl
+			},
+			want: false,
+		},
+	}
+
+	for _, tc := range cases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			L := lua.NewState()
+			defer L.Close()
+
+			L.Push(tc.fill(L))
+
+			gotN := luaThothIsEmpty(L)
+			if gotN != 1 {
+				t.Fatalf("expected 1 return value, got %d", gotN)
+			}
+
+			got, ok := L.Get(-1).(lua.LBool)
+			if !ok {
+				t.Fatalf("expected boolean result, got %T", L.Get(-1))
+			}
+			if bool(got) != tc.want {
+				t.Fatalf("is_empty = %v, want %v", bool(got), tc.want)
+			}
+		})
+	}
+}
+
 func TestInstallThothLib(t *testing.T) {
 	t.Parallel()
 
@@ -207,10 +321,19 @@ func TestInstallThothLib(t *testing.T) {
 	if thoth.RawGetString("ends_with").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.ends_with function to be registered")
 	}
+	if thoth.RawGetString("is_empty").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.is_empty function to be registered")
+	}
 	if thoth.RawGetString("push").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.push function to be registered")
 	}
+	if thoth.RawGetString("split").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.split function to be registered")
+	}
 	if thoth.RawGetString("sort_keys").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.sort_keys function to be registered")
+	}
+	if thoth.RawGetString("trim").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.trim function to be registered")
 	}
 }

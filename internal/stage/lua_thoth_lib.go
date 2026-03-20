@@ -11,8 +11,11 @@ func installThothLib(L *lua.LState) {
 	thoth := L.NewTable()
 	thoth.RawSetString("contains", L.NewFunction(luaThothContains))
 	thoth.RawSetString("ends_with", L.NewFunction(luaThothEndsWith))
+	thoth.RawSetString("is_empty", L.NewFunction(luaThothIsEmpty))
 	thoth.RawSetString("push", L.NewFunction(luaThothPush))
+	thoth.RawSetString("split", L.NewFunction(luaThothSplit))
 	thoth.RawSetString("sort_keys", L.NewFunction(luaThothSortKeys))
+	thoth.RawSetString("trim", L.NewFunction(luaThothTrim))
 	L.SetGlobal("thoth", thoth)
 }
 
@@ -61,5 +64,39 @@ func luaThothPush(L *lua.LState) int {
 	value := L.CheckAny(2)
 	list.Append(value)
 	L.Push(list)
+	return 1
+}
+
+func luaThothSplit(L *lua.LState) int {
+	s := L.CheckString(1)
+	sep := L.CheckString(2)
+	out := L.NewTable()
+	if sep == "" {
+		for _, part := range strings.Split(s, sep) {
+			out.Append(lua.LString(part))
+		}
+		L.Push(out)
+		return 1
+	}
+	for _, part := range strings.Split(s, sep) {
+		out.Append(lua.LString(part))
+	}
+	L.Push(out)
+	return 1
+}
+
+func luaThothTrim(L *lua.LState) int {
+	s := L.CheckString(1)
+	L.Push(lua.LString(strings.TrimSpace(s)))
+	return 1
+}
+
+func luaThothIsEmpty(L *lua.LState) int {
+	tbl := L.CheckTable(1)
+	empty := true
+	tbl.ForEach(func(_, _ lua.LValue) {
+		empty = false
+	})
+	L.Push(lua.LBool(empty))
 	return 1
 }
