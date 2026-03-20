@@ -76,6 +76,7 @@ func newSandboxLuaState(stage, locator string, cfg LuaSandboxMeta) *lua.LState {
 		seed := deterministicSeed(stage, locator)
 		installDeterministicRandom(L, seed)
 	}
+	installThothLib(L)
 	return L
 }
 

@@ -14,8 +14,8 @@
   filter: {
     inline: """
       return string.sub(locator, 1, 18) == "internal/metafile/"
-        and string.sub(locator, -3) == ".go"
-        and string.sub(locator, -8) ~= "_test.go"
+        and thoth.ends_with(locator, ".go")
+        and not thoth.ends_with(locator, "_test.go")
         and locator == "internal/metafile/write.go"
       """
   }

@@ -136,3 +136,26 @@ func TestLuaSandbox_OrdinaryLoopAllowedByDefault(t *testing.T) {
 		t.Fatalf("expected count=1, got %#v", mapped["count"])
 	}
 }
+
+func TestLuaSandbox_ThothEndsWith(t *testing.T) {
+	meta := defaultLuaSandboxForTest()
+	rec, _, err := processLuaMapRecord(
+		Record{Locator: "internal/metafile/write.go", Meta: map[string]any{}},
+		"return { go = thoth.ends_with(locator, '.go'), test = thoth.ends_with(locator, '_test.go') }",
+		"fail-fast",
+		meta,
+	)
+	if err != nil {
+		t.Fatalf("expected thoth.ends_with to succeed, got %v", err)
+	}
+	mapped, ok := rec.Mapped.(map[string]any)
+	if !ok {
+		t.Fatalf("expected mapped object, got %#v", rec.Mapped)
+	}
+	if mapped["go"] != true {
+		t.Fatalf("expected go=true, got %#v", mapped["go"])
+	}
+	if mapped["test"] != false {
+		t.Fatalf("expected test=false, got %#v", mapped["test"])
+	}
+}
