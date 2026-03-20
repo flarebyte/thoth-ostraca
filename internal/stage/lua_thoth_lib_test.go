@@ -75,6 +75,64 @@ func TestLuaThothEndsWith(t *testing.T) {
 	}
 }
 
+func TestLuaThothCopy(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local original = {alpha = "beta"}
+    result = thoth.copy(original)
+    original.alpha = "changed"
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	gotTbl, ok := L.GetGlobal("result").(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.GetGlobal("result"))
+	}
+	if gotTbl.RawGetString("alpha").String() != "beta" {
+		t.Fatalf(
+			"copy.alpha = %q, want %q",
+			gotTbl.RawGetString("alpha").String(),
+			"beta",
+		)
+	}
+}
+
+func TestLuaThothDeepCopy(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local original = {nested = {alpha = "beta"}}
+    result = thoth.deep_copy(original)
+    original.nested.alpha = "changed"
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	gotTbl, ok := L.GetGlobal("result").(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.GetGlobal("result"))
+	}
+	nested, ok := gotTbl.RawGetString("nested").(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected nested table, got %T", gotTbl.RawGetString("nested"))
+	}
+	if nested.RawGetString("alpha").String() != "beta" {
+		t.Fatalf(
+			"deep_copy.nested.alpha = %q, want %q",
+			nested.RawGetString("alpha").String(),
+			"beta",
+		)
+	}
+}
+
 func TestLuaThothSortKeys(t *testing.T) {
 	t.Parallel()
 
@@ -196,6 +254,36 @@ func TestLuaThothPush(t *testing.T) {
 	}
 }
 
+func TestLuaThothFlatten(t *testing.T) {
+	t.Parallel()
+
+	L := newLuaStateWithThothLib(t)
+	defer L.Close()
+
+	if err := L.DoString(`
+    local items = {"alpha", {"beta", {"gamma"}}, "delta"}
+    result = thoth.flatten(items)
+  `); err != nil {
+		t.Fatalf("unexpected lua error: %v", err)
+	}
+
+	gotTbl, ok := L.GetGlobal("result").(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.GetGlobal("result"))
+	}
+	want := []string{"alpha", "beta", "gamma", "delta"}
+	for i, exp := range want {
+		if gotTbl.RawGetInt(i+1).String() != exp {
+			t.Fatalf(
+				"flatten[%d] = %q, want %q",
+				i,
+				gotTbl.RawGetInt(i+1).String(),
+				exp,
+			)
+		}
+	}
+}
+
 func TestLuaThothSplit(t *testing.T) {
 	t.Parallel()
 
@@ -219,6 +307,41 @@ func TestLuaThothSplit(t *testing.T) {
 		if gotTbl.RawGetInt(i+1).String() != exp {
 			t.Fatalf(
 				"split[%d] = %q, want %q",
+				i,
+				gotTbl.RawGetInt(i+1).String(),
+				exp,
+			)
+		}
+	}
+}
+
+func TestLuaThothSortValues(t *testing.T) {
+	t.Parallel()
+
+	L := lua.NewState()
+	defer L.Close()
+
+	tbl := L.NewTable()
+	tbl.Append(lua.LString("beta"))
+	tbl.Append(lua.LString("alpha"))
+	tbl.Append(lua.LString("gamma"))
+
+	L.Push(tbl)
+
+	gotN := luaThothSortValues(L)
+	if gotN != 1 {
+		t.Fatalf("expected 1 return value, got %d", gotN)
+	}
+
+	gotTbl, ok := L.Get(-1).(*lua.LTable)
+	if !ok {
+		t.Fatalf("expected table result, got %T", L.Get(-1))
+	}
+	want := []string{"alpha", "beta", "gamma"}
+	for i, exp := range want {
+		if gotTbl.RawGetInt(i+1).String() != exp {
+			t.Fatalf(
+				"sort_values[%d] = %q, want %q",
 				i,
 				gotTbl.RawGetInt(i+1).String(),
 				exp,
@@ -535,6 +658,12 @@ func TestInstallThothLib(t *testing.T) {
 	if thoth.RawGetString("contains").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.contains function to be registered")
 	}
+	if thoth.RawGetString("copy").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.copy function to be registered")
+	}
+	if thoth.RawGetString("deep_copy").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.deep_copy function to be registered")
+	}
 	if thoth.RawGetString("ends_with").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.ends_with function to be registered")
 	}
@@ -543,6 +672,9 @@ func TestInstallThothLib(t *testing.T) {
 	}
 	if thoth.RawGetString("find").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.find function to be registered")
+	}
+	if thoth.RawGetString("flatten").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.flatten function to be registered")
 	}
 	if thoth.RawGetString("is_empty").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.is_empty function to be registered")
@@ -561,6 +693,9 @@ func TestInstallThothLib(t *testing.T) {
 	}
 	if thoth.RawGetString("sort_keys").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.sort_keys function to be registered")
+	}
+	if thoth.RawGetString("sort_values").Type() != lua.LTFunction {
+		t.Fatalf("expected thoth.sort_values function to be registered")
 	}
 	if thoth.RawGetString("trim").Type() != lua.LTFunction {
 		t.Fatalf("expected thoth.trim function to be registered")

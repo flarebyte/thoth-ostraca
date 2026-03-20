@@ -16,15 +16,19 @@ func newThothLibTable(L *lua.LState) *lua.LTable {
 	thoth.RawSetString("all", L.NewFunction(luaThothAll))
 	thoth.RawSetString("any", L.NewFunction(luaThothAny))
 	thoth.RawSetString("contains", L.NewFunction(luaThothContains))
+	thoth.RawSetString("copy", L.NewFunction(luaThothCopy))
+	thoth.RawSetString("deep_copy", L.NewFunction(luaThothDeepCopy))
 	thoth.RawSetString("ends_with", L.NewFunction(luaThothEndsWith))
 	thoth.RawSetString("filter", L.NewFunction(luaThothFilter))
 	thoth.RawSetString("find", L.NewFunction(luaThothFind))
+	thoth.RawSetString("flatten", L.NewFunction(luaThothFlatten))
 	thoth.RawSetString("is_empty", L.NewFunction(luaThothIsEmpty))
 	thoth.RawSetString("map", L.NewFunction(luaThothMap))
 	thoth.RawSetString("push", L.NewFunction(luaThothPush))
 	thoth.RawSetString("reduce", L.NewFunction(luaThothReduce))
 	thoth.RawSetString("split", L.NewFunction(luaThothSplit))
 	thoth.RawSetString("sort_keys", L.NewFunction(luaThothSortKeys))
+	thoth.RawSetString("sort_values", L.NewFunction(luaThothSortValues))
 	thoth.RawSetString("trim", L.NewFunction(luaThothTrim))
 	return thoth
 }
@@ -33,6 +37,18 @@ func luaThothEndsWith(L *lua.LState) int {
 	s := L.CheckString(1)
 	suffix := L.CheckString(2)
 	L.Push(lua.LBool(strings.HasSuffix(s, suffix)))
+	return 1
+}
+
+func luaThothCopy(L *lua.LState) int {
+	tbl := L.CheckTable(1)
+	L.Push(copyLuaTableShallow(L, tbl))
+	return 1
+}
+
+func luaThothDeepCopy(L *lua.LState) int {
+	tbl := L.CheckTable(1)
+	L.Push(copyLuaValueDeep(L, tbl))
 	return 1
 }
 
@@ -74,6 +90,14 @@ func luaThothPush(L *lua.LState) int {
 	value := L.CheckAny(2)
 	list.Append(value)
 	L.Push(list)
+	return 1
+}
+
+func luaThothFlatten(L *lua.LState) int {
+	list := L.CheckTable(1)
+	out := L.NewTable()
+	flattenInto(L, out, list)
+	L.Push(out)
 	return 1
 }
 
@@ -221,6 +245,23 @@ func luaThothSplit(L *lua.LState) int {
 	return 1
 }
 
+func luaThothSortValues(L *lua.LState) int {
+	tbl := L.CheckTable(1)
+	values := make([]string, 0)
+	tbl.ForEach(func(_, value lua.LValue) {
+		if value.Type() == lua.LTString {
+			values = append(values, value.String())
+		}
+	})
+	sort.Strings(values)
+	out := L.NewTable()
+	for _, value := range values {
+		out.Append(lua.LString(value))
+	}
+	L.Push(out)
+	return 1
+}
+
 func luaThothTrim(L *lua.LState) int {
 	s := L.CheckString(1)
 	L.Push(lua.LString(strings.TrimSpace(s)))
@@ -235,4 +276,34 @@ func luaThothIsEmpty(L *lua.LState) int {
 	})
 	L.Push(lua.LBool(empty))
 	return 1
+}
+
+func copyLuaTableShallow(L *lua.LState, tbl *lua.LTable) *lua.LTable {
+	out := L.NewTable()
+	tbl.ForEach(func(key, value lua.LValue) {
+		out.RawSet(key, value)
+	})
+	return out
+}
+
+func copyLuaValueDeep(L *lua.LState, value lua.LValue) lua.LValue {
+	tbl, ok := value.(*lua.LTable)
+	if !ok {
+		return value
+	}
+	out := L.NewTable()
+	tbl.ForEach(func(key, inner lua.LValue) {
+		out.RawSet(copyLuaValueDeep(L, key), copyLuaValueDeep(L, inner))
+	})
+	return out
+}
+
+func flattenInto(L *lua.LState, out *lua.LTable, list *lua.LTable) {
+	list.ForEach(func(_, value lua.LValue) {
+		if inner, ok := value.(*lua.LTable); ok {
+			flattenInto(L, out, inner)
+			return
+		}
+		out.Append(value)
+	})
 }
