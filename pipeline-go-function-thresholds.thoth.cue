@@ -89,6 +89,51 @@
       """
   }
 
+  reduce: {
+    inline: """
+      local function worseFirst(a, b)
+        if a.cognitiveComplexity ~= b.cognitiveComplexity then
+          return a.cognitiveComplexity > b.cognitiveComplexity
+        end
+        if a.tokens ~= b.tokens then
+          return a.tokens > b.tokens
+        end
+        if a.locator ~= b.locator then
+          return a.locator < b.locator
+        end
+        return a.name < b.name
+      end
+
+      local out = acc or {
+        filesWithFlags = 0,
+        flaggedFunctions = 0,
+        worstOffenders = {},
+      }
+      local flagged = item and item.flaggedFunctions or {}
+
+      if #flagged > 0 then
+        out.filesWithFlags = (out.filesWithFlags or 0) + 1
+      end
+
+      for _, fn in ipairs(flagged) do
+        thoth.push(out.worstOffenders, {
+          locator = item.locator,
+          name = fn.name,
+          cognitiveComplexity = fn.cognitiveComplexity,
+          cyclomaticComplexity = fn.cyclomaticComplexity,
+          tokens = fn.tokens,
+          loc = fn.loc,
+          sloc = fn.sloc,
+        })
+        out.flaggedFunctions = (out.flaggedFunctions or 0) + 1
+      end
+
+      table.sort(out.worstOffenders, worseFirst)
+
+      return out
+      """
+  }
+
   output: {
     out: "./temp/pipeline-go-function-thresholds.json"
     pretty: true
