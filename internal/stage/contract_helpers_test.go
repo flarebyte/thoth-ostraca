@@ -80,7 +80,7 @@ func selectStages(action string) ([]string, error) {
 	case "pipeline", "nop":
 		return []string{"discover-meta-files", "parse-validate-yaml", "validate-locators", "lua-filter", "lua-map", "shell-exec", "lua-postmap", "lua-reduce"}, nil
 	case "input-pipeline":
-		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "lua-filter", "lua-map", "shell-exec", "lua-postmap"}, nil
+		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "lua-filter", "lua-map", "shell-exec", "lua-postmap", "lua-reduce"}, nil
 	case "validate":
 		return []string{"discover-meta-files", "parse-validate-yaml", "validate-locators"}, nil
 	case "create-meta":

@@ -127,6 +127,20 @@ test('thoth run input-pipeline allows ordinary Lua postMap loops', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run input-pipeline supports reduce', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_reduce1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_reduce1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
 test('thoth run input-pipeline fails on invalid shell JSON when decoding is enabled', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

@@ -47,6 +47,16 @@
 
   postMap: {
     inline: """
+      local function worseFirst(a, b)
+        if a.cognitiveComplexity ~= b.cognitiveComplexity then
+          return a.cognitiveComplexity > b.cognitiveComplexity
+        end
+        if a.tokens ~= b.tokens then
+          return a.tokens > b.tokens
+        end
+        return a.name < b.name
+      end
+
       local rules = shell and shell.json and shell.json.rules or {}
       local functionMap = rules.function_map or {}
       local flagged = {}
@@ -68,6 +78,8 @@
           })
         end
       end
+
+      table.sort(flagged, worseFirst)
 
       return {
         locator = locator,

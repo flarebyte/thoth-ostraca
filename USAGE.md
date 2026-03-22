@@ -72,6 +72,7 @@ What `input-pipeline` can do:
 - map them with `lua-map`
 - run `shell-exec` per file
 - consume decoded shell JSON in `postMap`
+- reduce records with `lua-reduce`
 - emit JSON output
 - write/update `.thoth.yaml` sidecars
 - write sidecars to a dedicated output directory
@@ -80,7 +81,6 @@ What `input-pipeline` can do:
 
 What is still narrower than the broader design:
 
-- `input-pipeline` does not currently include `reduce`
 - `create-meta` and `update-meta` remain narrower metadata maintenance actions
 - shell JSON decoding is opt-in via `shell.decodeJsonStdout`
 

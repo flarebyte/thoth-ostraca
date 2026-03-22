@@ -35,6 +35,9 @@ func PreparedActionStages(action string, meta *stage.Meta) ([]string, error) {
 			"shell-exec",
 			"lua-postmap",
 		)
+		if reduceEnabled(meta) {
+			stages = append(stages, "lua-reduce")
+		}
 		if persistMetaEnabled(meta) {
 			stages = append(stages,
 				"load-existing-meta",
@@ -95,4 +98,10 @@ func gitEnabled(meta *stage.Meta) bool {
 
 func persistMetaEnabled(meta *stage.Meta) bool {
 	return meta != nil && meta.PersistMeta != nil && meta.PersistMeta.Enabled
+}
+
+func reduceEnabled(meta *stage.Meta) bool {
+	return meta != nil &&
+		meta.Lua != nil &&
+		meta.Lua.ReduceInline != ""
 }
