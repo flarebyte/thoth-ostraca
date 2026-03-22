@@ -13,8 +13,7 @@
 
   filter: {
     inline: """
-      return thoth.starts_with(locator, "internal/")
-        and thoth.ends_with(locator, ".go")
+      return thoth.ends_with(locator, ".go")
         and not thoth.ends_with(locator, "_test.go")
       """
   }
