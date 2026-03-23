@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide test-only helpers that build temporary config files and execute validate-config in unit tests.
+// Responsibilities:
+// - Write inline config content to a temporary fixture path under temp/.
+// - Build the minimal input envelope needed by the validate-config stage.
+// - Invoke the stage runner and return its result to tests.
+// Architecture notes:
+// - This helper is production code only because Go test files in this package reuse it across multiple suites.
+// - It writes to temp/ rather than t.TempDir so existing test fixtures and golden expectations can refer to stable relative paths when needed.
 package stage
 
 import (

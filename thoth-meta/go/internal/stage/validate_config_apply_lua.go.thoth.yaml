@@ -1,8 +1,16 @@
 locator: internal/stage/validate_config_apply_lua.go
 meta:
+  architecture_notes:
+    - Lua stage code and Lua sandbox settings are kept separate because script presence and sandbox tuning evolve independently.
+    - Sandbox defaults are rehydrated here when the section exists so partial config blocks still get a complete runtime contract.
   function_list:
     - applyLuaMeta
     - applyLuaSandboxMeta
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/internal/config
   language: go
+  purpose: Copy parsed Lua stage and Lua sandbox settings from config into runtime metadata.
+  responsibilities:
+    - Apply filter, map, postMap, and reduce inline Lua code to the envelope metadata.
+    - Apply sandbox limits and library toggles while preserving defaults for omitted fields.
+    - Initialize Lua-related metadata sections only when the config actually uses them.

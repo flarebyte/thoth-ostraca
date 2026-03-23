@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Turn raw Lua errors into more actionable messages by extracting line numbers and short source excerpts.
+// Responsibilities:
+// - Detect Lua line references in runtime or compile error text.
+// - Slice a compact surrounding code excerpt for the failing line.
+// - Return a sanitized multiline error message for stage error reporting.
+// Architecture notes:
+// - This formatter intentionally enriches only the error string; it avoids introducing a larger diagnostic object so Lua stage changes stay small.
+// - Excerpts are capped to a tiny window around the failing line to keep record errors readable inside JSON output.
 package stage
 
 import (

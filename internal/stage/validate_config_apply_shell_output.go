@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Copy shell-exec and output serialization config into the runtime metadata contract.
+// Responsibilities:
+// - Apply shell program, args, capture, templating, and timeout settings.
+// - Rehydrate shell defaults for omitted values when the shell section is present.
+// - Apply output path and formatting settings for final JSON emission.
+// Architecture notes:
+// - Shell and output settings share this file because both are edge-of-pipeline runtime I/O concerns and mostly involve defaulting.
+// - Defaulting happens here rather than in stage runners so runtime stages can assume a complete shell/output contract.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"

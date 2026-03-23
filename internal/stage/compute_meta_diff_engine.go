@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the pure diff engine used by diff-meta to compare existing and expected metadata deterministically.
+// Responsibilities:
+// - Compare nested maps, arrays, and scalar values and classify additions, removals, changes, and type changes.
+// - Produce summary, detailed, and JSON-patch diff representations from the same comparison logic.
+// - Normalize and sort diff artifacts so reports remain stable across runs.
+// Architecture notes:
+// - This file is intentionally pure and report-oriented; it has no envelope or stage concerns so diff logic can be tested in isolation.
+// - Array changes are tracked separately from map-key changes because the CLI needs stable summaries without flattening every array diff into pseudo-keys.
 package stage
 
 import (

@@ -1,5 +1,8 @@
 locator: cmd/thoth/run/pipeline_helpers.go
 meta:
+  architecture_notes:
+    - These helpers keep pipeline.go focused on action decisions instead of repeating stage loop boilerplate.
+    - Progress wrapping is injected here so stage implementations remain unaware of CLI-specific reporting behavior.
   function_list:
     - runStage
     - runStages
@@ -8,3 +11,8 @@ meta:
     - github.com/flarebyte/thoth-ostraca/internal/stage
     - os
   language: go
+  purpose: Provide the small helpers that run one or many stage names under the `thoth run` command.
+  responsibilities:
+    - Execute an ordered list of stage names in sequence.
+    - Route individual stage execution through the progress reporter when enabled.
+    - Supply the shared stage dependencies used by CLI runs.

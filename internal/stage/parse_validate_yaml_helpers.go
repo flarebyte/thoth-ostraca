@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the shared file-reading and YAML validation helpers used by parse-validate-yaml and other file-oriented stages.
+// Responsibilities:
+// - Resolve the effective discovery root and YAML-related config limits from the envelope.
+// - Read one YAML file, enforce size and top-level schema rules, and return locator/meta pairs.
+// - Convert read and validation failures into stable stage errors for keep-going mode.
+// Architecture notes:
+// - Root resolution lives here because multiple stages need the same discovery-root fallback semantics.
+// - YAML validation intentionally stays minimal and structural; richer metadata semantics are handled by later stages such as locator validation or diffing.
 package stage
 
 import (

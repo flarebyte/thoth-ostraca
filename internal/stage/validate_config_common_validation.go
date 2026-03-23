@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Enforce cross-section config rules that must hold before stage metadata is applied or execution begins.
+// Responsibilities:
+// - Validate shared numeric bounds such as workers and in-memory limits.
+// - Validate cross-field shell and persistMeta requirements.
+// - Reject malformed include/exclude patterns before any stage is built.
+// Architecture notes:
+// - This validation intentionally focuses on shared semantic rules that the schema alone cannot express cleanly.
+// - The checks stay action-aware so unsupported feature combinations fail at config-validation time rather than deep in stage execution.
 package stage
 
 import (

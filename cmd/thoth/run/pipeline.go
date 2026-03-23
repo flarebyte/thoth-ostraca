@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Orchestrate `thoth run` from config validation through action dispatch and any special-case streaming pipeline behavior.
+// Responsibilities:
+// - Validate the config first and derive the requested action and runtime metadata.
+// - Dispatch to the correct action pipeline and stage order.
+// - Enforce buffered versus streaming output constraints for meta-file pipelines.
+// Architecture notes:
+// - Config validation always runs first so later stage selection can depend on normalized runtime metadata rather than reparsing config in multiple places.
+// - Streaming NDJSON is limited to the legacy meta pipeline because reduce and file-persistence paths need buffered envelope state.
 package run
 
 import (

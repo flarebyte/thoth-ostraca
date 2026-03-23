@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Run the Lua filter stage over records and keep only those whose predicate returns true.
+// Responsibilities:
+// - Build the configured Lua predicate for the current envelope.
+// - Evaluate the predicate across records in parallel and collect keep/reject decisions.
+// - Preserve filtered input metadata for diff-meta after record selection changes.
+// Architecture notes:
+// - The stage keeps index-position bookkeeping separate from output assembly so parallel evaluation can remain fast while final record order stays deterministic.
+// - diff-meta updates meta.inputs here because later diff stages read the filtered locator set from envelope metadata, not directly from records.
 package stage
 
 import (

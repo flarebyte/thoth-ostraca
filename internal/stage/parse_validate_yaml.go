@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse discovered .thoth.yaml files into validated record metadata for meta-file pipeline actions.
+// Responsibilities:
+// - Run YAML read/parse/validate work across discovered records with worker parallelism.
+// - Preserve keep-going behavior by separating successful and failed records.
+// - Rebuild the output record set in deterministic locator order.
+// Architecture notes:
+// - This stage owns the concurrency and cancellation loop because YAML parsing needs a fail-fast mode that can stop workers early.
+// - Successful records are rebuilt from parsed locator/meta pairs so invalid input files cannot leak partially parsed metadata into downstream stages.
 package stage
 
 import (

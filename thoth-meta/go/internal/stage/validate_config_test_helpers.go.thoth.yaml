@@ -1,5 +1,8 @@
 locator: internal/stage/validate_config_test_helpers.go
 meta:
+  architecture_notes:
+    - This helper is production code only because Go test files in this package reuse it across multiple suites.
+    - It writes to temp/ rather than t.TempDir so existing test fixtures and golden expectations can refer to stable relative paths when needed.
   function_list:
     - runValidateConfigWithContent
   import_files_list:
@@ -8,3 +11,8 @@ meta:
     - path/filepath
     - testing
   language: go
+  purpose: Provide test-only helpers that build temporary config files and execute validate-config in unit tests.
+  responsibilities:
+    - Write inline config content to a temporary fixture path under temp/.
+    - Build the minimal input envelope needed by the validate-config stage.
+    - Invoke the stage runner and return its result to tests.

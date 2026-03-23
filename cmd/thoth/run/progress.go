@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Emit user-visible progress lines for `thoth run` without altering the JSON output contract.
+// Responsibilities:
+// - Decide whether progress reporting is enabled from UI metadata.
+// - Wrap stage execution with start, done, and failed progress events.
+// - Render stable progress lines to stderr and compute rejected counts.
+// Architecture notes:
+// - Progress formatting lives in the CLI layer rather than the stage package so runtime stages only depend on the abstract reporter interface.
+// - The emitted line format is intentionally stable and simple because acceptance tests assert it directly.
 package run
 
 import (

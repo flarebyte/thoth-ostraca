@@ -1,5 +1,8 @@
 locator: cmd/thoth/run/action_stages.go
 meta:
+  architecture_notes:
+    - Action stage order is intentionally hard-coded here so changes to user-visible workflow require a deliberate review rather than emerging from config shape alone.
+    - Helper predicates keep this file focused on orchestration decisions rather than repeating metadata field checks inline.
   function_list:
     - PreparedActionStages
     - fileInfoEnabled
@@ -11,3 +14,8 @@ meta:
     - fmt
     - github.com/flarebyte/thoth-ostraca/internal/stage
   language: go
+  purpose: Define the stage order for each `thoth run` action so the CLI can build deterministic execution pipelines from validated config.
+  responsibilities:
+    - Map each supported action name to its ordered list of stage names.
+    - Enable or skip optional stages based on runtime metadata flags.
+    - Keep action wiring decisions centralized and explicit.

@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Hold shared validate-config defaults and the top-level function that projects parsed config into runtime metadata.
+// Responsibilities:
+// - Define runtime default constants used by config application helpers.
+// - Deep-copy generic config values before attaching them to the envelope.
+// - Coordinate the concern-specific apply* helpers into one metadata projection pass.
+// Architecture notes:
+// - Default constants live here so all apply helpers share one source of truth instead of embedding fallback values in multiple files.
+// - applyMinimalToMeta is intentionally orchestration-only; detailed field logic is delegated to smaller helper files to keep config growth manageable.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"

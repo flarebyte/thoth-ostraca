@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the small helpers that run one or many stage names under the `thoth run` command.
+// Responsibilities:
+// - Execute an ordered list of stage names in sequence.
+// - Route individual stage execution through the progress reporter when enabled.
+// - Supply the shared stage dependencies used by CLI runs.
+// Architecture notes:
+// - These helpers keep pipeline.go focused on action decisions instead of repeating stage loop boilerplate.
+// - Progress wrapping is injected here so stage implementations remain unaware of CLI-specific reporting behavior.
 package run
 
 import (

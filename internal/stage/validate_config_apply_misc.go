@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Copy the remaining non-shell runtime config sections into metadata after minimal config parsing succeeds.
+// Responsibilities:
+// - Apply persistence, update-meta, and diff-meta settings.
+// - Apply errors, fileInfo, git, workers, UI, and locator policy settings.
+// - Rehydrate section defaults where actions require a full runtime struct.
+// Architecture notes:
+// - These helpers are grouped as “misc” because they are independent knobs whose only shared job is metadata projection, not shared runtime behavior.
+// - DiffMeta defaults are reset explicitly here so each validated config starts from a known report contract even when fields are omitted.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"

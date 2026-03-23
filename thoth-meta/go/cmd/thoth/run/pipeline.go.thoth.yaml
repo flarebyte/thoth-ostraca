@@ -1,5 +1,8 @@
 locator: cmd/thoth/run/pipeline.go
 meta:
+  architecture_notes:
+    - Config validation always runs first so later stage selection can depend on normalized runtime metadata rather than reparsing config in multiple places.
+    - Streaming NDJSON is limited to the legacy meta pipeline because reduce and file-persistence paths need buffered envelope state.
   function_list:
     - enforceBufferedRecordLimit
     - executeMetaPipeline
@@ -15,3 +18,8 @@ meta:
     - github.com/flarebyte/thoth-ostraca/internal/stage
     - os
   language: go
+  purpose: Orchestrate `thoth run` from config validation through action dispatch and any special-case streaming pipeline behavior.
+  responsibilities:
+    - Validate the config first and derive the requested action and runtime metadata.
+    - Dispatch to the correct action pipeline and stage order.
+    - Enforce buffered versus streaming output constraints for meta-file pipelines.

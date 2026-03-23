@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Copy validated discovery, validation, and limits config fields into the runtime envelope metadata model.
+// Responsibilities:
+// - Apply discovery root and include/exclude settings when present in the parsed config.
+// - Apply validation flags such as allowUnknownTopLevel.
+// - Apply memory and YAML size limits with the runtime defaults preserved elsewhere.
+// Architecture notes:
+// - Config application is split by concern so schema growth does not force one monolithic applyMinimalToMeta function.
+// - These helpers only copy parsed values; validation of those values belongs in validate_config_common_validation.go.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"

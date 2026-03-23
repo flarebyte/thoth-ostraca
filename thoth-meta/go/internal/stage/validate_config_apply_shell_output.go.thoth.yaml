@@ -1,8 +1,16 @@
 locator: internal/stage/validate_config_apply_shell_output.go
 meta:
+  architecture_notes:
+    - Shell and output settings share this file because both are edge-of-pipeline runtime I/O concerns and mostly involve defaulting.
+    - Defaulting happens here rather than in stage runners so runtime stages can assume a complete shell/output contract.
   function_list:
     - applyOutputMeta
     - applyShellMeta
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/internal/config
   language: go
+  purpose: Copy shell-exec and output serialization config into the runtime metadata contract.
+  responsibilities:
+    - Apply shell program, args, capture, templating, and timeout settings.
+    - Rehydrate shell defaults for omitted values when the shell section is present.
+    - Apply output path and formatting settings for final JSON emission.

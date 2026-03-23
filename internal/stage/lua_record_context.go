@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Build the structured Lua-visible record context shared by filter, map, postMap, and reduce scripts.
+// Responsibilities:
+// - Expose locator, meta, fileInfo, and git fields in a consistent object shape.
+// - Normalize nested fileInfo and git values into plain Lua-friendly maps.
+// - Omit unavailable optional sections to keep the script contract compact.
+// Architecture notes:
+// - This context intentionally mirrors only stable record fields; transient shell or postMap state is provided separately by the calling stage.
+// - Git and fileInfo are converted to plain maps here so each Lua stage does not need to duplicate shape-conversion logic.
 package stage
 
 func luaRecordContext(rec Record) map[string]any {

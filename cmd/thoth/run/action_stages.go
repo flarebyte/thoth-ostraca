@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Define the stage order for each `thoth run` action so the CLI can build deterministic execution pipelines from validated config.
+// Responsibilities:
+// - Map each supported action name to its ordered list of stage names.
+// - Enable or skip optional stages based on runtime metadata flags.
+// - Keep action wiring decisions centralized and explicit.
+// Architecture notes:
+// - Action stage order is intentionally hard-coded here so changes to user-visible workflow require a deliberate review rather than emerging from config shape alone.
+// - Helper predicates keep this file focused on orchestration decisions rather than repeating metadata field checks inline.
 package run
 
 import (
