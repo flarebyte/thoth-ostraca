@@ -83,5 +83,8 @@ What is still narrower than the broader design:
 
 - `create-meta` and `update-meta` remain narrower metadata maintenance actions
 - shell JSON decoding is opt-in via `shell.decodeJsonStdout`
+- `diff-meta` now supports `lua-filter` on input files; orphan meta reporting
+  still scans the full discovered meta-file set, so filtered-out paired files
+  can appear as orphans
 
 That is the main gap between the current metadata actions and the broader file-processing workflow.

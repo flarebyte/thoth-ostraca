@@ -11,7 +11,7 @@ Recipes-first quick reference. See `README.md` for full concepts.
 | `validate`         | existing `.thoth.yaml` meta files |     no |  no |    no |      no |     no |               no |         yes |
 | `create-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
 | `update-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
-| `diff-meta`        | input files + existing meta files |     no |  no |    no |      no |     no |               no |         yes |
+| `diff-meta`        | input files + existing meta files |    yes |  no |    no |      no |     no |               no |         yes |
 
 Notes:
 
@@ -23,6 +23,9 @@ Notes:
 - `create-meta` and `update-meta` are narrower metadata maintenance actions.
   `create-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
   `update-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
+- `diff-meta` now supports `lua-filter` on input files. Orphan meta reporting
+  still reflects the full discovered meta-file set under the chosen root, so
+  filtered-out paired files can become reported as orphans.
 
 ## Top 10 Commands / Workflows
 

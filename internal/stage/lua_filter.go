@@ -39,6 +39,13 @@ func luaFilterRunner(ctx context.Context, in Envelope, deps Deps) (Envelope, err
 			out.Records = append(out.Records, outs[i])
 		}
 	}
+	if out.Meta != nil && out.Meta.Config != nil && out.Meta.Config.Action == "diff-meta" {
+		inputs := make([]string, 0, len(out.Records))
+		for _, rec := range out.Records {
+			inputs = append(inputs, rec.Locator)
+		}
+		out.Meta.Inputs = inputs
+	}
 	return out, nil
 }
 

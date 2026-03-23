@@ -81,14 +81,20 @@ func PreparedActionStages(action string, meta *stage.Meta) ([]string, error) {
 		stages = append(stages, "load-existing-meta", "merge-meta", "write-updated-meta-files", "write-output")
 		return stages, nil
 	case "diff-meta":
-		return []string{
+		stages := []string{
 			"discover-input-files",
+		}
+		if filterEnabled(meta) {
+			stages = append(stages, "lua-filter")
+		}
+		stages = append(stages,
 			"discover-meta-files",
 			"parse-validate-yaml",
 			"validate-locators",
 			"compute-meta-diff",
 			"write-output",
-		}, nil
+		)
+		return stages, nil
 	default:
 		return nil, fmt.Errorf("invalid action")
 	}
