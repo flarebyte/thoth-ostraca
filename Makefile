@@ -87,6 +87,9 @@ thoth-lint-go:
 	./.e2e-bin/thoth run --config ./pipeline-go-function-thresholds.thoth.cue
 	cat temp/pipeline-go-function-thresholds.json | jq '.meta.reduced.worstOffenders'
 
+thoth-meta-merge:
+	./.e2e-bin/thoth run --config ./pipeline-thoth-meta-aggregate.thoth.cue
+	
 help:
 	@printf "Targets:\n"
 	@printf "  (requires: go, bun, golangci-lint, biome)\n"
