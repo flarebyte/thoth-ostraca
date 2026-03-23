@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Assemble and expose CLI build/version metadata in one compatibility-friendly place.
+// Responsibilities:
+// - Hold overridable build-time variables such as version, commit, and date.
+// - Fall back to cli package values when external build scripts inject metadata there.
+// - Format a concise one-line version summary for CLI output.
+// Architecture notes:
+// - The fallback to cli.Version and cli.Date is intentional compatibility glue for existing build scripts.
+// - Summary trims commit hashes and omits empty fields to keep version output stable and compact.
 package buildinfo
 
 import (

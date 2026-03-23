@@ -1,6 +1,14 @@
 locator: internal/stage/errors.go
 meta:
+  architecture_notes:
+    - errorMode centralizes defaulting so stage runners do not drift on fail-fast semantics.
+    - RecError intentionally stays smaller than envelope Error because the locator already lives on the record.
   function_list:
     - errorMode
   import_files_list: []
   language: go
+  purpose: Define the minimal per-record error payload and the shared error-mode switch.
+  responsibilities:
+    - Describe the embedded record error shape.
+    - Resolve fail-fast vs keep-going behavior from envelope meta.
+    - Expose whether record errors should be embedded.

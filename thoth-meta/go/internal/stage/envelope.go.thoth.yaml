@@ -1,7 +1,16 @@
 locator: internal/stage/envelope.go
 meta:
+  architecture_notes:
+    - This file is the canonical wire contract; changing field names or order has broad test and compatibility impact.
+    - Meta intentionally mixes config/runtime metadata with aggregate outputs such as reduced.
+    - Many stage-specific meta structs live here so downstream JSON output stays centralized and stable.
   function_list:
     - ValidateEnvelope
   import_files_list:
     - fmt
   language: go
+  purpose: Define the stable envelope and metadata contract shared by all stages and serialized outputs.
+  responsibilities:
+    - Declare the public JSON shapes for envelopes, records, meta, diff reports, and runtime settings.
+    - Validate minimal envelope invariants used by contract tests.
+    - Centralize deterministic field ordering through struct-based contracts.

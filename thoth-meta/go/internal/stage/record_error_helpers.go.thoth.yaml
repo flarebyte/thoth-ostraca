@@ -1,6 +1,14 @@
 locator: internal/stage/record_error_helpers.go
 meta:
+  architecture_notes:
+    - The paired record/envelope error behavior is intentional; keep-going mode needs both views.
+    - This helper should stay mechanical; message formatting belongs to upstream stage-specific logic.
   function_list:
     - recordFailure
   import_files_list: []
   language: go
+  purpose: Create consistent record-plus-envelope error results from one stage failure.
+  responsibilities:
+    - Build the embedded record error when embedErrors is enabled.
+    - Build the matching envelope error with locator context.
+    - Keep stage failure shaping consistent across runners.

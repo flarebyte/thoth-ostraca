@@ -1,6 +1,14 @@
 locator: internal/stage/envelope_error_helpers.go
 meta:
+  architecture_notes:
+    - Error sanitization and ordering are intentional output-contract behavior, not incidental cleanup.
+    - Keep this helper tiny; richer error semantics belong in the stage that produced the error.
   function_list:
     - appendSanitizedErrors
   import_files_list: []
   language: go
+  purpose: Append envelope-level errors in a single place while preserving deterministic output order.
+  responsibilities:
+    - Add sanitized stage errors to the envelope.
+    - Sort envelope errors after appending them.
+    - Avoid repeated error-list boilerplate across stage runners.
