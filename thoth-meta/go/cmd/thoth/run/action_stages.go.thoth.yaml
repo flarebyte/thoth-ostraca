@@ -3,8 +3,10 @@ meta:
   function_list:
     - PreparedActionStages
     - fileInfoEnabled
+    - filterEnabled
     - gitEnabled
     - persistMetaEnabled
+    - reduceEnabled
   import_files_list:
     - fmt
     - github.com/flarebyte/thoth-ostraca/internal/stage

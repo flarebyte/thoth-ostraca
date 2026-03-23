@@ -74,6 +74,12 @@ dup:
 
 review: format test e2e lint
 
+thoth-meta-go:
+	./.e2e-bin/thoth run --config ./pipeline-go-maat.thoth.cue
+
+thoth-meta-go-test:
+	./.e2e-bin/thoth run --config ./pipeline-go-test-maat.thoth.cue
+
 thoth-meta-ts-e2e:
 	./.e2e-bin/thoth run --config ./pipeline-ts-e2e-maat.thoth.cue 
 

@@ -1,0 +1,12 @@
+locator: internal/stage/lua_error_format.go
+meta:
+  function_list:
+    - excerptLuaCode
+    - extractLuaLineNumber
+    - formatLuaError
+  import_files_list:
+    - fmt
+    - regexp
+    - strconv
+    - strings
+  language: go

@@ -1,0 +1,31 @@
+locator: internal/stage/lua_thoth_lib.go
+meta:
+  function_list:
+    - copyLuaTableShallow
+    - copyLuaValueDeep
+    - flattenInto
+    - installThothLib
+    - luaThothAll
+    - luaThothAny
+    - luaThothContains
+    - luaThothCopy
+    - luaThothDeepCopy
+    - luaThothEndsWith
+    - luaThothFilter
+    - luaThothFind
+    - luaThothFlatten
+    - luaThothIsEmpty
+    - luaThothMap
+    - luaThothPush
+    - luaThothReduce
+    - luaThothSortKeys
+    - luaThothSortValues
+    - luaThothSplit
+    - luaThothStartsWith
+    - luaThothTrim
+    - newThothLibTable
+  import_files_list:
+    - github.com/yuin/gopher-lua
+    - sort
+    - strings
+  language: go
