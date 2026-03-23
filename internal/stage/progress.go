@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Define the minimal progress-reporting contract used to emit user-visible stage progress without contaminating JSON output.
+// Responsibilities:
+// - Define the stable ProgressEvent payload shared by run-time progress emitters.
+// - Define the ProgressReporter interface consumed by stages.
+// - Attach and retrieve reporters via context.
+// Architecture notes:
+// - Progress is carried through context so stages can remain decoupled from the CLI implementation and still report user-visible milestones.
+// - The event struct is intentionally small and stable because acceptance tests assert these lines directly.
 package stage
 
 import "context"

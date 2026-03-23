@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Load existing sidecar YAML into record post-state so later stages can merge or compare metadata against what is already on disk.
+// Responsibilities:
+// - Resolve the expected sidecar path for each locator, including configured outDir mode.
+// - Read and validate the locator/meta structure of existing sidecar YAML files.
+// - Attach existing metadata and path information into rec.Post for later merge or persistence stages.
+// Architecture notes:
+// - Missing sidecars are not errors here; the stage records only the expected path so create/update flows can decide what to do next.
+// - Existing metadata is attached in post-state rather than replacing rec.Meta so pipeline metadata and file metadata stay distinct.
 package stage
 
 import (

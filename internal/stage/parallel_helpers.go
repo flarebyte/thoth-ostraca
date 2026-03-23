@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Run indexed record work in parallel with a small reusable worker-pool helper.
+// Responsibilities:
+// - Fan out integer-indexed jobs to a fixed number of workers.
+// - Collect one result per input index in completion order.
+// - Keep the parallel execution primitive generic for multiple stage result types.
+// Architecture notes:
+// - Results are returned in completion order on purpose; stages that need deterministic record ordering reindex or sort afterward.
+// - This helper stays minimal and context-free so stages can layer their own cancellation, progress, and error handling logic around it.
 package stage
 
 import "sync"

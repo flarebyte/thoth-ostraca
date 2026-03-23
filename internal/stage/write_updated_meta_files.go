@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Persist nextMeta payloads back to sidecar files, including outDir and dry-run modes used by update and input-pipeline workflows.
+// Responsibilities:
+// - Resolve the target sidecar path from existingMetaPath or locator-based defaults.
+// - Write merged metadata to disk or mark the write as skipped in dry-run mode.
+// - Preserve metaPath in post-state and emit progress and envelope errors during persistence.
+// Architecture notes:
+// - Dry-run is implemented here, not in merge_meta.go, so the analysis and merge path is identical between preview and real writes.
+// - The stage prefers an existingMetaPath when available so updates preserve the originally discovered sidecar location under outDir mode.
 package stage
 
 import (

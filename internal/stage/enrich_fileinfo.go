@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Attach normalized filesystem stat information to each input record when file info enrichment is enabled.
+// Responsibilities:
+// - Read file metadata for each locator relative to the discovery root.
+// - Normalize modTime, mode, and size into the RecFileInfo contract.
+// - Surface stat failures through the standard stage error model.
+// Architecture notes:
+// - File timestamps are normalized to UTC and second precision so outputs remain deterministic across platforms and filesystems.
+// - This stage enriches records only; it does not influence discovery, so missing files become stage errors rather than silently changing the input set.
 package stage
 
 import (

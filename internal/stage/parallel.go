@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the shared worker-count and error-ordering utilities used across parallel record stages.
+// Responsibilities:
+// - Compute the effective worker count from config or CPU defaults.
+// - Sort envelope errors deterministically by stage, locator, and message.
+// - Keep shared runtime helpers out of individual stage implementations.
+// Architecture notes:
+// - Worker selection is intentionally conservative and centralized so stage implementations do not each invent their own concurrency defaults.
+// - Error sorting lives here because deterministic ordering is a cross-cutting runtime concern, not stage-specific behavior.
 package stage
 
 import (

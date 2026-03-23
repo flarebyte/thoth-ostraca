@@ -1,8 +1,16 @@
 locator: internal/stage/progress.go
 meta:
+  architecture_notes:
+    - Progress is carried through context so stages can remain decoupled from the CLI implementation and still report user-visible milestones.
+    - The event struct is intentionally small and stable because acceptance tests assert these lines directly.
   function_list:
     - ProgressReporterFromContext
     - WithProgressReporter
   import_files_list:
     - context
   language: go
+  purpose: Define the minimal progress-reporting contract used to emit user-visible stage progress without contaminating JSON output.
+  responsibilities:
+    - Define the stable ProgressEvent payload shared by run-time progress emitters.
+    - Define the ProgressReporter interface consumed by stages.
+    - Attach and retrieve reporters via context.

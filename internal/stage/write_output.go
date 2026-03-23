@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Serialize the final envelope or record stream into deterministic JSON output for files or stdout.
+// Responsibilities:
+// - Read output settings from metadata and choose aggregate JSON or line-delimited JSON mode.
+// - Strip embedded record errors when the envelope contract says they should not be serialized.
+// - Open the destination writer, encode JSON deterministically, and write the final bytes.
+// Architecture notes:
+// - Output is JSON-only by design here; other stages shape the envelope first so this writer can stay small and deterministic.
+// - Streaming NDJSON support is kept separate from aggregate envelope encoding so large pipelines can avoid buffering without changing the output contract.
 package stage
 
 import (

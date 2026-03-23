@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Create new empty .thoth.yaml sidecars for discovered input files during create-meta workflows.
+// Responsibilities:
+// - Resolve the target sidecar path for each locator.
+// - Refuse to overwrite an existing sidecar when bootstrapping metadata.
+// - Write the initial sidecar file and expose its path in record post-state.
+// Architecture notes:
+// - This stage writes only baseline empty metadata on purpose; richer metadata derivation belongs to programmable input-pipeline flows.
+// - Create-meta keeps fail-on-existing behavior so accidental re-bootstrap runs are visible instead of silently mutating existing sidecars.
 package stage
 
 import (

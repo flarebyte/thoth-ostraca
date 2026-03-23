@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Produce the next metadata payload for each record by combining existing sidecars with configured patches or postMap-derived meta.
+// Responsibilities:
+// - Read update instructions from config or from post.meta produced by the input pipeline.
+// - Merge nested metadata maps deterministically while preserving existing values unless patched.
+// - Surface malformed post/meta or Lua-derived updates through the standard stage error flow.
+// Architecture notes:
+// - Persistence-enabled input pipelines reuse this stage so programmable analysis and metadata writing stay on one path instead of splitting into separate actions.
+// - The merge result is stored in post.nextMeta, not written immediately, so validation and dry-run-aware write stages can stay separate.
 package stage
 
 import (
