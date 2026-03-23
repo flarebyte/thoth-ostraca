@@ -86,5 +86,8 @@ What is still narrower than the broader design:
 - `diff-meta` now supports `lua-filter` on input files; orphan meta reporting
   still scans the full discovered meta-file set, so filtered-out paired files
   can appear as orphans
+- `create-meta`, `update-meta`, and `diff-meta` still do not expose the full
+  programmable `map -> shell -> postMap -> reduce` surface of
+  `input-pipeline`
 
 That is the main gap between the current metadata actions and the broader file-processing workflow.

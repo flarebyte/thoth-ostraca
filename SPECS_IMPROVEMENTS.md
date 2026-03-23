@@ -13,5 +13,5 @@
 
 ## Remaining Improvement Areas
 
-- `input-pipeline` still has no `reduce` stage, so the full file workflow is protected for filter/map/shell/postMap/persist, not file-level aggregation.
 - `create-meta` and `update-meta` remain narrower metadata maintenance actions rather than aliases over the practical programmable pipeline.
+- `diff-meta` still has narrower semantics than the full programmable pipeline; it supports `lua-filter` on input files, but orphan meta reporting still reflects the full discovered meta-file set under the chosen root.

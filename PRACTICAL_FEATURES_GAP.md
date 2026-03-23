@@ -48,7 +48,7 @@ The shipped implementation now delivers the practical core workflow:
 
 - `input-pipeline` works on arbitrary input files, not only existing
   `.thoth.yaml` sidecars
-- the run path supports `discover -> filter -> map -> shell -> postMap`
+- the run path supports `discover -> filter -> map -> shell -> postMap -> reduce`
 - shell stdout can be decoded as structured JSON
 - mapped metadata can be written back to `.thoth.yaml` sidecars
 - sidecars can go to a dedicated output directory
@@ -67,9 +67,11 @@ The result is that the one practically useful workflow is now restored:
 
 The remaining gaps are narrower than before:
 
-- `input-pipeline` still has no `reduce` stage
 - `create-meta` and `update-meta` are still separate maintenance actions
   instead of thin wrappers over the restored programmable file pipeline
+- `diff-meta` still has narrower scoped semantics than the practical
+  programmable pipeline, especially around orphan reporting after input
+  filtering
 - some original design ambitions remain broader than the shipped CLI, but
   the practical critical workflow is no longer missing
 
@@ -103,28 +105,32 @@ The shipped CLI does not deliver that set cohesively.
 
 ### 3. JSON was not treated as a first-class shell result
 
-This is a critical gap.
+This was a critical gap and is now fixed.
 
 In practice, shell analysis tools emit JSON. The CLI should therefore make
 JSON shell output easy to consume.
 
-Today, shell output is exposed as raw strings only. That forces awkward
+Earlier, shell output was exposed as raw strings only. That forced awkward
 workarounds:
 
 - extra helper commands such as `jq`
 - fragile string parsing in Lua
 - complicated `postMap` code
 
-That is the opposite of the intended data-pipeline experience.
+The current CLI now supports opt-in JSON decoding, which is much closer to
+the intended data-pipeline experience.
 
 ### 4. File persistence was treated separately from analysis
 
-`create-meta` and `update-meta` persist sidecars, but they do not expose
-the programmable analysis path that users need.
+This was another critical split and is now largely fixed for the practical
+workflow.
 
-`pipeline` exposes the programmable path, but it does not persist sidecars.
+`input-pipeline` now exposes the programmable path and can also persist
+sidecars.
 
-This split makes the CLI hard to use for real metadata enrichment tasks.
+`create-meta` and `update-meta` still exist as narrower maintenance actions,
+which is now more of an action-surface simplification issue than a core
+capability gap.
 
 ### 5. Safety and practicality defaults were not validated against real repos
 
