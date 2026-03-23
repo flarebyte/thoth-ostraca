@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse output and lightweight runtime toggles that do not belong to the core programmable stages.
+// Responsibilities:
+// - Decode output destination and formatting settings.
+// - Decode error embedding mode, worker count, and UI progress settings.
+// - Decode fileInfo and git enrichment toggles.
+// Architecture notes:
+// - These settings are grouped here because they shape execution/reporting around the pipeline rather than the pipeline logic itself.
+// - Enrichment flags live here intentionally; they are optional runtime decorations, not part of config discovery.
 package config
 
 import "cuelang.org/go/cue"

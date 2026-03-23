@@ -1,5 +1,8 @@
 locator: internal/config/parse_output_misc.go
 meta:
+  architecture_notes:
+    - These settings are grouped here because they shape execution/reporting around the pipeline rather than the pipeline logic itself.
+    - Enrichment flags live here intentionally as optional runtime decorations, not discovery logic.
   function_list:
     - parseErrorsSection
     - parseFileInfoSection
@@ -10,3 +13,8 @@ meta:
   import_files_list:
     - cuelang.org/go/cue
   language: go
+  purpose: Parse output and lightweight runtime toggles that do not belong to the core programmable stages.
+  responsibilities:
+    - Decode output destination and formatting settings.
+    - Decode error embedding mode, worker count, and UI progress settings.
+    - Decode fileInfo and git enrichment toggles.

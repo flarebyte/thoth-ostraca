@@ -1,8 +1,16 @@
 locator: internal/config/version_policy.go
 meta:
+  architecture_notes:
+    - This file is intentionally small so version changes stay localized and easy to audit.
+    - The supported-version list is a slice on purpose, even with one value, to keep future multi-version support straightforward.
   function_list:
     - IsSupportedConfigVersion
     - SupportedConfigVersionsCSV
   import_files_list:
     - strings
   language: go
+  purpose: Centralize the supported thoth config-version policy in one tiny place.
+  responsibilities:
+    - Declare the current config version constant.
+    - Expose helpers that check support and render supported versions for errors.
+    - Keep version policy isolated from parsing logic.

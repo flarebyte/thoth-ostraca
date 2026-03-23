@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse the later-stage action sections that shape post-processing, persistence, update, and diff behavior.
+// Responsibilities:
+// - Decode postMap and reduce Lua sections.
+// - Decode persistMeta settings for sidecar writes.
+// - Decode updateMeta and diffMeta sections, including their stricter validation rules.
+// Architecture notes:
+// - updateMeta and diffMeta parsing return errors directly because these sections have richer schema constraints than the lighter parse helpers.
+// - Defaults for diffMeta format/only are assigned here so later stages can rely on normalized values.
 package config
 
 import (

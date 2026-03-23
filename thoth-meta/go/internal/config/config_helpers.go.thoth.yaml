@@ -1,5 +1,8 @@
 locator: internal/config/config_helpers.go
 meta:
+  architecture_notes:
+    - Error strings are intentionally simple because callers and tests depend on their wording.
+    - This file does not do semantic config parsing; it only produces the compiled CUE value.
   function_list:
     - compileCUE
   import_files_list:
@@ -10,3 +13,8 @@ meta:
     - os
     - path/filepath
   language: go
+  purpose: Compile raw CUE config files into cue.Value while preserving caller-facing error shape.
+  responsibilities:
+    - Read config files from disk.
+    - Reject unsupported config extensions before compilation.
+    - Compile bytes into cue.Value for higher-level parsing.

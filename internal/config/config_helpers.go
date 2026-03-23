@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Compile raw CUE config files into cue.Value while preserving caller-facing error shape.
+// Responsibilities:
+// - Read config files from disk.
+// - Reject unsupported extensions before compilation.
+// - Compile bytes into a cue.Value used by higher-level parsing.
+// Architecture notes:
+// - Error strings are intentionally simple because callers and tests depend on their wording.
+// - This file does not do semantic config parsing; it only provides the compiled CUE value.
 package config
 
 import (

@@ -1,7 +1,13 @@
 locator: internal/config/parse_locator_policy.go
 meta:
+  architecture_notes:
+    - This file is intentionally narrow because locator policy is a distinct contract from discovery or action behavior.
   function_list:
     - parseLocatorPolicySection
   import_files_list:
     - cuelang.org/go/cue
   language: go
+  purpose: Parse locator policy toggles that constrain what paths and locators are considered valid.
+  responsibilities:
+    - Decode locatorPolicy booleans for absolute paths, parent refs, URL allowance, and POSIX normalization.
+    - Preserve per-field presence flags for later validation and defaults.

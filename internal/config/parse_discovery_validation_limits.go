@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse the discovery, validation, and limits sections that shape broad run behavior.
+// Responsibilities:
+// - Decode discovery root and include/exclude controls.
+// - Decode validation flags for config strictness.
+// - Decode processing limits such as YAML size and in-memory record caps.
+// Architecture notes:
+// - These sections are grouped here because they are global execution controls rather than action-specific features.
+// - Each parser records Has* flags so later validation can tell omitted values from explicit settings.
 package config
 
 import (

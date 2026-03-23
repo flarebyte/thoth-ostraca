@@ -1,5 +1,9 @@
 locator: internal/config/config.go
 meta:
+  architecture_notes:
+    - This file is intentionally the orchestration hub; subsection parsing belongs in sibling parse_* files.
+    - The Minimal struct carries presence flags so later validation can distinguish defaults from explicit config.
+    - LoadAndValidate stays narrower than ParseMinimal on purpose for cheap early config checks.
   function_list:
     - LoadAndValidate
     - ParseMinimal
@@ -8,3 +12,8 @@ meta:
     - cuelang.org/go/cue
     - fmt
   language: go
+  purpose: Own the top-level config loading and minimal typed extraction for thoth CUE configs.
+  responsibilities:
+    - Validate required top-level fields and config version support.
+    - Parse the full Minimal config by delegating subsection decoding to dedicated parser files.
+    - Define the shared typed config structs consumed by downstream stages.

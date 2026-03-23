@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Own the top-level config loading and minimal typed extraction for thoth CUE configs.
+// Responsibilities:
+// - Validate required top-level fields and config version support.
+// - Parse the full Minimal config by delegating each subsection to the dedicated parser file.
+// - Define the shared typed config structs consumed by downstream stages.
+// Architecture notes:
+// - This file is intentionally the orchestration hub; subsection parsing logic lives in sibling parse_* files.
+// - The Minimal struct carries presence flags so validation can distinguish defaults from explicit config.
+// - LoadAndValidate stays narrower than ParseMinimal on purpose for cheap early config checks.
 package config
 
 import (

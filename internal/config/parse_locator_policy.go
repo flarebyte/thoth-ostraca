@@ -1,3 +1,10 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse locator policy toggles that constrain what paths/config locators are considered valid.
+// Responsibilities:
+// - Decode locatorPolicy booleans for absolute paths, parent refs, URL allowance, and POSIX normalization.
+// - Preserve per-field presence flags for later validation and defaults.
+// Architecture notes:
+// - This file is intentionally narrow because locator policy is a distinct contract from discovery or action behavior.
 package config
 
 import "cuelang.org/go/cue"
