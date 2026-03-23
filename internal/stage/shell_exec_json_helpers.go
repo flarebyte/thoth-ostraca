@@ -1,3 +1,11 @@
+// File Guide for dev/ai agents:
+// Purpose: Decode shell stdout into structured JSON when the config explicitly asks for it.
+// Responsibilities:
+// - Parse captured stdout as JSON.
+// - Fail clearly when stdout is missing or invalid.
+// - Keep JSON decoding isolated from the rest of shell execution.
+// Architecture notes:
+// - JSON decoding is intentionally opt-in and isolated so raw stdout behavior remains backward compatible for non-JSON tools.
 package stage
 
 import (

@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Execute Lua map transforms that derive per-record structured data from the current record context.
+// Responsibilities:
+// - Normalize map code into runnable Lua.
+// - Run the map transform for one record.
+// - Attach mapped output or stage errors back onto the record.
+// Architecture notes:
+// - Map stage behavior is intentionally minimal: it only computes `record.Mapped`; later stages decide how to consume it.
+// - Error shaping mirrors the other Lua helpers so keep-going/fail-fast behavior stays consistent across stages.
 package stage
 
 import (

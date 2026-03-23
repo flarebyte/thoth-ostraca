@@ -1,8 +1,16 @@
 locator: internal/stage/lua_map_helpers.go
 meta:
+  architecture_notes:
+    - Map stage behavior is intentionally minimal; it only computes `record.Mapped`, and later stages decide how to consume it.
+    - Error shaping mirrors the other Lua helpers so keep-going/fail-fast behavior stays consistent across stages.
   function_list:
     - buildLuaMapCode
     - processLuaMapRecord
   import_files_list:
     - fmt
   language: go
+  purpose: Execute Lua map transforms that derive per-record structured data from the current record context.
+  responsibilities:
+    - Normalize map code into runnable Lua.
+    - Run the map transform for one record.
+    - Attach mapped output or stage errors back onto the record.

@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Execute Lua reduce logic that collapses many record results into one aggregate accumulator.
+// Responsibilities:
+// - Normalize reduce code into runnable Lua.
+// - Convert each record into the reducer item shape.
+// - Run the reducer deterministically across records and return the final accumulator.
+// Architecture notes:
+// - Reduce order matters; this file relies on the current record order being deterministic before reduction starts.
+// - The reducer input prefers `post` when present, which is intentional because postMap is the last per-record shaping step.
 package stage
 
 import (

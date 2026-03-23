@@ -1,5 +1,9 @@
 locator: internal/stage/shell_exec_run_helpers.go
 meta:
+  architecture_notes:
+    - Timeout handling is per record, not per stage, and the `-2` exit code convention for timeouts is intentional.
+    - Process-group termination is deliberate to avoid leaving child processes behind for shell commands that spawn subcommands.
+    - Diagnostic context is captured here because the low-level spawn path knows the final program, args, and working directory.
   function_list:
     - applyEnvOverlay
     - runCommand
@@ -16,3 +20,8 @@ meta:
     - syscall
     - time
   language: go
+  purpose: Spawn and supervise the actual OS process for one shell-exec record run.
+  responsibilities:
+    - Start the command with rendered args, env overlay, output capture, and timeout control.
+    - Terminate timed-out processes and optionally their process group.
+    - Return low-level shellRunResult details used by higher-level shell processing.

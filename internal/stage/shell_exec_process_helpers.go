@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Convert one record plus shell settings into a final ShellResult and matching stage error outcome.
+// Responsibilities:
+// - Execute the rendered shell command for one record.
+// - Attach decoded JSON, timeouts, and diagnostic context onto the record.
+// - Translate shell failures into keep-going or fail-fast stage behavior.
+// Architecture notes:
+// - This file is the semantic bridge between low-level process execution and the record/error contract used by the stage.
+// - Shell diagnostics such as program, workingDir, and args are attached intentionally to make config failures debuggable.
 package stage
 
 import (

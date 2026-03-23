@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Discover existing .thoth.yaml sidecars for actions that operate on metadata files rather than raw source inputs.
+// Responsibilities:
+// - Resolve the configured discovery root into an absolute path.
+// - Invoke meta-file discovery with the current ignore, symlink, and error-mode settings.
+// - Convert discovered sidecar locators into records and diff-meta metadata fields.
+// Architecture notes:
+// - This file is intentionally thin; the recursive walk, symlink handling, and gitignore logic are delegated to discover_meta_files_helpers.go.
+// - The stage passes through when no discovery root is configured so validation-only or partially built envelopes can reuse the stage safely.
 package stage
 
 import (

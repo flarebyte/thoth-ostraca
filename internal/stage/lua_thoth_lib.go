@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Expose the small `thoth.*` Lua helper library used by config scripts to avoid repetitive boilerplate.
+// Responsibilities:
+// - Register the global `thoth` helper table in the sandbox.
+// - Implement deterministic list, string, and table helpers for Lua scripts.
+// - Keep callback-based helpers such as map/filter/reduce inside the sandbox runtime.
+// Architecture notes:
+// - This helper surface is intentionally curated; prefer adding narrow deterministic helpers over enabling generic module loading.
+// - Most helpers mutate or copy Lua tables directly, so behavior here defines the scripting ergonomics contract.
+// - String and sorting helpers are intentionally deterministic to support golden tests and reproducible output.
 package stage
 
 import (

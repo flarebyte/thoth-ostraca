@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Run the shell-exec stage across records when shell analysis is enabled in the config.
+// Responsibilities:
+// - Build and validate stage-level shell options from envelope metadata.
+// - Dispatch per-record shell execution in parallel.
+// - Emit progress events and merge shell results back into the envelope.
+// Architecture notes:
+// - This file orchestrates the stage only; rendering, spawning, and result shaping live in helper files.
+// - Progress reporting is kept here because it depends on stage-level worker fan-out, not individual shell mechanics.
 package stage
 
 import (

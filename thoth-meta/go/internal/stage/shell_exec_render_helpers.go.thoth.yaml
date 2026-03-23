@@ -1,5 +1,8 @@
 locator: internal/stage/shell_exec_render_helpers.go
 meta:
+  architecture_notes:
+    - Placeholder support is intentionally explicit and limited; this is not a generic expression engine.
+    - Rendering stays argv-oriented on purpose to keep shell command construction safer and easier to reason about.
   function_list:
     - lookupMappedValue
     - placeholderValueString
@@ -12,3 +15,8 @@ meta:
     - path
     - strings
   language: go
+  purpose: Render shell argument templates against the current record context in a deterministic way.
+  responsibilities:
+    - Expand supported placeholders such as locator, file parts, `{json}`, and mapped fields.
+    - Enforce strict templating behavior when configured.
+    - Convert mapped values into string-safe shell argument fragments.

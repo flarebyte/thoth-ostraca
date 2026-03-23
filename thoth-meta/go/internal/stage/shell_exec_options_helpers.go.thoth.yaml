@@ -1,5 +1,8 @@
 locator: internal/stage/shell_exec_options_helpers.go
 meta:
+  architecture_notes:
+    - WorkingDir is intentionally resolved relative to the discovery root here, not lazily during execution.
+    - Presence-vs-default decisions are flattened into one shellOptions struct before the execution path begins.
   function_list:
     - buildShellOptions
     - validateShellOptions
@@ -7,3 +10,8 @@ meta:
     - errors
     - path/filepath
   language: go
+  purpose: Derive normalized shell stage options from envelope metadata and defaults.
+  responsibilities:
+    - Apply default shell settings when config fields are omitted.
+    - Resolve working-directory behavior from discovery root plus shell config.
+    - Validate the minimum shell config required to execute commands.

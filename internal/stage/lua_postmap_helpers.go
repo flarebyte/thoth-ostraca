@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Execute the postMap phase that reshapes mapped and shell data into the final per-record post payload.
+// Responsibilities:
+// - Build the Lua postMap program from config.
+// - Provide a deterministic default postMap when no custom Lua is configured.
+// - Run postMap across records and merge record/envelope errors.
+// Architecture notes:
+// - postMap is the bridge between shell output and persistence/output; many user-visible workflows rely on this exact record shape.
+// - The default non-Lua path exists to keep output stable even when no custom script is present.
 package stage
 
 import (

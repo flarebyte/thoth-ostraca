@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Render shell argument templates against the current record context in a deterministic way.
+// Responsibilities:
+// - Expand supported placeholders such as locator, file parts, `{json}`, and mapped fields.
+// - Enforce strict templating behavior when configured.
+// - Convert mapped values into string-safe shell argument fragments.
+// Architecture notes:
+// - Placeholder support is intentionally explicit and limited; this is not a generic expression engine.
+// - Rendering stays argv-oriented on purpose to keep shell command construction safer and easier to reason about.
 package stage
 
 import (

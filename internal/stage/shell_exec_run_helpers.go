@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Spawn and supervise the actual OS process for one shell-exec record run.
+// Responsibilities:
+// - Start the command with rendered args, env overlay, output capture, and timeout control.
+// - Terminate timed-out processes and optionally their process group.
+// - Return low-level shellRunResult details used by higher-level shell processing.
+// Architecture notes:
+// - Timeout handling is per record, not per stage, and the `-2` exit code convention for timeouts is intentional.
+// - Process-group termination is deliberate to avoid leaving child processes behind for shell commands that spawn subcommands.
+// - Diagnostic context is captured here because the low-level spawn path knows the final program, args, and working directory.
 package stage
 
 import (

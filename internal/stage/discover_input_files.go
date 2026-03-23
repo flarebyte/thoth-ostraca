@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Discover arbitrary input files for file-oriented actions while applying root, ignore, and include/exclude policy.
+// Responsibilities:
+// - Walk the configured discovery root and collect eligible non-sidecar files.
+// - Apply always-excluded, default-excluded, gitignore, include, and exclude rules deterministically.
+// - Materialize sorted input records and diff-meta input metadata from the discovered locators.
+// Architecture notes:
+// - This file owns input discovery only; pattern matching helpers live in discovery_filters.go and gitignore matching is reused from meta discovery helpers.
+// - Existing .thoth.yaml files and .gitignore files are always excluded here so file actions operate on source inputs, not metadata artifacts.
 package stage
 
 import (

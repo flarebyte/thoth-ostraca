@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse and validate the requested config file early so the run pipeline works from one normalized minimal config contract.
+// Responsibilities:
+// - Require a config path in the input envelope.
+// - Parse the minimal config shape and apply shared validation rules.
+// - Copy validated config fields into envelope metadata and reject unsupported actions.
+// Architecture notes:
+// - This stage validates only the minimal contract needed to build the stage graph; richer action-specific checks stay in shared validation helpers.
+// - The explicit action allowlist is intentional so newly added actions are opt-in and cannot silently bypass stage wiring review.
 package stage
 
 import (

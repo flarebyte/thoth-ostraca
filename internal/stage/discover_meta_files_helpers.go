@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the low-level filesystem and gitignore helpers that power deterministic .thoth.yaml discovery.
+// Responsibilities:
+// - Read layered .gitignore patterns for a relative path and evaluate ignore matches.
+// - Walk a root directory, follow symlinked directories when configured, and collect sidecar locators.
+// - Normalize discovery-path errors into stable locator-scoped diagnostics.
+// Architecture notes:
+// - Meta discovery keeps its own walker because it must handle symlink recursion, keep-going errors, and locator deduplication in one place.
+// - Error helpers sanitize paths relative to the discovery root so failures stay stable across machines and absolute checkout locations.
 package stage
 
 import (

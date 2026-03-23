@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Create and run the constrained Lua runtime used by thoth’s programmable stages.
+// Responsibilities:
+// - Build sandbox configuration from envelope metadata.
+// - Initialize the Lua VM with only the allowed libraries and deterministic helpers.
+// - Execute Lua code under timeout, instruction, and memory constraints.
+// Architecture notes:
+// - This file is the enforcement boundary for Lua safety; do not casually widen the exposed library surface here.
+// - Deterministic random seeding is intentional so tests and repeated runs stay stable per stage/locator.
+// - Sandbox violations are translated into fixed strings because downstream stages and tests depend on them.
 package stage
 
 import (

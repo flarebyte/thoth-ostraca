@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Centralize discovery pattern matching and default path exclusion rules for file-oriented discovery.
+// Responsibilities:
+// - Read include and exclude lists from envelope metadata.
+// - Normalize discovery paths and evaluate glob-like match rules against files and directories.
+// - Define which directory names are always or normally excluded during input discovery.
+// Architecture notes:
+// - Input discovery uses simple normalized pattern helpers here instead of reusing gitignore semantics so include/exclude behavior stays explicit and deterministic.
+// - .git is treated as always excluded separately from the broader defaultExcludedDirNames set to prevent accidental opt-in through generic include patterns.
 package stage
 
 import (

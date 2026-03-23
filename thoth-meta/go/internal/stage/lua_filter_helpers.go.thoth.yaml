@@ -1,5 +1,8 @@
 locator: internal/stage/lua_filter_helpers.go
 meta:
+  architecture_notes:
+    - The code-wrapping behavior for bare expressions is intentional and shared with other Lua stage helpers.
+    - This file also hosts shared Lua conversion helpers used by the sandbox entrypoint; keep that coupling in mind before moving them.
   function_list:
     - buildLuaPredicate
     - containsReturn
@@ -9,3 +12,8 @@ meta:
     - fmt
     - github.com/yuin/gopher-lua
   language: go
+  purpose: Turn config-supplied Lua predicates into per-record filter behavior for record-driven actions.
+  responsibilities:
+    - Normalize filter code into a runnable predicate.
+    - Execute the predicate against one record with the current sandbox context.
+    - Translate predicate failures into fail-fast or keep-going stage errors.

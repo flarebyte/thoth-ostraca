@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Turn config-supplied Lua predicates into per-record filter behavior for record-driven actions.
+// Responsibilities:
+// - Normalize filter code into a runnable predicate.
+// - Execute the predicate against one record with the current sandbox context.
+// - Translate predicate failures into fail-fast or keep-going stage errors.
+// Architecture notes:
+// - The code-wrapping behavior for bare expressions is intentional and shared with other Lua stage helpers.
+// - This file also hosts shared Lua conversion helpers used by the sandbox entrypoint; keep that coupling in mind before moving them.
 package stage
 
 import (
