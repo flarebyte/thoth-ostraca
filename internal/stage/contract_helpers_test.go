@@ -84,7 +84,7 @@ func selectStages(action string) ([]string, error) {
 	case "validate":
 		return []string{"discover-meta-files", "parse-validate-yaml", "validate-locators"}, nil
 	case "create-meta":
-		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "write-meta-files"}, nil
+		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "lua-filter", "write-meta-files"}, nil
 	case "update-meta":
 		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "load-existing-meta", "merge-meta", "write-updated-meta-files"}, nil
 	case "diff-meta":

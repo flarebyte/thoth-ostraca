@@ -9,7 +9,7 @@ Recipes-first quick reference. See `README.md` for full concepts.
 | `pipeline` / `nop` | existing `.thoth.yaml` meta files |    yes | yes |   yes |     yes |    yes |               no |         yes |
 | `input-pipeline`   | arbitrary input files             |    yes | yes |   yes |     yes |    yes |              yes |         yes |
 | `validate`         | existing `.thoth.yaml` meta files |     no |  no |    no |      no |     no |               no |         yes |
-| `create-meta`      | arbitrary input files             |     no |  no |    no |      no |     no |              yes |         yes |
+| `create-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
 | `update-meta`      | arbitrary input files             |     no |  no |    no |      no |     no |              yes |         yes |
 | `diff-meta`        | input files + existing meta files |     no |  no |    no |      no |     no |               no |         yes |
 
@@ -21,6 +21,7 @@ Notes:
   filter, map, shell, postMap, reduce, JSON output, progress, dry-run
   persistence, and dedicated sidecar output directories.
 - `create-meta` and `update-meta` are narrower metadata maintenance actions.
+  `create-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
 
 ## Top 10 Commands / Workflows
 

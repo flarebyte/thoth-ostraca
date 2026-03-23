@@ -65,6 +65,50 @@ test('create-meta: creates .thoth.yaml files and prints expected envelope', () =
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('create-meta: lua-filter limits which sidecars are created', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/create1');
+  const tempRepo = path.join(root, 'temp', 'create1_repo_filtered');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'create1_filtered_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "create-meta"
+  discovery: { root: "${path.join('temp', 'create1_repo_filtered').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return locator == "dir/b.txt"
+"""
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-create-meta-filtered', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
+  const metaB = path.join(tempRepo, 'dir', 'b.txt.thoth.yaml');
+  const metaIgnored = path.join(tempRepo, 'ignored.txt.thoth.yaml');
+  const metaC = path.join(tempRepo, 'skipdir', 'c.txt.thoth.yaml');
+  expect(fs.existsSync(metaA)).toBe(false);
+  expect(fs.existsSync(metaB)).toBe(true);
+  expect(fs.existsSync(metaIgnored)).toBe(false);
+  expect(fs.existsSync(metaC)).toBe(false);
+  expect(fs.readFileSync(metaB, 'utf8')).toBe('locator: dir/b.txt\nmeta: {}\n');
+
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  expect(out.records.map((r) => r.locator)).toEqual(['dir/b.txt']);
+  expect(out.records.map((r) => r.post?.metaPath)).toEqual([
+    'dir/b.txt.thoth.yaml',
+  ]);
+});
+
 test('input-pipeline: writes .thoth.yaml sidecars from postMap meta', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

@@ -13,13 +13,13 @@ thoth run --config ./create-meta-project.thoth.cue
 What it does:
 
 - discovers input files under `discovery.root`
+- can filter them with `lua-filter`
 - skips files already ending in `.thoth.yaml`
 - creates `<locator>.thoth.yaml` alongside each discovered file
 - writes a JSON envelope to `output.out`
 
 What it cannot do:
 
-- it cannot filter discovered input files with `lua-filter`
 - it cannot map records with `lua-map`
 - it cannot run `shell-exec`
 - it cannot write sidecars to a separate output folder

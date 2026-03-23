@@ -62,6 +62,9 @@ func PreparedActionStages(action string, meta *stage.Meta) ([]string, error) {
 		if gitEnabled(meta) {
 			stages = append(stages, "enrich-git")
 		}
+		if filterEnabled(meta) {
+			stages = append(stages, "lua-filter")
+		}
 		stages = append(stages, "write-meta-files", "write-output")
 		return stages, nil
 	case "update-meta":
@@ -104,4 +107,10 @@ func reduceEnabled(meta *stage.Meta) bool {
 	return meta != nil &&
 		meta.Lua != nil &&
 		meta.Lua.ReduceInline != ""
+}
+
+func filterEnabled(meta *stage.Meta) bool {
+	return meta != nil &&
+		meta.Lua != nil &&
+		meta.Lua.FilterInline != ""
 }
