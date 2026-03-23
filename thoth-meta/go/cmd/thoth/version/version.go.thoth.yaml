@@ -1,5 +1,8 @@
 locator: cmd/thoth/version/version.go
 meta:
+  architecture_notes:
+    - The human-readable path stays the default and is kept to exactly one stdout line because E2E tests rely on that stable contract.
+    - JSON mode writes a human hint to stderr and structured data to stdout so machine-readable output stays clean.
   function_list:
     - init
   import_files_list:
@@ -10,3 +13,8 @@ meta:
     - runtime
     - time
   language: go
+  purpose: Define the `thoth version` command and its human-readable versus JSON output modes.
+  responsibilities:
+    - Register the version command and its flags.
+    - Print the stable one-line version summary for normal CLI use.
+    - Emit the richer JSON diagnostic object when explicitly requested.

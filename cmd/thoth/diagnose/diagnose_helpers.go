@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Implement the operational paths behind `thoth diagnose`, including prepared pipeline execution and stage dumping.
+// Responsibilities:
+// - Resolve target stages and stage ranges from diagnose flags.
+// - Run one or more stages in sequence and optionally dump stage boundaries.
+// - Support the diagnose modes for direct input, prepared discovery, and prepared action pipelines.
+// Architecture notes:
+// - Diagnose reuses the real stage runners and prepared action stage order so debugging matches shipped CLI behavior instead of a separate simulation path.
+// - Dump helpers are kept here rather than in the stage package because staged fixture output is a command concern, not a runtime stage concern.
 package diagnose
 
 import (

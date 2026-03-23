@@ -1,5 +1,8 @@
 locator: cmd/thoth/main.go
 meta:
+  architecture_notes:
+    - Error text is whitespace-normalized here so CLI failures stay compact and predictable across nested command errors.
+    - Exit code mapping is handled only at the top level so subcommands can return typed errors without depending on os.Exit directly.
   function_list:
     - main
   import_files_list:
@@ -7,3 +10,8 @@ meta:
     - os
     - strings
   language: go
+  purpose: Provide the real process entrypoint that executes the root command and normalizes top-level CLI exit behavior.
+  responsibilities:
+    - Invoke the root command with process arguments.
+    - Render one short single-line error to stderr on failure.
+    - Exit with the mapped code when commands return an exitCoder.

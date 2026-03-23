@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Define the root Cobra command and wire the top-level thoth subcommands together.
+// Responsibilities:
+// - Build the root command with its default help behavior.
+// - Register the diagnose, run, and version subcommands.
+// - Execute the configured root command with caller-provided args.
+// Architecture notes:
+// - The root command is intentionally thin and declarative so most behavior remains inside subcommand packages.
+// - Help-on-no-subcommand is implemented here rather than in main so tests and alternate entrypoints can reuse the same root behavior.
 package root
 
 import (

@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Define the `thoth version` command and its human-readable versus JSON output modes.
+// Responsibilities:
+// - Register the version command and its flags.
+// - Print the stable one-line version summary for normal CLI use.
+// - Emit the richer JSON diagnostic object when explicitly requested.
+// Architecture notes:
+// - The human-readable path stays the default and is kept to exactly one stdout line because E2E tests rely on that stable contract.
+// - JSON mode writes a human hint to stderr and structured data to stdout so machine-readable output stays clean.
 package version
 
 import (
