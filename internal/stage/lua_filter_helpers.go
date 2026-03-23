@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Turn config-supplied Lua predicates into per-record filter behavior for record-driven actions.
+// Responsibilities:
+// - Normalize filter code into a runnable predicate.
+// - Execute the predicate against one record with the current sandbox context.
+// - Translate predicate failures into fail-fast or keep-going stage errors.
+// Architecture notes:
+// - The code-wrapping behavior for bare expressions is intentional and shared with other Lua stage helpers.
+// - This file also hosts shared Lua conversion helpers used by the sandbox entrypoint; keep that coupling in mind before moving them.
 package stage
 
 import (
@@ -43,20 +52,23 @@ func processLuaFilterRecord(rec Record, pred string, mode string, metaCfg *Meta)
 		return true, rec, nil, nil
 	}
 
-	ret, violation, err := runLuaScriptWithSandbox(luaFilterStage, metaCfg, locator, map[string]any{
-		"locator": locator,
-		"meta":    meta,
-	}, pred)
+	ret, violation, err := runLuaScriptWithSandbox(
+		luaFilterStage,
+		metaCfg,
+		locator,
+		luaRecordContext(rec),
+		pred,
+	)
 	if err != nil {
-		msg := sanitizeErrorMessage(err.Error())
+		msg := formatLuaError(luaFilterStage, locator, pred, err.Error())
 		if mode == "keep-going" {
-			rr, envErr := recordFailure(Record{Locator: locator, Meta: meta}, luaFilterStage, msg, true)
+			rr, envErr := recordFailure(rec, luaFilterStage, msg, true)
 			return true, rr, envErr, nil
 		}
 		return false, Record{}, nil, fmt.Errorf("lua-filter: %s", msg)
 	}
 	if violation != "" {
-		msg := sanitizeErrorMessage(violation)
+		msg := formatLuaError(luaFilterStage, locator, pred, violation)
 		if mode == "keep-going" {
 			rr, envErr := recordFailure(Record{Locator: locator, Meta: meta}, luaFilterStage, msg, true)
 			return true, rr, envErr, nil
@@ -65,7 +77,7 @@ func processLuaFilterRecord(rec Record, pred string, mode string, metaCfg *Meta)
 	}
 	keep, _ = ret.(bool)
 	if keep {
-		return true, Record{Locator: locator, Meta: meta}, nil, nil
+		return true, rec, nil, nil
 	}
 	return false, Record{}, nil, nil
 }

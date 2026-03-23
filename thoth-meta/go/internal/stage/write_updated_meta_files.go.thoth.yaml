@@ -1,0 +1,19 @@
+locator: internal/stage/write_updated_meta_files.go
+meta:
+  architecture_notes:
+    - Dry-run is implemented here, not in merge_meta.go, so the analysis and merge path is identical between preview and real writes.
+    - The stage prefers an existingMetaPath when available so updates preserve the originally discovered sidecar location under outDir mode.
+  function_list:
+    - init
+    - writeOneUpdatedWithMeta
+    - writeUpdatedMetaFilesRunner
+  import_files_list:
+    - context
+    - github.com/flarebyte/thoth-ostraca/internal/metafile
+    - path/filepath
+  language: go
+  purpose: Persist nextMeta payloads back to sidecar files, including outDir and dry-run modes used by update and input-pipeline workflows.
+  responsibilities:
+    - Resolve the target sidecar path from existingMetaPath or locator-based defaults.
+    - Write merged metadata to disk or mark the write as skipped in dry-run mode.
+    - Preserve metaPath in post-state and emit progress and envelope errors during persistence.

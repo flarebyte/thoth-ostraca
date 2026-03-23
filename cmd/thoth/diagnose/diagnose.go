@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Define the `thoth diagnose` command and the shared input/output helpers used to run a single stage or prepared stage subset.
+// Responsibilities:
+// - Define diagnose flags for stage selection, pipeline preparation, dumps, and output shaping.
+// - Build the initial envelope from config, root, or input JSON.
+// - Serialize diagnostic envelopes and stage dumps to deterministic JSON files or stdout.
+// Architecture notes:
+// - Diagnose is intentionally separate from `run` so developers can inspect individual stages and prepared pipelines without changing normal CLI behavior.
+// - Root relativization is applied only for deterministic diagnostic output, not to alter actual discovery semantics at runtime.
 package diagnose
 
 import (

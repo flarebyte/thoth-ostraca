@@ -42,35 +42,38 @@ In practical terms, a user should be able to:
 
 That is the core utility. Everything else is secondary.
 
-## What The Current CLI Actually Delivers
+## What The Current CLI Now Delivers
 
-The shipped implementation supports only part of that design:
+The shipped implementation now delivers the practical core workflow:
 
-- `pipeline` / `nop` works on existing `.thoth.yaml` files, not arbitrary
-  input files
-- `create-meta` and `update-meta` work on input files, but they do not
-  expose `filter`, `map`, `shell`, or `postMap` in the run path
-- shell output is captured as strings, not decoded structured JSON
-- sidecar writes happen in-place beside source files
-- discovery is too broad for practical repo-scale usage without stronger
-  defaults and excludes
+- `input-pipeline` works on arbitrary input files, not only existing
+  `.thoth.yaml` sidecars
+- the run path supports `discover -> filter -> map -> shell -> postMap -> reduce`
+- shell stdout can be decoded as structured JSON
+- mapped metadata can be written back to `.thoth.yaml` sidecars
+- sidecars can go to a dedicated output directory
+- persistence supports dry-run
+- discovery excludes unsafe/internal paths by default
+- long-running practical workflows can emit progress on stderr
+- ordinary Lua transform loops are allowed by default while explicit limits
+  are still enforced
 
-The result is that the one practically useful workflow is missing:
+The result is that the one practically useful workflow is now restored:
 
 - file discovery + file filtering + shell analysis + structured mapping +
   persistence
 
-## Main Gap
+## Remaining Gaps
 
-The design says the CLI is an action-configured data pipeline.
+The remaining gaps are narrower than before:
 
-The implementation behaves more like two disconnected products:
-
-- a meta-file pipeline (`pipeline` / `nop`)
-- file-sidecar maintenance commands (`create-meta`, `update-meta`,
-  `diff-meta`)
-
-The practical bridge between them was never completed.
+- `create-meta` and `update-meta` are still separate maintenance actions
+  instead of thin wrappers over the restored programmable file pipeline
+- `diff-meta` still has narrower scoped semantics than the practical
+  programmable pipeline, especially around orphan reporting after input
+  filtering
+- some original design ambitions remain broader than the shipped CLI, but
+  the practical critical workflow is no longer missing
 
 ## Where It Went Off-Rail
 
@@ -102,32 +105,36 @@ The shipped CLI does not deliver that set cohesively.
 
 ### 3. JSON was not treated as a first-class shell result
 
-This is a critical gap.
+This was a critical gap and is now fixed.
 
 In practice, shell analysis tools emit JSON. The CLI should therefore make
 JSON shell output easy to consume.
 
-Today, shell output is exposed as raw strings only. That forces awkward
+Earlier, shell output was exposed as raw strings only. That forced awkward
 workarounds:
 
 - extra helper commands such as `jq`
 - fragile string parsing in Lua
 - complicated `postMap` code
 
-That is the opposite of the intended data-pipeline experience.
+The current CLI now supports opt-in JSON decoding, which is much closer to
+the intended data-pipeline experience.
 
 ### 4. File persistence was treated separately from analysis
 
-`create-meta` and `update-meta` persist sidecars, but they do not expose
-the programmable analysis path that users need.
+This was another critical split and is now largely fixed for the practical
+workflow.
 
-`pipeline` exposes the programmable path, but it does not persist sidecars.
+`input-pipeline` now exposes the programmable path and can also persist
+sidecars.
 
-This split makes the CLI hard to use for real metadata enrichment tasks.
+`create-meta` and `update-meta` still exist as narrower maintenance actions,
+which is now more of an action-surface simplification issue than a core
+capability gap.
 
 ### 5. Safety and practicality defaults were not validated against real repos
 
-Observed practical failures:
+Observed practical failures that drove the gap analysis were:
 
 - creating sidecars under `.git`
 - colliding with fixture directories under `internal`
@@ -135,9 +142,10 @@ Observed practical failures:
 - no dedicated output directory for generated sidecars
 - no user-visible progress during long-running actions
 
-These are not minor polish issues. They block normal usage.
+These were not minor polish issues. They blocked normal usage until the
+practical file pipeline was restored.
 
-## Practical Must-Haves To Make The CLI Useful
+## Practical Must-Haves That Made The CLI Useful
 
 The CLI needs one first-class workflow to be spec'd and protected:
 
@@ -146,7 +154,6 @@ The CLI needs one first-class workflow to be spec'd and protected:
 - run shell analysis per file
 - decode shell JSON automatically
 - map decoded results into metadata
-- optionally reduce results
 - either:
   - write JSON output, or
   - write/update `.thoth.yaml` sidecars
@@ -161,6 +168,8 @@ Supporting requirements:
 - long-running actions must expose progress
 - Lua/scripting limits must not reject ordinary transformation logic by
   default
+
+These capabilities are now shipped and covered by acceptance tests.
 
 ## Practical Guardrails For AI-Built Projects
 
@@ -232,12 +241,12 @@ the CLI should warn or refuse by default.
 
 The design aimed at a practical metadata-processing pipeline.
 
-The shipped CLI mostly delivered stage machinery and deterministic test
-coverage, but it missed the single workflow that would make the tool useful
-in practice:
+The project originally delivered stage machinery and deterministic test
+coverage before it delivered the single workflow that would make the tool
+useful in practice:
 
 - file -> filter -> shell -> structured map -> save
 
-The immediate spec priority is therefore not more add-on features.
-It is to restore that core workflow as a protected, acceptance-tested,
-user-visible capability.
+That core workflow is now restored and acceptance-tested.
+The remaining design work is to simplify and unify the surrounding action
+surface rather than to recover basic usefulness.

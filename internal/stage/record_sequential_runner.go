@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the common sequential record-stage loop used by create, load, and other ordered file operations.
+// Responsibilities:
+// - Run a per-record function over the envelope records in order.
+// - Apply keep-going versus fail-fast error behavior consistently.
+// - Append sanitized envelope errors and embedded record errors when configured.
+// Architecture notes:
+// - Sequential stages share this helper so ordered filesystem operations do not each reimplement the same error-mode logic.
+// - The helper sanitizes both returned errors and embedded errors centrally to keep user-visible output stable.
 package stage
 
 import "fmt"

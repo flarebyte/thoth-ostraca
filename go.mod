@@ -12,6 +12,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+replace github.com/yuin/gopher-lua => ./vendor/github.com/yuin/gopher-lua
+
 require (
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/emicklei/proto v1.14.2 // indirect

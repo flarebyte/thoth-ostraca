@@ -1,0 +1,28 @@
+locator: internal/stage/compute_meta_diff_test.go
+meta:
+  function_list:
+    - TestComputeMetaDiffRunner_DetailedIncludesChanges
+    - TestComputeMetaDiffRunner_FilterOnlyChanged
+    - TestComputeMetaDiffRunner_FilterOnlyOrphans
+    - TestComputeMetaDiffRunner_FilterOnlyUnchanged
+    - TestComputeMetaDiffRunner_JSONPatchIncludesPatch
+    - TestComputeMetaDiffRunner_UsesExpectedLuaPerLocator
+    - TestComputeMetaDiffRunner_V2Report
+    - TestDiffMetaJSONPatch_ArrayReplaceSingleOp
+    - TestDiffMetaJSONPatch_OrderingStable
+    - TestDiffMetaMapsV3Detailed_ArrayIndexChanged
+    - TestDiffMetaMapsV3Detailed_ChangesKinds
+    - TestDiffMetaMapsV3Detailed_ChangesSorted
+    - TestDiffMetaMapsV3_ArrayIndexDiff
+    - TestDiffMetaMapsV3_NestedArrayPath
+    - TestDiffMetaMapsV3_TypeChange
+    - TestDiffMetaMaps_Rules
+    - TestEscapeJSONPointer
+    - mustComputeDiffReport
+    - singleLocatorDiffInput
+    - twoLocatorFilterInput
+  import_files_list:
+    - context
+    - reflect
+    - testing
+  language: go

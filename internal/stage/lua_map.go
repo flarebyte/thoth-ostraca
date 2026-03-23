@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Run the Lua map stage that transforms each record into mapped post-state or derived values.
+// Responsibilities:
+// - Build the configured Lua map program for the envelope.
+// - Execute the map logic per record in parallel using the shared Lua sandbox helpers.
+// - Convert returned Lua values into Go data structures for downstream stages.
+// Architecture notes:
+// - Lua-to-Go conversion lives in this file because the map stage is the main place where arbitrary structured Lua return values enter the pipeline.
+// - Parallel execution delegates all error handling to the shared record merger so map stays aligned with other per-record stages.
 package stage
 
 import (

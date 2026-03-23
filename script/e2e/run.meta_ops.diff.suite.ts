@@ -49,6 +49,52 @@ test('diff-meta: content diff v2 matches golden', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('diff-meta: lua-filter limits paired inputs while keeping root orphan scan', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(root, 'temp', 'diff1_filtered_tmp.cue');
+  fs.mkdirSync(path.join(root, 'temp'), { recursive: true });
+  fs.writeFileSync(
+    cfgPath,
+    `{
+  configVersion: "1"
+  action: "diff-meta"
+  discovery: { root: "testdata/repos/diff1" }
+  filter: {
+    inline: """
+return locator == "a.txt"
+"""
+  }
+}`,
+    'utf8',
+  );
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-diff-meta-filtered', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  const out = JSON.parse(run.stdout) as {
+    meta: {
+      inputs: string[];
+      diff: {
+        pairedCount: number;
+        changedCount: number;
+        orphanCount: number;
+        orphanMetaFiles: string[];
+        details: Array<{ locator: string }>;
+      };
+    };
+  };
+  expect(out.meta.inputs).toEqual(['a.txt']);
+  expect(out.meta.diff.pairedCount).toBe(1);
+  expect(out.meta.diff.changedCount).toBe(0);
+  expect(out.meta.diff.details.map((d) => d.locator)).toEqual(['a.txt']);
+  expect(out.meta.diff.orphanCount).toBe(2);
+  expect(out.meta.diff.orphanMetaFiles).toEqual([
+    'dir/b.txt.thoth.yaml',
+    'orphan.txt.thoth.yaml',
+  ]);
+});
+
 test('diff-meta: structural diff v3 arrays and type changes matches golden', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

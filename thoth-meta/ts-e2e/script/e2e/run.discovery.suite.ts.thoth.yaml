@@ -1,0 +1,18 @@
+locator: script/e2e/run.discovery.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - input-pipeline discovery include/exclude controls work deterministically
+    - input-pipeline discovery skips unsafe paths by default
+    - thoth run discovery followSymlinks handles symlink dirs and loops deterministically
+    - thoth run discovery/parse permission errors obey keep-going and fail-fast
+    - thoth run executes discovery and respects gitignore by default
+    - thoth run pipeline discovery excludes ignored meta files by default
+    - thoth run pipeline discovery includes ignored meta files when noGitignore=true
+    - thoth run with valid config prints envelope JSON

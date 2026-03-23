@@ -71,6 +71,101 @@ test('thoth run executes shell and postmap', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('thoth run input-pipeline works on source files', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run input-pipeline decodes shell JSON for postMap', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_json1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_json1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run input-pipeline supports direct shell field interpolation', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_template1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_template1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run input-pipeline allows ordinary Lua postMap loops', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_lua_loop1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_lua_loop1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run input-pipeline supports reduce', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_reduce1.cue');
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_reduce1_out.golden.json',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(run.stdout).toBe(expectedOut);
+});
+
+test('thoth run input-pipeline fails on invalid shell JSON when decoding is enabled', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/input_pipeline_json_bad.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('shell-exec: invalid JSON stdout:')).toBe(true);
+});
+
+test('thoth run input-pipeline fails on invalid shell placeholder in strict mode', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(
+    root,
+    'testdata/configs/input_pipeline_template_bad.cue',
+  );
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(
+    run.stderr.includes('shell-exec: strict templating: invalid placeholder'),
+  ).toBe(true);
+});
+
 test('thoth run fails when shell program is missing', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -79,6 +174,19 @@ test('thoth run fails when shell program is missing', () => {
   expect(run.status).not.toBe(0);
   expect(run.stdout).toBe('');
   expect(run.stderr.includes('shell-exec')).toBe(true);
+});
+
+test('thoth run shell start failure preserves the real cause', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfg = path.join(root, 'testdata/configs/shell_bad_workdir.cue');
+  const run = runThoth(bin, ['run', '--config', cfg], root);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('shell-exec: program /bin/sh start failed:')).toBe(
+    true,
+  );
+  expect(run.stderr.includes('does-not-exist')).toBe(true);
 });
 
 test('thoth run reduces to count and prints full envelope', () => {
@@ -209,5 +317,7 @@ test('invalid action yields a short error mentioning allowed actions', () => {
   const run = runThoth(bin, ['run', '--config', cfg], root);
   expect(run.status).not.toBe(0);
   expect(run.stdout).toBe('');
-  expect(run.stderr.includes("allowed 'pipeline' or 'validate'")).toBe(true);
+  expect(run.stderr.includes("allowed 'pipeline', 'input-pipeline'")).toBe(
+    true,
+  );
 });

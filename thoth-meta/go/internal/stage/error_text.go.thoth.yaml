@@ -1,0 +1,16 @@
+locator: internal/stage/error_text.go
+meta:
+  architecture_notes:
+    - Whitespace collapsing is deliberate because tests assert deterministic error bytes across platforms and runtimes.
+    - Record-level embedded errors can preserve richer formatting before envelope sanitization; do not assume both paths are identical.
+  function_list:
+    - sanitizeErrorMessage
+    - sanitizedError
+  import_files_list:
+    - strings
+  language: go
+  purpose: Normalize human-facing error text into deterministic, compact strings for records and envelopes.
+  responsibilities:
+    - Collapse whitespace in error messages.
+    - Provide the shared sanitizedError helper for envelope errors.
+    - Supply a stable fallback message for empty errors.

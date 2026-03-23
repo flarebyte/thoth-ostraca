@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Build and query the in-memory git context used by enrich-git to answer record-level repository questions.
+// Responsibilities:
+// - Initialize repository state from the git directory, index, and HEAD.
+// - Translate locators into repo-relative paths and compute tracked, ignored, and status information.
+// - Compute git-style blob hashes for workspace files when comparing index state.
+// Architecture notes:
+// - The git context is rooted at both the repo root and the action root so nested discovery roots can still resolve repo-relative state safely.
+// - SHA-1 usage here is intentional because git object identity is defined that way; this is repository compatibility logic, not general-purpose hashing.
 package stage
 
 import (

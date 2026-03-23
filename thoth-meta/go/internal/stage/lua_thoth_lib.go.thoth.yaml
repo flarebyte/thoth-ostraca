@@ -1,0 +1,40 @@
+locator: internal/stage/lua_thoth_lib.go
+meta:
+  architecture_notes:
+    - This helper surface is intentionally curated; prefer adding narrow deterministic helpers over enabling generic module loading.
+    - Most helpers mutate or copy Lua tables directly, so behavior here defines the scripting ergonomics contract.
+    - String and sorting helpers are intentionally deterministic to support golden tests and reproducible output.
+  function_list:
+    - copyLuaTableShallow
+    - copyLuaValueDeep
+    - flattenInto
+    - installThothLib
+    - luaThothAll
+    - luaThothAny
+    - luaThothContains
+    - luaThothCopy
+    - luaThothDeepCopy
+    - luaThothEndsWith
+    - luaThothFilter
+    - luaThothFind
+    - luaThothFlatten
+    - luaThothIsEmpty
+    - luaThothMap
+    - luaThothPush
+    - luaThothReduce
+    - luaThothSortKeys
+    - luaThothSortValues
+    - luaThothSplit
+    - luaThothStartsWith
+    - luaThothTrim
+    - newThothLibTable
+  import_files_list:
+    - github.com/yuin/gopher-lua
+    - sort
+    - strings
+  language: go
+  purpose: Expose the small `thoth.*` Lua helper library used by config scripts to avoid repetitive boilerplate.
+  responsibilities:
+    - Register the global `thoth` helper table in the sandbox.
+    - Implement deterministic list, string, and table helpers for Lua scripts.
+    - Keep callback-based helpers such as map/filter/reduce inside the sandbox runtime.

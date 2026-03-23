@@ -1,0 +1,11 @@
+locator: internal/stage/test_helpers.go
+meta:
+  function_list:
+    - mustJSON
+    - mustRead
+    - normalizeJSON
+  import_files_list:
+    - encoding/json
+    - os
+    - testing
+  language: go

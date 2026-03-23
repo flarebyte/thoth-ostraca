@@ -1,0 +1,17 @@
+locator: internal/stage/registry.go
+meta:
+  architecture_notes:
+    - The registry is intentionally package-global and small because stage composition is built at startup, not via dynamic plugin loading.
+    - Deps is kept minimal so stage implementations can share only the runtime channels and writers they actually need.
+  function_list:
+    - Register
+    - Run
+  import_files_list:
+    - context
+    - io
+  language: go
+  purpose: Hold the stage runner registry that maps validated stage names to executable implementations.
+  responsibilities:
+    - Define the shared stage runner function signature and runtime dependencies.
+    - Register named stage runners during package initialization.
+    - Resolve and execute stages by name with a uniform unknown-stage error.

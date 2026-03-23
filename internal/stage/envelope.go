@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Define the stable envelope and metadata contract shared by all stages and serialized outputs.
+// Responsibilities:
+// - Declare the public JSON shapes for envelopes, records, meta, diff reports, and runtime settings.
+// - Validate minimal envelope invariants used by contract tests.
+// - Centralize deterministic field ordering through struct-based contracts.
+// Architecture notes:
+// - This file is the canonical wire contract; changing field names or order has broad test and compatibility impact.
+// - `Meta` intentionally mixes config/runtime metadata with aggregate outputs such as `reduced`.
+// - Many stage-specific meta structs live here so downstream JSON output stays centralized and stable.
 package stage
 
 import "fmt"
@@ -11,9 +21,11 @@ type Error struct {
 
 // DiscoveryMeta holds discovery options.
 type DiscoveryMeta struct {
-	Root           string `json:"root,omitempty"`
-	NoGitignore    bool   `json:"noGitignore,omitempty"`
-	FollowSymlinks bool   `json:"followSymlinks,omitempty"`
+	Root           string   `json:"root,omitempty"`
+	Include        []string `json:"include,omitempty"`
+	Exclude        []string `json:"exclude,omitempty"`
+	NoGitignore    bool     `json:"noGitignore,omitempty"`
+	FollowSymlinks bool     `json:"followSymlinks,omitempty"`
 }
 
 // ConfigMeta holds validated config essentials.
@@ -24,29 +36,30 @@ type ConfigMeta struct {
 
 // Meta holds optional metadata with deterministic JSON field order.
 type Meta struct {
-	ContractVersion string          `json:"contractVersion,omitempty"`
-	Stage           string          `json:"stage,omitempty"`
-	ConfigPath      string          `json:"configPath,omitempty"`
-	Config          *ConfigMeta     `json:"config,omitempty"`
-	Discovery       *DiscoveryMeta  `json:"discovery,omitempty"`
-	Validation      *ValidationMeta `json:"validation,omitempty"`
-	Limits          *LimitsMeta     `json:"limits,omitempty"`
-	LocatorPolicy   *LocatorPolicy  `json:"locatorPolicy,omitempty"`
-	FileInfo        *FileInfoMeta   `json:"fileInfo,omitempty"`
-	Git             *GitMeta        `json:"git,omitempty"`
-	Inputs          []string        `json:"inputs,omitempty"`
-	MetaFiles       []string        `json:"metaFiles,omitempty"`
-	Diff            *DiffReport     `json:"diff,omitempty"`
-	Lua             *LuaMeta        `json:"lua,omitempty"`
-	LuaSandbox      *LuaSandboxMeta `json:"luaSandbox,omitempty"`
-	Shell           *ShellMeta      `json:"shell,omitempty"`
-	Output          *OutputMeta     `json:"output,omitempty"`
-	UpdateMeta      *UpdateMetaMeta `json:"updateMeta,omitempty"`
-	DiffMeta        *DiffMetaMeta   `json:"diffMeta,omitempty"`
-	Reduced         any             `json:"reduced,omitempty"`
-	Errors          *ErrorsMeta     `json:"errors,omitempty"`
-	Workers         int             `json:"workers,omitempty"`
-	UI              *UIMeta         `json:"ui,omitempty"`
+	ContractVersion string           `json:"contractVersion,omitempty"`
+	Stage           string           `json:"stage,omitempty"`
+	ConfigPath      string           `json:"configPath,omitempty"`
+	Config          *ConfigMeta      `json:"config,omitempty"`
+	Discovery       *DiscoveryMeta   `json:"discovery,omitempty"`
+	Validation      *ValidationMeta  `json:"validation,omitempty"`
+	Limits          *LimitsMeta      `json:"limits,omitempty"`
+	LocatorPolicy   *LocatorPolicy   `json:"locatorPolicy,omitempty"`
+	FileInfo        *FileInfoMeta    `json:"fileInfo,omitempty"`
+	Git             *GitMeta         `json:"git,omitempty"`
+	Inputs          []string         `json:"inputs,omitempty"`
+	MetaFiles       []string         `json:"metaFiles,omitempty"`
+	Diff            *DiffReport      `json:"diff,omitempty"`
+	Lua             *LuaMeta         `json:"lua,omitempty"`
+	LuaSandbox      *LuaSandboxMeta  `json:"luaSandbox,omitempty"`
+	Shell           *ShellMeta       `json:"shell,omitempty"`
+	Output          *OutputMeta      `json:"output,omitempty"`
+	PersistMeta     *PersistMetaMeta `json:"persistMeta,omitempty"`
+	UpdateMeta      *UpdateMetaMeta  `json:"updateMeta,omitempty"`
+	DiffMeta        *DiffMetaMeta    `json:"diffMeta,omitempty"`
+	Reduced         any              `json:"reduced,omitempty"`
+	Errors          *ErrorsMeta      `json:"errors,omitempty"`
+	Workers         int              `json:"workers,omitempty"`
+	UI              *UIMeta          `json:"ui,omitempty"`
 }
 
 // ValidationMeta controls strictness for top-level YAML fields.
@@ -177,6 +190,7 @@ type LuaSandboxLibsMeta struct {
 // ShellMeta holds minimal shell execution settings.
 type ShellMeta struct {
 	Enabled          bool              `json:"enabled"`
+	DecodeJSONStdout bool              `json:"decodeJsonStdout"`
 	Program          string            `json:"program"`
 	ArgsTemplate     []string          `json:"argsTemplate,omitempty"`
 	WorkingDir       string            `json:"workingDir"`
@@ -200,6 +214,13 @@ type OutputMeta struct {
 	Out    string `json:"out,omitempty"`
 	Pretty bool   `json:"pretty,omitempty"`
 	Lines  bool   `json:"lines,omitempty"`
+}
+
+// PersistMetaMeta enables sidecar persistence from input-pipeline records.
+type PersistMetaMeta struct {
+	Enabled bool   `json:"enabled"`
+	DryRun  bool   `json:"dryRun,omitempty"`
+	OutDir  string `json:"outDir,omitempty"`
 }
 
 // UpdateMetaMeta holds update-meta patch settings.

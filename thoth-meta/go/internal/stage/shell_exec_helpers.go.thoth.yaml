@@ -1,0 +1,12 @@
+locator: internal/stage/shell_exec_helpers.go
+meta:
+  architecture_notes:
+    - This file is intentionally small; it exists to avoid circular drift in option shape across multiple shell helper files.
+  function_list: []
+  import_files_list: []
+  language: go
+  purpose: Hold the compact shared shell stage option struct and stage constant.
+  responsibilities:
+    - Define the internal shellOptions shape used across shell helper files.
+    - Provide the shell stage name constant shared in diagnostics.
+    - Keep shell helper coupling explicit without exporting stage internals broadly.

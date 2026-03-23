@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Execute the tiny expectedLua contract used by update-meta and diff-meta to derive per-locator expected metadata.
+// Responsibilities:
+// - Wrap inline expectedLua snippets into the runtime program shape the sandbox expects.
+// - Run the snippet with locator and existingMeta context.
+// - Validate that the snippet returns a function and then an object result.
+// Architecture notes:
+// - expectedLua is wrapped to require a returned function on purpose so config authors write explicit per-locator transforms instead of implicit top-level scripts.
+// - The type-marker key is an internal sentinel used only to distinguish a non-function return from a valid object result.
 package stage
 
 import "fmt"

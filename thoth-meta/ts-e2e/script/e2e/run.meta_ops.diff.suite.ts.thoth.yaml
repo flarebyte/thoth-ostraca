@@ -1,0 +1,25 @@
+locator: script/e2e/run.meta_ops.diff.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'diff-meta: computes orphans and counts deterministically'
+    - 'diff-meta: content diff v2 matches golden'
+    - 'diff-meta: detailed format includes deterministic changes with old/new values'
+    - 'diff-meta: expectedLua derives per-locator expected meta (golden)'
+    - 'diff-meta: failOnChange deterministic workers=1 vs workers=8'
+    - 'diff-meta: failOnChange=true exits 0 when no paired drift exists'
+    - 'diff-meta: failOnChange=true returns exit 2 with full diff output'
+    - 'diff-meta: failOnChange=true with keep-going parse errors exits 1'
+    - 'diff-meta: json-patch deterministic workers=1 vs workers=8'
+    - 'diff-meta: json-patch format includes deterministic RFC6902 patch ops'
+    - 'diff-meta: only=changed + summary=true reflects filtered report counts'
+    - 'diff-meta: only=changed filters details deterministically'
+    - 'diff-meta: only=orphans omits paired details and keeps sorted orphans'
+    - 'diff-meta: only=unchanged filters details'
+    - 'diff-meta: structural diff v3 arrays and type changes matches golden'
+    - 'diff-meta: summary=true emits deterministic stderr summary and keeps stdout golden'

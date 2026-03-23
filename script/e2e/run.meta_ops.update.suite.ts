@@ -9,6 +9,24 @@ import {
   saveOutputs,
 } from './helpers';
 
+function expectPersistSummary(
+  root: string,
+  stdout: string,
+  goldenRelPath: string,
+): void {
+  const out = JSON.parse(stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  const summary = {
+    locators: out.records.map((r) => r.locator),
+    metaPaths: out.records.map((r) => r.post?.metaPath),
+  };
+  const expectedSummary = JSON.parse(
+    fs.readFileSync(path.join(root, goldenRelPath), 'utf8'),
+  );
+  expect(summary).toEqual(expectedSummary);
+}
+
 test('create-meta: creates .thoth.yaml files and prints expected envelope', () => {
   const root = projectRoot();
   const bin = buildBinary(root);
@@ -45,6 +63,405 @@ test('create-meta: creates .thoth.yaml files and prints expected envelope', () =
     'testdata/run/create1_out.golden.json',
   );
   expect(run.stdout).toBe(expectedOut);
+});
+
+test('create-meta: lua-filter limits which sidecars are created', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/create1');
+  const tempRepo = path.join(root, 'temp', 'create1_repo_filtered');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'create1_filtered_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "create-meta"
+  discovery: { root: "${path.join('temp', 'create1_repo_filtered').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return locator == "dir/b.txt"
+"""
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-create-meta-filtered', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
+  const metaB = path.join(tempRepo, 'dir', 'b.txt.thoth.yaml');
+  const metaIgnored = path.join(tempRepo, 'ignored.txt.thoth.yaml');
+  const metaC = path.join(tempRepo, 'skipdir', 'c.txt.thoth.yaml');
+  expect(fs.existsSync(metaA)).toBe(false);
+  expect(fs.existsSync(metaB)).toBe(true);
+  expect(fs.existsSync(metaIgnored)).toBe(false);
+  expect(fs.existsSync(metaC)).toBe(false);
+  expect(fs.readFileSync(metaB, 'utf8')).toBe('locator: dir/b.txt\nmeta: {}\n');
+
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  expect(out.records.map((r) => r.locator)).toEqual(['dir/b.txt']);
+  expect(out.records.map((r) => r.post?.metaPath)).toEqual([
+    'dir/b.txt.thoth.yaml',
+  ]);
+});
+
+test('input-pipeline: writes .thoth.yaml sidecars from postMap meta', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(root, 'temp', 'input_pipeline_persist_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_persist_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_persist_repo').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return string.sub(locator, -3) == ".go"
+  and string.sub(locator, -8) ~= "_test.go"
+"""
+  }
+  map: {
+    inline: """
+return {
+  locator = locator,
+  kind = "go",
+}
+"""
+  }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = {
+    kind = shell and shell.json and shell.json.kind,
+    shellLocator = shell and shell.json and shell.json.locator,
+  },
+}
+"""
+  }
+  persistMeta: { enabled: true }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-persist', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const metaA = path.join(tempRepo, 'a.go.thoth.yaml');
+  const metaC = path.join(tempRepo, 'sub', 'c.go.thoth.yaml');
+  const metaTest = path.join(tempRepo, 'a_test.go.thoth.yaml');
+  expect(fs.existsSync(metaA)).toBe(true);
+  expect(fs.existsSync(metaC)).toBe(true);
+  expect(fs.existsSync(metaTest)).toBe(false);
+
+  expect(fs.readFileSync(metaA, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_a_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+  expect(fs.readFileSync(metaC, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_c_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+
+  expectPersistSummary(
+    root,
+    run.stdout,
+    'testdata/run/input_pipeline_persist_summary.golden.json',
+  );
+});
+
+test('input-pipeline: malformed postMap meta fails before sidecar writes', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(
+    root,
+    'temp',
+    'input_pipeline_persist_invalid_repo',
+  );
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(
+    root,
+    'temp',
+    'input_pipeline_persist_invalid_tmp.cue',
+  );
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_persist_invalid_repo').replaceAll('\\', '\\\\')}" }
+  filter: { inline: "return locator == \\"a.go\\"" }
+  map: { inline: "return { locator = locator }" }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = "bad",
+}
+"""
+  }
+  persistMeta: { enabled: true }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-persist-invalid', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('merge-meta: post.meta must be object')).toBe(
+    true,
+  );
+  expect(fs.existsSync(path.join(tempRepo, 'a.go.thoth.yaml'))).toBe(false);
+});
+
+test('input-pipeline: progress writes structured stderr and keeps stdout clean', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(
+    root,
+    'testdata/configs/input_pipeline_progress1.cue',
+  );
+  const expectedOut = expectedJSONFromGolden(
+    root,
+    'testdata/run/input_pipeline_progress1_out.golden.json',
+  );
+  const expectedProgress = fs.readFileSync(
+    path.join(
+      root,
+      'testdata/run/input_pipeline_progress1_progress.golden.txt',
+    ),
+    'utf8',
+  );
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-progress', run);
+  expect(run.status).toBe(0);
+  expect(run.stdout).toBe(expectedOut);
+  expect(run.stderr).toBe(expectedProgress);
+});
+
+test('input-pipeline: writes sidecars to dedicated output directory', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(root, 'temp', 'input_pipeline_outdir_repo');
+  const outDir = path.join(root, 'temp', 'input_pipeline_outdir_sidecars');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.rmSync(outDir, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_outdir_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_outdir_repo').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return string.sub(locator, -3) == ".go"
+  and string.sub(locator, -8) ~= "_test.go"
+"""
+  }
+  map: {
+    inline: """
+return {
+  locator = locator,
+  kind = "go",
+}
+"""
+  }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = {
+    kind = shell and shell.json and shell.json.kind,
+    shellLocator = shell and shell.json and shell.json.locator,
+  },
+}
+"""
+  }
+  persistMeta: {
+    enabled: true
+    outDir: "../input_pipeline_outdir_sidecars"
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-outdir', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const sourceMetaA = path.join(tempRepo, 'a.go.thoth.yaml');
+  const sourceMetaC = path.join(tempRepo, 'sub', 'c.go.thoth.yaml');
+  expect(fs.existsSync(sourceMetaA)).toBe(false);
+  expect(fs.existsSync(sourceMetaC)).toBe(false);
+
+  const outMetaA = path.join(outDir, 'a.go.thoth.yaml');
+  const outMetaC = path.join(outDir, 'sub', 'c.go.thoth.yaml');
+  expect(fs.existsSync(outMetaA)).toBe(true);
+  expect(fs.existsSync(outMetaC)).toBe(true);
+  expect(fs.readFileSync(outMetaA, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_a_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+  expect(fs.readFileSync(outMetaC, 'utf8')).toBe(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/golden/meta/input_pipeline_persist_c_expected.thoth.yaml',
+      ),
+      'utf8',
+    ),
+  );
+
+  expectPersistSummary(
+    root,
+    run.stdout,
+    'testdata/run/input_pipeline_persist_outdir_summary.golden.json',
+  );
+});
+
+test('input-pipeline: invalid persistMeta.outDir config fails early', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_outdir_invalid.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "testdata/repos/input_pipeline1" }
+  persistMeta: {
+    enabled: true
+    outDir: "   "
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-outdir-invalid', run);
+  expect(run.status).not.toBe(0);
+  expect(run.stdout).toBe('');
+  expect(run.stderr.includes('invalid persistMeta.outDir')).toBe(true);
+});
+
+test('input-pipeline: dry-run reports intended writes and creates no sidecars', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/input_pipeline1');
+  const tempRepo = path.join(root, 'temp', 'input_pipeline_dryrun_repo');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'input_pipeline_dryrun_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "input-pipeline"
+  discovery: { root: "${path.join('temp', 'input_pipeline_dryrun_repo').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return string.sub(locator, -3) == ".go"
+  and string.sub(locator, -8) ~= "_test.go"
+"""
+  }
+  map: {
+    inline: """
+return {
+  locator = locator,
+  kind = "go",
+}
+"""
+  }
+  shell: {
+    enabled: true
+    decodeJsonStdout: true
+    program: "sh"
+    argsTemplate: ["-c", "printf '%s\\\\n' '{json}'"]
+  }
+  postMap: {
+    inline: """
+return {
+  meta = {
+    kind = shell and shell.json and shell.json.kind,
+    shellLocator = shell and shell.json and shell.json.locator,
+  },
+}
+"""
+  }
+  persistMeta: {
+    enabled: true
+    dryRun: true
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const beforeA = path.join(tempRepo, 'a.go.thoth.yaml');
+  const beforeC = path.join(tempRepo, 'sub', 'c.go.thoth.yaml');
+  expect(fs.existsSync(beforeA)).toBe(false);
+  expect(fs.existsSync(beforeC)).toBe(false);
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-input-pipeline-dryrun', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+  expect(fs.existsSync(beforeA)).toBe(false);
+  expect(fs.existsSync(beforeC)).toBe(false);
+  const out = JSON.parse(run.stdout) as {
+    meta: { persistMeta: { enabled: boolean; dryRun: boolean } };
+    records: Array<{
+      locator: string;
+      post?: { metaPath?: string; writeSkipped?: string };
+    }>;
+  };
+  expect(out.meta.persistMeta.enabled).toBe(true);
+  expect(out.meta.persistMeta.dryRun).toBe(true);
+  const summary = {
+    locators: out.records.map((r) => r.locator),
+    metaPaths: out.records.map((r) => r.post?.metaPath),
+    writeSkipped: out.records.map((r) => r.post?.writeSkipped),
+  };
+  const expectedSummary = JSON.parse(
+    fs.readFileSync(
+      path.join(
+        root,
+        'testdata/run/input_pipeline_persist_dryrun_summary.golden.json',
+      ),
+      'utf8',
+    ),
+  );
+  expect(summary).toEqual(expectedSummary);
 });
 
 test('create-meta: second run fails-fast when meta exists', () => {
@@ -102,6 +519,48 @@ test('update-meta: preserves existing meta and creates missing', () => {
     'testdata/run/update1_out.golden.json',
   );
   expect(run.stdout).toBe(expectedOut);
+});
+
+test('update-meta: lua-filter limits which files are updated', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/update1');
+  const tempRepo = path.join(root, 'temp', 'update1_repo_filtered');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'update1_filtered_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update1_repo_filtered').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return locator == "b.txt"
+"""
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta-filtered', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
+  const metaB = path.join(tempRepo, 'b.txt.thoth.yaml');
+  expect(fs.readFileSync(metaA, 'utf8')).toBe(
+    'locator: a.txt\nmeta: { x: 1 }\n\n',
+  );
+  expect(fs.existsSync(metaB)).toBe(true);
+  expect(fs.readFileSync(metaB, 'utf8')).toBe('locator: b.txt\nmeta: {}\n');
+
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  expect(out.records.map((r) => r.locator)).toEqual(['b.txt']);
+  expect(out.records.map((r) => r.post?.metaPath)).toEqual([
+    'b.txt.thoth.yaml',
+  ]);
 });
 
 test('update-meta: invalid existing meta embeds errors in keep-going and still creates others', () => {

@@ -1,0 +1,46 @@
+locator: internal/e2e/determinism_test.go
+meta:
+  function_list:
+    - TestDeterminism_CreateMeta
+    - TestDeterminism_DiffMeta
+    - TestDeterminism_InputDiscoverySafeDefault_MultiRuns
+    - TestDeterminism_InputPipelineJSON_MultiRuns
+    - TestDeterminism_InputPipelineLuaLoop_MultiRuns
+    - TestDeterminism_InputPipelinePersistDryRun_MultiRuns
+    - TestDeterminism_InputPipelinePersistOutDir_MultiRuns
+    - TestDeterminism_InputPipelinePersist_MultiRuns
+    - TestDeterminism_InputPipelineProgress_MultiRuns
+    - TestDeterminism_InputPipelineTemplate_MultiRuns
+    - TestDeterminism_InputPipeline_MultiRuns
+    - TestDeterminism_Pipeline_MultiRuns
+    - TestDeterminism_Pipeline_Workers
+    - TestDeterminism_UpdateMeta
+    - TestDeterminism_Validate
+    - assertInputPipelinePersistDeterminism
+    - assertInputPipelinePersistDryRunDeterminism
+    - assertInputPipelinePersistOutDirDeterminism
+    - assertMetaActionDeterminism
+    - assertPersistSidecarDeterminism
+    - assertStable
+    - assertStableBytes
+    - assertStableStdout
+    - assertStdoutDeterminism
+    - buildThoth
+    - fmtSprintf
+    - normalizeWorkersJSON
+    - readTwoSidecars
+    - repoRoot
+    - runCmd
+    - runDeterminismConfigRun
+  import_files_list:
+    - bytes
+    - encoding/json
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - github.com/flarebyte/thoth-ostraca/internal/testutil
+    - os
+    - os/exec
+    - path/filepath
+    - runtime
+    - testing
+  language: go

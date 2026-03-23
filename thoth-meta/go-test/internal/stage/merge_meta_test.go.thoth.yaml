@@ -1,0 +1,12 @@
+locator: internal/stage/merge_meta_test.go
+meta:
+  function_list:
+    - TestDeepMerge_Rules
+    - TestMergeMetaRunner_UsesExpectedLuaPerLocator
+    - TestMergeMetaRunner_UsesPatchWhenNoExisting
+    - TestMergeMetaRunner_UsesPostMetaWhenPersistEnabled
+  import_files_list:
+    - context
+    - github.com/flarebyte/thoth-ostraca/internal/metafile
+    - testing
+  language: go

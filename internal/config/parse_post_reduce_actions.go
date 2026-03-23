@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse the later-stage action sections that shape post-processing, persistence, update, and diff behavior.
+// Responsibilities:
+// - Decode postMap and reduce Lua sections.
+// - Decode persistMeta settings for sidecar writes.
+// - Decode updateMeta and diffMeta sections, including their stricter validation rules.
+// Architecture notes:
+// - updateMeta and diffMeta parsing return errors directly because these sections have richer schema constraints than the lighter parse helpers.
+// - Defaults for diffMeta format/only are assigned here so later stages can rely on normalized values.
 package config
 
 import (
@@ -36,6 +45,32 @@ func parseReduceSection(v cue.Value) Reduce {
 		}
 	}
 	return r
+}
+
+// parsePersistMetaSection extracts optional persistMeta.enabled.
+func parsePersistMetaSection(v cue.Value) PersistMeta {
+	var p PersistMeta
+	pv := v.LookupPath(cue.ParsePath("persistMeta"))
+	if !pv.Exists() {
+		return p
+	}
+	p.HasSection = true
+	ev := pv.LookupPath(cue.ParsePath("enabled"))
+	if ev.Exists() && ev.Kind() == cue.BoolKind {
+		_ = ev.Decode(&p.Enabled)
+		p.HasEnabled = true
+	}
+	dv := pv.LookupPath(cue.ParsePath("dryRun"))
+	if dv.Exists() && dv.Kind() == cue.BoolKind {
+		_ = dv.Decode(&p.DryRun)
+		p.HasDryRun = true
+	}
+	ov := pv.LookupPath(cue.ParsePath("outDir"))
+	if ov.Exists() && ov.Kind() == cue.StringKind {
+		_ = ov.Decode(&p.OutDir)
+		p.HasOutDir = true
+	}
+	return p
 }
 
 // parseUpdateMetaSection extracts optional updateMeta.patch object.

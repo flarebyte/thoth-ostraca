@@ -1,0 +1,10 @@
+locator: cmd/thoth/version/version_test.go
+meta:
+  function_list:
+    - TestVersionDefaultOutputStable
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/buildinfo
+    - io
+    - os
+    - testing
+  language: go

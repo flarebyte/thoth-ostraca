@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Resolve last-commit information for a repo path by walking commit and tree objects in the git object store.
+// Responsibilities:
+// - Traverse commit ancestry until the first commit that changes the requested path.
+// - Parse commit metadata and tree blobs from raw git object payloads.
+// - Cache commit and blob lookups on the git context for reuse across records.
+// Architecture notes:
+// - This code reads git objects directly instead of shelling out to git so enrichment stays deterministic and does not depend on external binaries.
+// - Path commit lookup intentionally memoizes commit and tree state because multiple records often share ancestry and tree traversals.
 package stage
 
 import (

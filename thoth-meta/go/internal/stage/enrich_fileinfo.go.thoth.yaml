@@ -1,0 +1,21 @@
+locator: internal/stage/enrich_fileinfo.go
+meta:
+  architecture_notes:
+    - File timestamps are normalized to UTC and second precision so outputs remain deterministic across platforms and filesystems.
+    - This stage enriches records only; it does not influence discovery, so missing files become stage errors rather than silently changing the input set.
+  function_list:
+    - enrichFileInfoRunner
+    - init
+    - statToRecInfo
+  import_files_list:
+    - context
+    - fmt
+    - os
+    - path/filepath
+    - time
+  language: go
+  purpose: Attach normalized filesystem stat information to each input record when file info enrichment is enabled.
+  responsibilities:
+    - Read file metadata for each locator relative to the discovery root.
+    - Normalize modTime, mode, and size into the RecFileInfo contract.
+    - Surface stat failures through the standard stage error model.

@@ -1,0 +1,15 @@
+locator: internal/app/app.go
+meta:
+  architecture_notes:
+    - This file is intentionally skeletal; do not infer a larger app-layer pattern from it yet.
+    - The placeholder output exists to keep early wiring simple until real command handlers replace it.
+  function_list:
+    - RunHello
+  import_files_list:
+    - fmt
+  language: go
+  purpose: Provide the minimal placeholder app entrypoint used while the real internal app layer is still thin.
+  responsibilities:
+    - Expose a tiny runnable internal app function.
+    - Print a placeholder message for early wiring and smoke checks.
+    - Act as the handoff point for future internal application orchestration.

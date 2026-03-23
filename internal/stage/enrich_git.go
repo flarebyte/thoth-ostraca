@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Attach git tracking, status, ignore, and last-commit metadata to records for repository-aware workflows.
+// Responsibilities:
+// - Locate the enclosing git repository for the configured root.
+// - Build a reusable git context and derive RecGit data for each locator.
+// - Convert repository and per-record failures into stable stage errors.
+// Architecture notes:
+// - Repository setup happens once per stage run so record processing can reuse parsed git state instead of reopening repository data per file.
+// - Git errors are normalized to a small fixed vocabulary because raw filesystem and object-store failures are too noisy for end users.
 package stage
 
 import (

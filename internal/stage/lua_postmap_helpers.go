@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Execute the postMap phase that reshapes mapped and shell data into the final per-record post payload.
+// Responsibilities:
+// - Build the Lua postMap program from config.
+// - Provide a deterministic default postMap when no custom Lua is configured.
+// - Run postMap across records and merge record/envelope errors.
+// Architecture notes:
+// - postMap is the bridge between shell output and persistence/output; many user-visible workflows rely on this exact record shape.
+// - The default non-Lua path exists to keep output stable even when no custom script is present.
 package stage
 
 import (
@@ -51,6 +60,9 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 		if rec.Shell.Stdout != nil {
 			shellMap["stdout"] = *rec.Shell.Stdout
 		}
+		if rec.Shell.JSON != nil {
+			shellMap["json"] = rec.Shell.JSON
+		}
 		if rec.Shell.Stderr != nil {
 			shellMap["stderr"] = *rec.Shell.Stderr
 		}
@@ -58,14 +70,18 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 			shellMap["error"] = *rec.Shell.Error
 		}
 	}
-	ret, violation, err := runLuaScriptWithSandbox(luaPostMapStage, metaCfg, rec.Locator, map[string]any{
-		"locator": rec.Locator,
-		"meta":    rec.Meta,
-		"mapped":  rec.Mapped,
-		"shell":   shellMap,
-	}, code)
+	luaCtx := luaRecordContext(rec)
+	luaCtx["mapped"] = rec.Mapped
+	luaCtx["shell"] = shellMap
+	ret, violation, err := runLuaScriptWithSandbox(
+		luaPostMapStage,
+		metaCfg,
+		rec.Locator,
+		luaCtx,
+		code,
+	)
 	if err != nil {
-		msg := sanitizeErrorMessage(err.Error())
+		msg := formatLuaError(luaPostMapStage, rec.Locator, code, err.Error())
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaPostMapStage, Message: msg}
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: msg}, nil
@@ -73,7 +89,7 @@ func processLuaPostMapRecord(rec Record, code string, mode string, metaCfg *Meta
 		return Record{}, nil, fmt.Errorf("lua-postmap: %s", msg)
 	}
 	if violation != "" {
-		msg := sanitizeErrorMessage(violation)
+		msg := formatLuaError(luaPostMapStage, rec.Locator, code, violation)
 		if mode == "keep-going" {
 			rec.Error = &RecError{Stage: luaPostMapStage, Message: msg}
 			return rec, &Error{Stage: luaPostMapStage, Locator: rec.Locator, Message: msg}, nil

@@ -1,0 +1,21 @@
+locator: internal/stage/perf_bench_test.go
+meta:
+  function_list:
+    - BenchmarkDiscoverMetaFiles
+    - BenchmarkLuaFilter
+    - BenchmarkLuaMap
+    - BenchmarkParseValidateYAML
+    - BenchmarkShellExecNoOp
+    - benchmarkLuaEnvelope
+    - benchmarkRootMeta
+    - writeBenchmarkYAMLFiles
+  import_files_list:
+    - context
+    - fmt
+    - os
+    - os/exec
+    - path/filepath
+    - runtime
+    - sort
+    - testing
+  language: go

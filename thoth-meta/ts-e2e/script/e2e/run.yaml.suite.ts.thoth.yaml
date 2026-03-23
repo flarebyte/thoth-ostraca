@@ -1,0 +1,19 @@
+locator: script/e2e/run.yaml.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'parse-validate-yaml determinism: many files workers=1 equals workers=8'
+    - parse-validate-yaml maxYAMLBytes keep-going collects size error and fail-fast exits
+    - thoth run fails on invalid YAML (missing meta)
+    - thoth run parse-validate-yaml unreadable file obeys keep-going and fail-fast
+    - thoth run parses YAML records into {locator,meta}
+    - thoth run pipeline parse-validate-yaml fail-fast exits non-zero and includes invalid file path
+    - thoth run pipeline parse-validate-yaml keep-going embeds record errors and envelope errors
+    - thoth run strict top-level allowUnknownTopLevel accepts unknown keys and drops them
+    - thoth run strict top-level default rejects unknown keys

@@ -1,0 +1,8 @@
+locator: internal/stage/e2e_policy_test.go
+meta:
+  function_list:
+    - TestE2EPolicy_NoNewGoE2ETests
+  import_files_list:
+    - path/filepath
+    - testing
+  language: go

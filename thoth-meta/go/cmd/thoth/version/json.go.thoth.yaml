@@ -1,0 +1,16 @@
+locator: cmd/thoth/version/json.go
+meta:
+  architecture_notes:
+    - This helper exists separately so the version command can stay focused on data selection rather than serialization details.
+    - Indented JSON is part of the user-facing contract for version output, so the format is fixed here instead of left to callers.
+  function_list:
+    - encodeJSON
+  import_files_list:
+    - encoding/json
+    - io
+  language: go
+  purpose: Provide the small JSON encoding helper used by the version command.
+  responsibilities:
+    - Encode a value to JSON on the provided writer.
+    - Apply the stable pretty indent used by `thoth version --json`.
+    - Keep JSON output concerns out of the version command body.

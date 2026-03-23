@@ -1,0 +1,17 @@
+locator: internal/stage/shell_exec.go
+meta:
+  architecture_notes:
+    - This file orchestrates the stage only; rendering, spawning, and result shaping live in helper files.
+    - Progress reporting is kept here because it depends on stage-level worker fan-out, not individual shell mechanics.
+  function_list:
+    - init
+    - shellExecRunner
+  import_files_list:
+    - context
+    - fmt
+  language: go
+  purpose: Run the shell-exec stage across records when shell analysis is enabled in the config.
+  responsibilities:
+    - Build and validate stage-level shell options from envelope metadata.
+    - Dispatch per-record shell execution in parallel.
+    - Emit progress events and merge shell results back into the envelope.

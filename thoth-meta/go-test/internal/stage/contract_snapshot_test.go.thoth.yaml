@@ -1,0 +1,26 @@
+locator: internal/stage/contract_snapshot_test.go
+meta:
+  function_list:
+    - TestContract_CreateMeta
+    - TestContract_DiffMeta
+    - TestContract_Goldens_Schema
+    - TestContract_Pipeline
+    - TestContract_UpdateMeta
+    - TestContract_Validate
+    - ValidateEnvelopeShape
+    - assertJSONEqual
+    - encodeEnvelopeContract
+    - rootTempPath
+    - runActionWithConfig
+    - testdataPath
+    - validateContractBytes
+  import_files_list:
+    - context
+    - encoding/json
+    - errors
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - github.com/flarebyte/thoth-ostraca/internal/testutil
+    - os
+    - path/filepath
+    - testing
+  language: go

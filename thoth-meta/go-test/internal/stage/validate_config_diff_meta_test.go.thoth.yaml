@@ -1,0 +1,17 @@
+locator: internal/stage/validate_config_diff_meta_test.go
+meta:
+  function_list:
+    - TestValidateConfig_DiffMetaExpectedLuaMustBeString
+    - TestValidateConfig_DiffMetaExpectedPatchMustBeObject
+    - TestValidateConfig_DiffMetaFailOnChangeMustBeBoolean
+    - TestValidateConfig_DiffMetaFormatJSONPatch
+    - TestValidateConfig_DiffMetaFormatMustBeKnown
+    - TestValidateConfig_DiffMetaOnlyMustBeKnown
+    - TestValidateConfig_DiffMetaSummaryMustBeBoolean
+    - TestValidateConfig_ExposesDiffMetaExpectedPatch_Configured
+    - TestValidateConfig_ExposesDiffMetaExpectedPatch_Default
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - strings
+    - testing
+  language: go

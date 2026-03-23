@@ -1,0 +1,28 @@
+locator: internal/stage/discover_meta_files_helpers.go
+meta:
+  architecture_notes:
+    - Meta discovery keeps its own walker because it must handle symlink recursion, keep-going errors, and locator deduplication in one place.
+    - Error helpers sanitize paths relative to the discovery root so failures stay stable across machines and absolute checkout locations.
+  function_list:
+    - addDiscoveryError
+    - dirsForRel
+    - discoveryFatal
+    - displayDiscoveryPath
+    - findThothYAMLs
+    - hasThothYAML
+    - matchIgnore
+    - readGitignorePatterns
+    - shouldIgnore
+  import_files_list:
+    - fmt
+    - github.com/go-git/go-git/v5/plumbing/format/gitignore
+    - os
+    - path/filepath
+    - sort
+    - strings
+  language: go
+  purpose: Provide the low-level filesystem and gitignore helpers that power deterministic .thoth.yaml discovery.
+  responsibilities:
+    - Read layered .gitignore patterns for a relative path and evaluate ignore matches.
+    - Walk a root directory, follow symlinked directories when configured, and collect sidecar locators.
+    - Normalize discovery-path errors into stable locator-scoped diagnostics.

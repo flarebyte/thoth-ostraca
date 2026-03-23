@@ -1,0 +1,16 @@
+locator: internal/stage/persist_meta_paths.go
+meta:
+  architecture_notes:
+    - Path resolution is centralized here so alongside-source mode and dedicated outDir mode cannot drift across stages.
+    - Relative sidecar paths stay locator-based even when outDir is used, which keeps output contracts stable across persistence modes.
+  function_list:
+    - persistMetaFilePath
+    - persistMetaRoot
+  import_files_list:
+    - path/filepath
+  language: go
+  purpose: Resolve deterministic sidecar output roots and file paths for create, update, and file-pipeline persistence flows.
+  responsibilities:
+    - Compute the effective persistence root from discovery root and optional outDir.
+    - Derive the canonical sidecar relative path from a locator.
+    - Return matching absolute and relative paths for downstream read/write stages.

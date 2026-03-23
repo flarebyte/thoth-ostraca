@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide low-level helpers for reading git refs, index entries, and loose objects from the repository store.
+// Responsibilities:
+// - Resolve the effective git directory for normal and worktree-style repositories.
+// - Read HEAD and refs and parse the git index into in-memory entries.
+// - Inflate loose objects and extract typed payloads for commit and tree parsing.
+// Architecture notes:
+// - This file intentionally implements only the subset of git storage needed by enrich-git, which keeps the code small and avoids a heavier dependency.
+// - Missing packed objects are not handled here because the current enrichment contract targets simple local repos and fixtures first.
 package stage
 
 import (

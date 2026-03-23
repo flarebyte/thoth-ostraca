@@ -1,0 +1,17 @@
+locator: internal/stage/validate_config_apply_discovery_limits.go
+meta:
+  architecture_notes:
+    - Config application is split by concern so schema growth does not force one monolithic applyMinimalToMeta function.
+    - These helpers only copy parsed values; validation of those values belongs in validate_config_common_validation.go.
+  function_list:
+    - applyDiscoveryMeta
+    - applyLimitsMeta
+    - applyValidationMeta
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/config
+  language: go
+  purpose: Copy validated discovery, validation, and limits config fields into the runtime envelope metadata model.
+  responsibilities:
+    - Apply discovery root and include/exclude settings when present in the parsed config.
+    - Apply validation flags such as allowUnknownTopLevel.
+    - Apply memory and YAML size limits with the runtime defaults preserved elsewhere.

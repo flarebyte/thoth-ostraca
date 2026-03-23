@@ -1,0 +1,59 @@
+{
+  "records": [
+    {
+      "locator": "a.go",
+      "mapped": { "kind": "go", "slug": "a.go" },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "a.go|a.go|a|.go|a.go\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": { "locator": "a.go", "stdout": "a.go|a.go|a|.go|a.go\n" }
+    },
+    {
+      "locator": "sub/c.go",
+      "mapped": { "kind": "go", "slug": "sub__c.go" },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "sub/c.go|c.go|c|.go|sub__c.go\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": {
+        "locator": "sub/c.go",
+        "stdout": "sub/c.go|c.go|c|.go|sub__c.go\n"
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": { "configVersion": "1", "action": "input-pipeline" },
+    "discovery": { "root": "testdata/repos/input_pipeline1" },
+    "limits": { "maxRecordsInMemory": 10000 },
+    "lua": {
+      "filterInline": "return string.sub(locator, -3) == \".go\"\n  and string.sub(locator, -8) ~= \"_test.go\"",
+      "mapInline": "return {\n  kind = \"go\",\n  slug = string.gsub(locator, \"/\", \"__\"),\n}",
+      "postMapInline": "return {\n  locator = locator,\n  stdout = shell and shell.stdout,\n}"
+    },
+    "shell": {
+      "enabled": true,
+      "decodeJsonStdout": false,
+      "program": "sh",
+      "argsTemplate": [
+        "-c",
+        "printf '%s|%s|%s|%s|%s\\n' '{locator}' '{file.base}' '{file.stem}' '{file.ext}' '{mapped.slug}'"
+      ],
+      "workingDir": ".",
+      "timeoutMs": 60000,
+      "capture": { "stdout": true, "stderr": true, "maxBytes": 1048576 },
+      "strictTemplating": true,
+      "killProcessGroup": true,
+      "termGraceMs": 2000
+    }
+  }
+}

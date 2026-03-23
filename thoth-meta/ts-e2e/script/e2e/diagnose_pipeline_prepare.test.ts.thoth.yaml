@@ -1,0 +1,12 @@
+locator: script/e2e/diagnose_pipeline_prepare.test.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - diagnose dump-dir writes stable stage boundary fixtures for prepared pipeline
+    - diagnose prepared pipeline runs through until-stage and matches golden
+    - diagnose prepared pipeline stage-index matches stage name output

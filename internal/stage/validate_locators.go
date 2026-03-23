@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Enforce locator policy so downstream stages receive normalized URLs and safe path-style locators.
+// Responsibilities:
+// - Derive locator validation policy from the envelope metadata.
+// - Normalize allowed HTTP(S) URL locators into a stable canonical form.
+// - Reject or annotate records whose locators violate path or URL policy.
+// Architecture notes:
+// - Locator validation runs in parallel but always resorts records by locator before returning so later stages keep deterministic ordering.
+// - URL normalization is intentionally limited to HTTP(S); this prevents the locator contract from silently widening to arbitrary schemes.
 package stage
 
 import (

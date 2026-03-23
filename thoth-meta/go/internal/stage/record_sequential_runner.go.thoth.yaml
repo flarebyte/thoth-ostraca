@@ -1,0 +1,15 @@
+locator: internal/stage/record_sequential_runner.go
+meta:
+  architecture_notes:
+    - Sequential stages share this helper so ordered filesystem operations do not each reimplement the same error-mode logic.
+    - The helper sanitizes both returned errors and embedded errors centrally to keep user-visible output stable.
+  function_list:
+    - runSequentialRecordStage
+  import_files_list:
+    - fmt
+  language: go
+  purpose: Provide the common sequential record-stage loop used by create, load, and other ordered file operations.
+  responsibilities:
+    - Run a per-record function over the envelope records in order.
+    - Apply keep-going versus fail-fast error behavior consistently.
+    - Append sanitized envelope errors and embedded record errors when configured.

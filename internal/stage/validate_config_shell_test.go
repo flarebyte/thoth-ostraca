@@ -28,6 +28,9 @@ func TestValidateConfig_ExposesShellDefaultsWhenSectionPresent(t *testing.T) {
 	if !s.Enabled {
 		t.Fatalf("expected enabled=true")
 	}
+	if s.DecodeJSONStdout {
+		t.Fatalf("expected decodeJsonStdout=false by default")
+	}
 	if s.Program != "bash" || s.WorkingDir != "." || s.TimeoutMs != 60000 || s.TermGraceMs != 2000 {
 		t.Fatalf("unexpected shell defaults: %+v", s)
 	}
@@ -42,5 +45,29 @@ func TestValidateConfig_ExposesShellDefaultsWhenSectionPresent(t *testing.T) {
 	}
 	if s.Env == nil || len(s.Env) != 0 {
 		t.Fatalf("expected empty env map")
+	}
+}
+
+func TestValidateConfig_RejectsDecodeJSONWithoutStdoutCapture(t *testing.T) {
+	_ = os.MkdirAll("temp", 0o755)
+	cfg := filepath.Join("temp", "shell_decode_validate_test.cue")
+	content := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  shell: {\n" +
+		"    enabled: true\n" +
+		"    decodeJsonStdout: true\n" +
+		"    argsTemplate: [\"-c\", \"printf '{}' \"]\n" +
+		"    capture: { stdout: false }\n" +
+		"  }\n}\n"
+	if err := os.WriteFile(cfg, []byte(content), 0o644); err != nil {
+		t.Fatalf("write cfg: %v", err)
+	}
+	in := Envelope{Records: []Record{}, Meta: &Meta{ConfigPath: cfg}}
+	_, err := Run(context.Background(), "validate-config", in, Deps{})
+	if err == nil {
+		t.Fatalf("expected validate-config error")
+	}
+	if got := err.Error(); got != "invalid shell.capture.stdout: must be true when shell.decodeJsonStdout=true" {
+		t.Fatalf("unexpected error: %s", got)
 	}
 }

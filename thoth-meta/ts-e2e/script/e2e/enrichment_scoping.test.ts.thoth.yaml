@@ -1,0 +1,14 @@
+locator: script/e2e/enrichment_scoping.test.ts
+meta:
+  import_files_list:
+    - ./config_helpers
+    - ./helpers
+    - ./shell_helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'determinism with fileInfo+git enabled: workers=1 vs workers=8'
+    - no-enrichment contract across pipeline/validate/create-meta/update-meta/diff-meta
+    - 'positive scoping: create-meta and update-meta include fileInfo/git only when enabled'

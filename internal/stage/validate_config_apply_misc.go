@@ -1,6 +1,33 @@
+// File Guide for dev/ai agents:
+// Purpose: Copy the remaining non-shell runtime config sections into metadata after minimal config parsing succeeds.
+// Responsibilities:
+// - Apply persistence, update-meta, and diff-meta settings.
+// - Apply errors, fileInfo, git, workers, UI, and locator policy settings.
+// - Rehydrate section defaults where actions require a full runtime struct.
+// Architecture notes:
+// - These helpers are grouped as “misc” because they are independent knobs whose only shared job is metadata projection, not shared runtime behavior.
+// - DiffMeta defaults are reset explicitly here so each validated config starts from a known report contract even when fields are omitted.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"
+
+func applyPersistMeta(out *Envelope, min config.Minimal) {
+	if !min.PersistMeta.HasSection {
+		return
+	}
+	if out.Meta.PersistMeta == nil {
+		out.Meta.PersistMeta = &PersistMetaMeta{}
+	}
+	if min.PersistMeta.HasEnabled {
+		out.Meta.PersistMeta.Enabled = min.PersistMeta.Enabled
+	}
+	if min.PersistMeta.HasDryRun {
+		out.Meta.PersistMeta.DryRun = min.PersistMeta.DryRun
+	}
+	if min.PersistMeta.HasOutDir {
+		out.Meta.PersistMeta.OutDir = min.PersistMeta.OutDir
+	}
+}
 
 func applyUpdateMeta(out *Envelope, min config.Minimal) {
 	if !min.UpdateMeta.HasPatch && !min.UpdateMeta.HasExpectedLuaCode {

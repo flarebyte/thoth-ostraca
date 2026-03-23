@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Copy parsed Lua stage and Lua sandbox settings from config into runtime metadata.
+// Responsibilities:
+// - Apply filter, map, postMap, and reduce inline Lua code to the envelope metadata.
+// - Apply sandbox limits and library toggles while preserving defaults for omitted fields.
+// - Initialize Lua-related metadata sections only when the config actually uses them.
+// Architecture notes:
+// - Lua stage code and Lua sandbox settings are kept separate because script presence and sandbox tuning evolve independently.
+// - Sandbox defaults are rehydrated here when the section exists so partial config blocks still get a complete runtime contract.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"

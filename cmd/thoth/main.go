@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Provide the real process entrypoint that executes the root command and normalizes top-level CLI exit behavior.
+// Responsibilities:
+// - Invoke the root command with process arguments.
+// - Render one short single-line error to stderr on failure.
+// - Exit with the mapped code when commands return an exitCoder.
+// Architecture notes:
+// - Error text is whitespace-normalized here so CLI failures stay compact and predictable across nested command errors.
+// - Exit code mapping is handled only at the top level so subcommands can return typed errors without depending on os.Exit directly.
 package main
 
 import (

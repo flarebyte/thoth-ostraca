@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse the programmable per-record stages for filtering, mapping, and shell execution.
+// Responsibilities:
+// - Decode filter.inline and map.inline Lua snippets.
+// - Decode shell execution settings, including capture, templating, and timeouts.
+// - Preserve presence flags that let later validation reason about explicit shell config.
+// Architecture notes:
+// - Shell parsing is verbose by design because many downstream defaults depend on whether a field was explicitly set.
+// - Keep filter/map here with shell because these three stages form the main programmable record pipeline.
 package config
 
 import "cuelang.org/go/cue"
@@ -46,6 +55,11 @@ func parseShellSection(v cue.Value) Shell {
 	if ev.Exists() && ev.Kind() == cue.BoolKind {
 		_ = ev.Decode(&s.Enabled)
 		s.HasEnabled = true
+	}
+	djv := sv.LookupPath(cue.ParsePath("decodeJsonStdout"))
+	if djv.Exists() && djv.Kind() == cue.BoolKind {
+		_ = djv.Decode(&s.DecodeJSONStdout)
+		s.HasDecodeJSON = true
 	}
 	pv := sv.LookupPath(cue.ParsePath("program"))
 	if pv.Exists() && pv.Kind() == cue.StringKind {

@@ -13,13 +13,13 @@ thoth run --config ./create-meta-project.thoth.cue
 What it does:
 
 - discovers input files under `discovery.root`
+- can filter them with `lua-filter`
 - skips files already ending in `.thoth.yaml`
 - creates `<locator>.thoth.yaml` alongside each discovered file
 - writes a JSON envelope to `output.out`
 
 What it cannot do:
 
-- it cannot filter discovered input files with `lua-filter`
 - it cannot map records with `lua-map`
 - it cannot run `shell-exec`
 - it cannot write sidecars to a separate output folder
@@ -42,6 +42,7 @@ thoth run --config ./update-meta-project.thoth.cue
 What it does:
 
 - discovers input files under `discovery.root`
+- can filter them with `lua-filter`
 - loads existing sidecars when present
 - merges configured metadata changes
 - writes updated `.thoth.yaml` files back alongside the source files
@@ -55,19 +56,38 @@ What it can modify:
 
 What it cannot do:
 
-- it cannot filter discovered input files with `lua-filter`
 - it cannot map records with `lua-map`
 - it cannot run `shell-exec`
 - it cannot write sidecars to a separate output folder
 
 ## Current Limitation
 
-The shipped CLI does not currently provide a `thoth run` action for:
+The shipped CLI now provides `action: "input-pipeline"` for the practical
+file workflow.
 
-- discovering arbitrary input files
-- filtering them
-- mapping them
-- optionally running shell commands
-- saving the final results somewhere
+What `input-pipeline` can do:
+
+- discover arbitrary input files
+- filter them with `lua-filter`
+- map them with `lua-map`
+- run `shell-exec` per file
+- consume decoded shell JSON in `postMap`
+- reduce records with `lua-reduce`
+- emit JSON output
+- write/update `.thoth.yaml` sidecars
+- write sidecars to a dedicated output directory
+- preview writes with `persistMeta.dryRun`
+- emit progress on stderr with `ui.progress`
+
+What is still narrower than the broader design:
+
+- `create-meta` and `update-meta` remain narrower metadata maintenance actions
+- shell JSON decoding is opt-in via `shell.decodeJsonStdout`
+- `diff-meta` now supports `lua-filter` on input files; orphan meta reporting
+  still scans the full discovered meta-file set, so filtered-out paired files
+  can appear as orphans
+- `create-meta`, `update-meta`, and `diff-meta` still do not expose the full
+  programmable `map -> shell -> postMap -> reduce` surface of
+  `input-pipeline`
 
 That is the main gap between the current metadata actions and the broader file-processing workflow.

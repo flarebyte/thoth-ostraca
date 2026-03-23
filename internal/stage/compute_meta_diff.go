@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Compare discovered inputs and existing sidecars to produce the diff-meta report consumed by users and tests.
+// Responsibilities:
+// - Build paired input/meta sets and detect orphan sidecar files.
+// - Compute expected metadata from static patches or per-locator Lua and diff it against existing metadata.
+// - Filter, summarize, and emit the final diff report into envelope metadata.
+// Architecture notes:
+// - The diff report is assembled entirely from sorted inputs and metas so summaries and detailed results remain deterministic.
+// - This stage writes its aggregate result into meta.diff instead of mutating records because diff-meta is a reporting action, not a persistence action.
 package stage
 
 import (

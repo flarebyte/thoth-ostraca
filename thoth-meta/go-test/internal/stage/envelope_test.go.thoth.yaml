@@ -1,0 +1,9 @@
+locator: internal/stage/envelope_test.go
+meta:
+  function_list:
+    - TestEnvelopeContractSnapshotV1
+    - TestRecordContractSnapshotV1
+  import_files_list:
+    - path/filepath
+    - testing
+  language: go

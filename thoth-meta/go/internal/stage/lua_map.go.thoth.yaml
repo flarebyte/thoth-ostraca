@@ -1,0 +1,18 @@
+locator: internal/stage/lua_map.go
+meta:
+  architecture_notes:
+    - Lua-to-Go conversion lives in this file because the map stage is the main place where arbitrary structured Lua return values enter the pipeline.
+    - Parallel execution delegates all error handling to the shared record merger so map stays aligned with other per-record stages.
+  function_list:
+    - fromLValue
+    - init
+    - luaMapRunner
+  import_files_list:
+    - context
+    - github.com/yuin/gopher-lua
+  language: go
+  purpose: Run the Lua map stage that transforms each record into mapped post-state or derived values.
+  responsibilities:
+    - Build the configured Lua map program for the envelope.
+    - Execute the map logic per record in parallel using the shared Lua sandbox helpers.
+    - Convert returned Lua values into Go data structures for downstream stages.

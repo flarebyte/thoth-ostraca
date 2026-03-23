@@ -1,0 +1,100 @@
+{
+  "records": [
+    {
+      "locator": "a.go",
+      "mapped": {
+        "kind": "go"
+      },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "a.go\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": {
+        "existingMetaPath": "a.go.thoth.yaml",
+        "meta": {
+          "kind": "go",
+          "shellLocator": "a.go\n"
+        },
+        "metaPath": "a.go.thoth.yaml",
+        "nextMeta": {
+          "kind": "go",
+          "shellLocator": "a.go\n"
+        },
+        "writeSkipped": "dry-run"
+      }
+    },
+    {
+      "locator": "sub/c.go",
+      "mapped": {
+        "kind": "go"
+      },
+      "shell": {
+        "exitCode": 0,
+        "stdout": "sub/c.go\n",
+        "stderr": "",
+        "stdoutTruncated": false,
+        "stderrTruncated": false,
+        "timedOut": false
+      },
+      "post": {
+        "existingMetaPath": "sub/c.go.thoth.yaml",
+        "meta": {
+          "kind": "go",
+          "shellLocator": "sub/c.go\n"
+        },
+        "metaPath": "sub/c.go.thoth.yaml",
+        "nextMeta": {
+          "kind": "go",
+          "shellLocator": "sub/c.go\n"
+        },
+        "writeSkipped": "dry-run"
+      }
+    }
+  ],
+  "meta": {
+    "contractVersion": "1",
+    "config": {
+      "configVersion": "1",
+      "action": "input-pipeline"
+    },
+    "discovery": {
+      "root": "testdata/repos/input_pipeline1"
+    },
+    "limits": {
+      "maxRecordsInMemory": 10000
+    },
+    "lua": {
+      "filterInline": "return string.sub(locator, -3) == \".go\"\n  and string.sub(locator, -8) ~= \"_test.go\"",
+      "mapInline": "return {\n  kind = \"go\",\n}",
+      "postMapInline": "return {\n  meta = {\n    kind = mapped and mapped.kind,\n    shellLocator = shell and shell.stdout,\n  },\n}"
+    },
+    "shell": {
+      "enabled": true,
+      "decodeJsonStdout": false,
+      "program": "sh",
+      "argsTemplate": ["-c", "printf '%s\\n' '{locator}'"],
+      "workingDir": ".",
+      "timeoutMs": 60000,
+      "capture": {
+        "stdout": true,
+        "stderr": true,
+        "maxBytes": 1048576
+      },
+      "strictTemplating": true,
+      "killProcessGroup": true,
+      "termGraceMs": 2000
+    },
+    "persistMeta": {
+      "enabled": true,
+      "dryRun": true
+    },
+    "ui": {
+      "progress": true,
+      "progressIntervalMs": 1
+    }
+  }
+}

@@ -1,0 +1,17 @@
+locator: internal/config/parse_filter_map_shell.go
+meta:
+  architecture_notes:
+    - Shell parsing is verbose by design because many downstream defaults depend on whether a field was explicitly set.
+    - Filter, map, and shell are grouped here because they form the main programmable record pipeline.
+  function_list:
+    - parseFilterSection
+    - parseMapSection
+    - parseShellSection
+  import_files_list:
+    - cuelang.org/go/cue
+  language: go
+  purpose: Parse the programmable per-record stages for filtering, mapping, and shell execution.
+  responsibilities:
+    - Decode filter.inline and map.inline Lua snippets.
+    - Decode shell execution settings, including capture, templating, and timeouts.
+    - Preserve presence flags that let later validation reason about explicit shell config.

@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Derive normalized shell stage options from envelope metadata and defaults.
+// Responsibilities:
+// - Apply default shell settings when config fields are omitted.
+// - Resolve working-directory behavior from discovery root plus shell config.
+// - Validate the minimum shell config required to execute commands.
+// Architecture notes:
+// - WorkingDir is intentionally resolved relative to the discovery root here, not lazily during execution.
+// - Presence-vs-default decisions are flattened into one shellOptions struct before the execution path begins.
 package stage
 
 import (
@@ -9,6 +18,7 @@ import (
 func buildShellOptions(in Envelope) shellOptions {
 	opts := shellOptions{
 		enabled:          false,
+		decodeJSONStdout: false,
 		program:          defaultShellProgram,
 		argsT:            nil,
 		workingDir:       filepath.Join(".", defaultShellWorkingDir),
@@ -26,6 +36,7 @@ func buildShellOptions(in Envelope) shellOptions {
 	}
 	cfg := in.Meta.Shell
 	opts.enabled = cfg.Enabled
+	opts.decodeJSONStdout = cfg.DecodeJSONStdout
 	if cfg.Program != "" {
 		opts.program = cfg.Program
 	}

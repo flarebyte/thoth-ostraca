@@ -1,0 +1,23 @@
+locator: cmd/thoth/run/exit_rules.go
+meta:
+  architecture_notes:
+    - Exit evaluation is separated from pipeline execution so output can still be written before the CLI decides whether the run counts as a failure.
+    - keep-going mode intentionally allows partial success, so exit logic must reason about aggregate usefulness rather than only raw error counts.
+  function_list:
+    - actionName
+    - countRecordResults
+    - driftDetectionEnabled
+    - evaluateRunExit
+    - hasActionFailures
+    - hasDiffChanges
+    - hasExecutionErrors
+    - hasMeaningfulAggregateOutput
+    - keepGoingMode
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+  language: go
+  purpose: Decide the final CLI exit code for `thoth run` after the pipeline has produced its envelope and errors.
+  responsibilities:
+    - Count successful and failed record results.
+    - Apply keep-going and diff-meta drift rules to determine whether the run should fail.
+    - Return small typed exit errors with stable exit codes.

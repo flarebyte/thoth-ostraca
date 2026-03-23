@@ -1,0 +1,9 @@
+locator: internal/stage/validate_config_discovery_test.go
+meta:
+  function_list:
+    - TestValidateConfig_DiscoveryIncludeExcludeMustBeNonEmpty
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - strings
+    - testing
+  language: go

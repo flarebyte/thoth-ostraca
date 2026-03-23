@@ -2,6 +2,31 @@
 
 Recipes-first quick reference. See `README.md` for full concepts.
 
+## Action Matrix
+
+| Action             | Discovers                         | Filter | Map | Shell | PostMap | Reduce | Persist sidecars | JSON output |
+| ------------------ | --------------------------------- | -----: | --: | ----: | ------: | -----: | ---------------: | ----------: |
+| `pipeline` / `nop` | existing `.thoth.yaml` meta files |    yes | yes |   yes |     yes |    yes |               no |         yes |
+| `input-pipeline`   | arbitrary input files             |    yes | yes |   yes |     yes |    yes |              yes |         yes |
+| `validate`         | existing `.thoth.yaml` meta files |     no |  no |    no |      no |     no |               no |         yes |
+| `create-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
+| `update-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
+| `diff-meta`        | input files + existing meta files |    yes |  no |    no |      no |     no |               no |         yes |
+
+Notes:
+
+- `pipeline` / `nop` is the programmable meta-file workflow. It works on
+  existing sidecars, not arbitrary source files.
+- `input-pipeline` is the practical file workflow. It supports discovery,
+  filter, map, shell, postMap, reduce, JSON output, progress, dry-run
+  persistence, and dedicated sidecar output directories.
+- `create-meta` and `update-meta` are narrower metadata maintenance actions.
+  `create-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
+  `update-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
+- `diff-meta` now supports `lua-filter` on input files. Orphan meta reporting
+  still reflects the full discovered meta-file set under the chosen root, so
+  filtered-out paired files can become reported as orphans.
+
 ## Top 10 Commands / Workflows
 
 ```bash
@@ -40,6 +65,7 @@ go test ./...
 ## Config Snippets (CUE)
 
 ### validate
+
 ```cue
 {
   configVersion: "1"
@@ -49,6 +75,7 @@ go test ./...
 ```
 
 ### create-meta
+
 ```cue
 {
   configVersion: "1"
@@ -58,6 +85,7 @@ go test ./...
 ```
 
 ### update-meta with patch
+
 ```cue
 {
   configVersion: "1"
@@ -74,6 +102,7 @@ go test ./...
 ```
 
 ### update-meta with expectedLua
+
 ```cue
 {
   configVersion: "1"
@@ -95,6 +124,7 @@ end
 ```
 
 ### diff-meta summary
+
 ```cue
 {
   configVersion: "1"
@@ -108,6 +138,7 @@ end
 ```
 
 ### diff-meta detailed
+
 ```cue
 {
   configVersion: "1"
@@ -121,6 +152,7 @@ end
 ```
 
 ### diff-meta json-patch
+
 ```cue
 {
   configVersion: "1"
@@ -134,6 +166,7 @@ end
 ```
 
 ### diff-meta only=changed
+
 ```cue
 {
   configVersion: "1"
@@ -147,6 +180,7 @@ end
 ```
 
 ### diff-meta failOnChange
+
 ```cue
 {
   configVersion: "1"
@@ -161,6 +195,7 @@ end
 ```
 
 ### output.lines=true (streaming NDJSON)
+
 ```cue
 {
   configVersion: "1"
@@ -176,6 +211,7 @@ end
 ## Diagnose Recipes
 
 ### Prepare input-files/meta-files
+
 ```bash
 # Prepare input-files then run a stage
 ./.e2e-bin/thoth diagnose \
@@ -191,6 +227,7 @@ end
 ```
 
 ### Prepare full action pipeline and run until stage
+
 ```bash
 ./.e2e-bin/thoth diagnose \
   --prepare-pipeline diff-meta \
@@ -205,6 +242,7 @@ end
 ```
 
 ### Dump fixtures to a directory
+
 ```bash
 ./.e2e-bin/thoth diagnose \
   --prepare-pipeline pipeline \

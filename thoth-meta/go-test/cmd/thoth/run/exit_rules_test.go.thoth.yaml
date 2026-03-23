@@ -1,0 +1,17 @@
+locator: cmd/thoth/run/exit_rules_test.go
+meta:
+  function_list:
+    - TestEvaluateRunExit_DiffFailOnChange_DriftDetected
+    - TestEvaluateRunExit_DiffFailOnChange_ExecutionErrorWins
+    - TestEvaluateRunExit_DiffFailOnChange_NoDrift
+    - TestEvaluateRunExit_FailFastMode
+    - TestEvaluateRunExit_KeepGoing_AllFailed
+    - TestEvaluateRunExit_KeepGoing_DiffAggregateOutput
+    - TestEvaluateRunExit_KeepGoing_SuccessRecord
+    - assertExitError
+    - diffFailOnChangeEnv
+    - keepGoingMeta
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - testing
+  language: go

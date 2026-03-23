@@ -1,0 +1,12 @@
+locator: internal/stage/enrich_git_test.go
+meta:
+  function_list:
+    - TestEnrichGit_RepoNotFound_FailFast
+    - TestEnrichGit_RepoNotFound_KeepGoing
+    - makeRepoNotFoundInput
+  import_files_list:
+    - context
+    - os
+    - path/filepath
+    - testing
+  language: go

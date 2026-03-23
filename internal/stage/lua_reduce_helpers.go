@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Execute Lua reduce logic that collapses many record results into one aggregate accumulator.
+// Responsibilities:
+// - Normalize reduce code into runnable Lua.
+// - Convert each record into the reducer item shape.
+// - Run the reducer deterministically across records and return the final accumulator.
+// Architecture notes:
+// - Reduce order matters; this file relies on the current record order being deterministic before reduction starts.
+// - The reducer input prefers `post` when present, which is intentional because postMap is the last per-record shaping step.
 package stage
 
 import (
@@ -63,10 +72,16 @@ func runLuaReduce(in Envelope, code string) (any, error) {
 			"item": item,
 		}, code)
 		if err != nil {
-			return nil, fmt.Errorf("lua-reduce: %v", err)
+			return nil, fmt.Errorf(
+				"lua-reduce: %s",
+				formatLuaError(luaReduceStage, locator, code, err.Error()),
+			)
 		}
 		if violation != "" {
-			return nil, luaViolationFailFast(luaReduceStage, violation)
+			return nil, luaViolationFailFast(
+				luaReduceStage,
+				formatLuaError(luaReduceStage, locator, code, violation),
+			)
 		}
 		acc = ret
 	}

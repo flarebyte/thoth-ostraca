@@ -1,0 +1,26 @@
+locator: internal/stage/discovery_filters.go
+meta:
+  architecture_notes:
+    - Input discovery uses simple normalized pattern helpers here instead of reusing gitignore semantics so include/exclude behavior stays explicit and deterministic.
+    - .git is treated as always excluded separately from the broader defaultExcludedDirNames set to prevent accidental opt-in through generic include patterns.
+  function_list:
+    - dirCouldMatchAnyPattern
+    - dirCouldMatchPattern
+    - discoveryExcludes
+    - discoveryIncludes
+    - matchesAnyPattern
+    - matchesDiscoveryPattern
+    - normalizeDiscoveryPath
+    - relHasAlwaysExcludedDir
+    - relHasDefaultExcludedDir
+    - relHasDirName
+    - staticPatternPrefix
+  import_files_list:
+    - path
+    - strings
+  language: go
+  purpose: Centralize discovery pattern matching and default path exclusion rules for file-oriented discovery.
+  responsibilities:
+    - Read include and exclude lists from envelope metadata.
+    - Normalize discovery paths and evaluate glob-like match rules against files and directories.
+    - Define which directory names are always or normally excluded during input discovery.

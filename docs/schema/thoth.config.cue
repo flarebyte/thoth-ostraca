@@ -6,11 +6,20 @@ PipelineConfig: {
   configVersion: string & =~"^[0-9]+$" & "1"
 
   // Action to perform
-  action: "pipeline" | "create" | "update" | "diff" | "validate"
+  action:
+    "pipeline" |
+    "input-pipeline" |
+    "create-meta" |
+    "update-meta" |
+    "diff-meta" |
+    "validate" |
+    "nop"
 
   // File discovery options
   discovery?: {
     root?: string | "." // repo root (default ".")
+    include?: [...string]
+    exclude?: [...string]
     noGitignore?: bool | false // default false (respect .gitignore)
     followSymlinks?: bool | false // default false (do not follow for safety)
   }
@@ -33,7 +42,7 @@ PipelineConfig: {
   // Lua sandbox + runtime
   lua?: {
     timeoutMs?: int & >=0 | 2000
-    instructionLimit?: int & >=0 | 1000000
+    instructionLimit?: int & >=0 | 1000000 // runtime VM instruction ceiling; 0 disables
     memoryLimitBytes?: int & >=0 | 8*1024*1024
     libs?: {
       base?: bool | true
@@ -89,8 +98,12 @@ PipelineConfig: {
   // Shell execution
   shell?: {
     enabled?: bool | false
+    decodeJsonStdout?: bool | false
     program?: "bash" | "sh" | "zsh" | "bash"
     commandTemplate?: string // exactly one of commandTemplate or argsTemplate
+    // Supported placeholders in argsTemplate:
+    // {json}, {locator}, {file.base}, {file.dir},
+    // {file.stem}, {file.ext}, {mapped.<path>}
     argsTemplate?: [...string]
     workingDir?: string | "."
     env?: [string]: string
@@ -111,6 +124,19 @@ PipelineConfig: {
     lines?: bool | false
     pretty?: bool | false
     out?: string | "-"
+  }
+
+  // User-visible progress lines on stderr for long-running workflows
+  ui?: {
+    progress?: bool | false
+    progressIntervalMs?: int & >=0 | 500
+  }
+
+  // Persist postMap.meta into sidecars for input-pipeline
+  persistMeta?: {
+    enabled?: bool | false
+    dryRun?: bool | false
+    outDir?: string
   }
 
   // Save options (create)

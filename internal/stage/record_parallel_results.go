@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Merge per-record parallel stage results back into an envelope while preserving error semantics.
+// Responsibilities:
+// - Collect embedded record updates produced by parallel workers.
+// - Accumulate sanitized envelope errors from parallel stages.
+// - Return the first fatal error while preserving keep-going record mutations when appropriate.
+// Architecture notes:
+// - Parallel stages use this shared merger so shell, locator validation, and similar stages follow the same error-handling contract.
+// - Envelope errors are sanitized here before appending so callers do not have to duplicate that consistency logic.
 package stage
 
 type recordParallelRes struct {

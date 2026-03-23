@@ -1,19 +1,26 @@
+// File Guide for dev/ai agents:
+// Purpose: Load existing sidecar YAML into record post-state so later stages can merge or compare metadata against what is already on disk.
+// Responsibilities:
+// - Resolve the expected sidecar path for each locator, including configured outDir mode.
+// - Read and validate the locator/meta structure of existing sidecar YAML files.
+// - Attach existing metadata and path information into rec.Post for later merge or persistence stages.
+// Architecture notes:
+// - Missing sidecars are not errors here; the stage records only the expected path so create/update flows can decide what to do next.
+// - Existing metadata is attached in post-state rather than replacing rec.Meta so pipeline metadata and file metadata stay distinct.
 package stage
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
 
 const loadExistingStage = "load-existing-meta"
 
-func loadOneExisting(root string, rec Record) (Record, *Error, error) {
-	_, rel := metaFilePath(root, rec.Locator)
-	abs := filepath.Join(root, filepath.FromSlash(rel))
+func loadOneExistingWithMeta(meta *Meta, root string, rec Record) (Record, *Error, error) {
+	abs, rel := persistMetaFilePath(meta, root, rec.Locator)
 	b, err := os.ReadFile(abs)
 	if err != nil {
 		// Not found → expose path only
@@ -61,7 +68,7 @@ func loadExistingMetaRunner(ctx context.Context, in Envelope, deps Deps) (Envelo
 	root := determineRoot(in)
 	mode, embed := errorMode(in.Meta)
 	return runSequentialRecordStage(in, loadExistingStage, mode, embed, func(r Record) (Record, *Error, error) {
-		return loadOneExisting(root, r)
+		return loadOneExistingWithMeta(in.Meta, root, r)
 	})
 }
 

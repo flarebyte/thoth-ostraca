@@ -1,0 +1,18 @@
+locator: internal/stage/validate_config.go
+meta:
+  architecture_notes:
+    - This stage validates only the minimal contract needed to build the stage graph; richer action-specific checks stay in shared validation helpers.
+    - The explicit action allowlist is intentional so newly added actions are opt-in and cannot silently bypass stage wiring review.
+  function_list:
+    - ValidateConfig
+    - init
+  import_files_list:
+    - context
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/config
+  language: go
+  purpose: Parse and validate the requested config file early so the run pipeline works from one normalized minimal config contract.
+  responsibilities:
+    - Require a config path in the input envelope.
+    - Parse the minimal config shape and apply shared validation rules.
+    - Copy validated config fields into envelope metadata and reject unsupported actions.

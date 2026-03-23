@@ -1,0 +1,4 @@
+locator: sub/c.go
+meta:
+  kind: go
+  shellLocator: sub/c.go

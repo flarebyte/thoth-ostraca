@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Canonically serialize and write `.thoth.yaml` sidecar files so metadata output stays deterministic.
+// Responsibilities:
+// - Marshal locator and meta content into canonical YAML bytes.
+// - Write sidecar files while creating parent directories as needed.
+// - Normalize nested maps and arrays into stable YAML node ordering.
+// Architecture notes:
+// - Map keys are sorted intentionally to keep sidecar bytes deterministic across runs.
+// - `nil` meta values become an empty mapping on purpose; do not "fix" this to YAML null.
+// - YAML nodes are built manually here to control output shape more tightly than generic struct marshaling.
 package metafile
 
 import (

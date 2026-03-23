@@ -1,0 +1,4 @@
+locator: a.go
+meta:
+  kind: go
+  shellLocator: a.go

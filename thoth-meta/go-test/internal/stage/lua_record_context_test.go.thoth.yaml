@@ -1,0 +1,7 @@
+locator: internal/stage/lua_record_context_test.go
+meta:
+  function_list:
+    - TestLuaRecordContext
+  import_files_list:
+    - testing
+  language: go

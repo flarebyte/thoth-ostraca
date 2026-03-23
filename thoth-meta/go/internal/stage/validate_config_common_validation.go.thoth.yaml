@@ -1,0 +1,17 @@
+locator: internal/stage/validate_config_common_validation.go
+meta:
+  architecture_notes:
+    - This validation intentionally focuses on shared semantic rules that the schema alone cannot express cleanly.
+    - The checks stay action-aware so unsupported feature combinations fail at config-validation time rather than deep in stage execution.
+  function_list:
+    - validateCommonConfig
+  import_files_list:
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/config
+    - strings
+  language: go
+  purpose: Enforce cross-section config rules that must hold before stage metadata is applied or execution begins.
+  responsibilities:
+    - Validate shared numeric bounds such as workers and in-memory limits.
+    - Validate cross-field shell and persistMeta requirements.
+    - Reject malformed include/exclude patterns before any stage is built.

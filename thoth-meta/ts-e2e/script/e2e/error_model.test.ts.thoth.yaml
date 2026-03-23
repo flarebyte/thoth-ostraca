@@ -1,0 +1,16 @@
+locator: script/e2e/error_model.test.ts
+meta:
+  import_files_list:
+    - ./config_helpers
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - error model fail-fast for pipeline aborts with non-zero exit
+    - error model fail-fast for update-meta aborts with non-zero exit
+    - error model keep-going for diff-meta returns valid output with sorted errors and deterministic bytes
+    - error model keep-going with shell missing program records shell errors and exits non-zero when all fail
+    - error model keep-going+embedErrors for pipeline produces partial success and deterministic sorted errors
+    - error model keep-going+embedErrors for update-meta keeps successes and records writer/load failures

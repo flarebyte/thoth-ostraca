@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Parse Lua sandbox settings that control script safety and deterministic behavior.
+// Responsibilities:
+// - Decode Lua timeout, instruction, and memory limits.
+// - Decode deterministicRandom and allowed standard-library toggles.
+// - Preserve section and field presence for downstream validation/defaulting.
+// Architecture notes:
+// - This file only parses sandbox policy; actual Lua execution lives under internal/stage.
+// - Library toggles use explicit Has* flags so "unset" can differ from "set false".
 package config
 
 import "cuelang.org/go/cue"

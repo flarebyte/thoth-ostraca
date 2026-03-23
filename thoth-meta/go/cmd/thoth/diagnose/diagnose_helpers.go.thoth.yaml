@@ -1,0 +1,36 @@
+locator: cmd/thoth/diagnose/diagnose_helpers.go
+meta:
+  architecture_notes:
+    - Diagnose reuses the real stage runners and prepared action stage order so debugging matches shipped CLI behavior instead of a separate simulation path.
+    - Dump helpers are kept here rather than in the stage package because staged fixture output is a command concern, not a runtime stage concern.
+  function_list:
+    - baseDiscoveryOverrides
+    - dumpStageBoundary
+    - findStageIndexByName
+    - maybeDumpIn
+    - maybeDumpOut
+    - resolvePreparedAction
+    - resolveStageByIndex
+    - resolveTargetStage
+    - resolveUntilIndex
+    - runDiagnoseDefault
+    - runDiagnoseWithIn
+    - runDiagnoseWithPrepare
+    - runDiagnoseWithPreparedPipeline
+    - runStageSequence
+    - runStagesAndRender
+  import_files_list:
+    - context
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/run
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - github.com/spf13/cobra
+    - os
+    - path/filepath
+    - strings
+  language: go
+  purpose: Implement the operational paths behind `thoth diagnose`, including prepared pipeline execution and stage dumping.
+  responsibilities:
+    - Resolve target stages and stage ranges from diagnose flags.
+    - Run one or more stages in sequence and optionally dump stage boundaries.
+    - Support the diagnose modes for direct input, prepared discovery, and prepared action pipelines.

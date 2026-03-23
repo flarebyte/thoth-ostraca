@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Copy shell-exec and output serialization config into the runtime metadata contract.
+// Responsibilities:
+// - Apply shell program, args, capture, templating, and timeout settings.
+// - Rehydrate shell defaults for omitted values when the shell section is present.
+// - Apply output path and formatting settings for final JSON emission.
+// Architecture notes:
+// - Shell and output settings share this file because both are edge-of-pipeline runtime I/O concerns and mostly involve defaulting.
+// - Defaulting happens here rather than in stage runners so runtime stages can assume a complete shell/output contract.
 package stage
 
 import "github.com/flarebyte/thoth-ostraca/internal/config"
@@ -9,6 +18,7 @@ func applyShellMeta(out *Envelope, min config.Minimal) {
 	if out.Meta.Shell == nil {
 		out.Meta.Shell = &ShellMeta{
 			Enabled:          false,
+			DecodeJSONStdout: false,
 			Program:          defaultShellProgram,
 			WorkingDir:       defaultShellWorkingDir,
 			Env:              map[string]string{},
@@ -21,6 +31,9 @@ func applyShellMeta(out *Envelope, min config.Minimal) {
 	}
 	if min.Shell.HasEnabled {
 		out.Meta.Shell.Enabled = min.Shell.Enabled
+	}
+	if min.Shell.HasDecodeJSON {
+		out.Meta.Shell.DecodeJSONStdout = min.Shell.DecodeJSONStdout
 	}
 	if min.Shell.HasProgram {
 		out.Meta.Shell.Program = min.Shell.Program

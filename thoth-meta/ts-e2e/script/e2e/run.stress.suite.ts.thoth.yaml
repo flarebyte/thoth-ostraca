@@ -1,0 +1,12 @@
+locator: script/e2e/run.stress.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - stress ingestion determinism at scale is byte-identical across runs and workers
+    - stress mixed failures keep-going is deterministic with expected errors

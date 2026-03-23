@@ -1,0 +1,17 @@
+locator: script/e2e/run.test.ts
+meta:
+  import_files_list:
+    - ./run.discovery.suite
+    - ./run.locators.suite
+    - ./run.lua_phase4.suite
+    - ./run.meta_ops.diff.suite
+    - ./run.meta_ops.update.suite
+    - ./run.output.suite
+    - ./run.pipeline.suite
+    - ./run.shell_phase4.suite
+    - ./run.streaming_phase4.suite
+    - ./run.stress.suite
+    - ./run.ux_phase4.suite
+    - ./run.yaml.suite
+  language: typescript
+  testcase_titles_list: []

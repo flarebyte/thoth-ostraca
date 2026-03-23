@@ -1,0 +1,15 @@
+locator: script/e2e/diagnose.test.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - diagnose discover-meta-files default excludes ignored files and keeps sorted locators
+    - diagnose discover-meta-files no-gitignore includes ignored files and keeps sorted locators
+    - diagnose discover-meta-files respects gitignore by default and can be disabled
+    - diagnose echo prints expected JSON and writes dumps
+    - diagnose parse-validate-yaml works with --in envelope using discovery root + discovered locators
+    - diagnose validate-config produces expected envelope when --config is provided

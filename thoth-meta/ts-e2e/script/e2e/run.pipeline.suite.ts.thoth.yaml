@@ -1,0 +1,32 @@
+locator: script/e2e/run.pipeline.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - 'determinism: workers=1 equals workers=2 golden'
+    - 'determinism: workers=2 matches single-worker golden'
+    - invalid action yields a short error mentioning allowed actions
+    - keep-going with embedErrors=false only lists envelope errors
+    - keep-going with embedErrors=true embeds record errors and lists envelope errors
+    - thoth run executes shell and postmap
+    - thoth run fails on invalid Lua
+    - thoth run fails on invalid map Lua
+    - thoth run fails on invalid reduce Lua
+    - thoth run fails when shell program is missing
+    - thoth run filters records via Lua predicate
+    - thoth run input-pipeline allows ordinary Lua postMap loops
+    - thoth run input-pipeline decodes shell JSON for postMap
+    - thoth run input-pipeline fails on invalid shell JSON when decoding is enabled
+    - thoth run input-pipeline fails on invalid shell placeholder in strict mode
+    - thoth run input-pipeline supports direct shell field interpolation
+    - thoth run input-pipeline works on source files
+    - thoth run maps records via Lua transform
+    - thoth run reduces to count and prints full envelope
+    - thoth run shell start failure preserves the real cause
+    - thoth run with missing field fails with short error
+    - 'validate-only: mixed repo embeds record and envelope errors (keep-going)'
+    - 'validate-only: ok repo yields compact JSON with records'

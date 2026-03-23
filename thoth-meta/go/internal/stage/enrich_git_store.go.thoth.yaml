@@ -1,0 +1,28 @@
+locator: internal/stage/enrich_git_store.go
+meta:
+  architecture_notes:
+    - This file intentionally implements only the subset of git storage needed by enrich-git, which keeps the code small and avoids a heavier dependency.
+    - Missing packed objects are not handled here because the current enrichment contract targets simple local repos and fixtures first.
+  function_list:
+    - bytesIndex
+    - gitDirForRepo
+    - objectPayload
+    - parseIndex
+    - readHEAD
+    - readLooseObject
+    - resolveRef
+  import_files_list:
+    - bufio
+    - compress/zlib
+    - encoding/binary
+    - errors
+    - io
+    - os
+    - path/filepath
+    - strings
+  language: go
+  purpose: Provide low-level helpers for reading git refs, index entries, and loose objects from the repository store.
+  responsibilities:
+    - Resolve the effective git directory for normal and worktree-style repositories.
+    - Read HEAD and refs and parse the git index into in-memory entries.
+    - Inflate loose objects and extract typed payloads for commit and tree parsing.

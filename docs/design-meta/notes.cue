@@ -127,49 +127,49 @@ import "list"
   {
     name:   "flow.usecase.file-pipeline-filter-shell-map-persist"
     title:  "File pipeline: filter, shell, map, persist"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Discover input files, filter them, run shell analysis per file, map the results, and either emit JSON or persist `.thoth.yaml` sidecars."
   },
   {
     name:   "flow.usecase.decode-shell-json-automatically"
     title:  "Decode shell JSON automatically"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Treat JSON shell output as structured data by default instead of exposing only raw stdout strings."
   },
   {
     name:   "flow.usecase.sidecars-to-dedicated-output-directory"
     title:  "Write sidecars to a dedicated output directory"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Generated `.thoth.yaml` files should be able to go into a separate output tree instead of beside source files."
   },
   {
     name:   "flow.usecase.safe-discovery-default-excludes"
     title:  "Safe discovery default excludes"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Discovery should exclude `.git`, fixture trees, and similar internal directories by default."
   },
   {
     name:   "flow.usecase.dry-run-save-mode"
     title:  "Dry-run save mode"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Save/update workflows should support a clear dry-run mode before writing sidecars."
   },
   {
     name:   "flow.usecase.direct-shell-field-interpolation"
     title:  "Direct shell field interpolation"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Shell templating should support direct field interpolation beyond a single `{json}` placeholder."
   },
   {
     name:   "flow.usecase.progress-reporting-for-long-actions"
     title:  "Progress reporting for long-running actions"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Long-running actions should expose user-visible progress."
   },
   {
     name:   "flow.usecase.lua-limits-allow-ordinary-transforms"
     title:  "Lua limits allow ordinary transforms"
-    labels: ["design", "flow", "usecase", "missing"]
+    labels: ["design", "flow", "usecase", "completed"]
     markdown: "Default Lua limits should allow normal transformation logic without immediate instruction-limit failures."
   },
 ]

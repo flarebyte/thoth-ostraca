@@ -1,10 +1,9 @@
 {
   configVersion: "1"
-  action: "pipeline"
+  action: "input-pipeline"
 
   discovery: {
-    root: "internal"
-    noGitignore: false
+    root: "."
   }
 
   errors: {
@@ -12,65 +11,62 @@
     embedErrors: true
   }
 
-  lua: {
-    instructionLimit: 3000000
-  }
-
   filter: {
-    inline:
-      "return string.sub(locator or \"\", -3) == \".go\" " +
-      "and string.sub(locator or \"\", -8) ~= \"_test.go\""
+    inline: """
+      return thoth.ends_with(locator, ".go")
+        and not thoth.ends_with(locator, "_test.go")
+      """
   }
 
   map: {
-    inline: "return locator"
+    inline: """
+      return {
+        language = "go",
+      }
+      """
   }
 
   shell: {
     enabled: true
+    decodeJsonStdout: true
     program: "/bin/sh"
-    workingDir: "internal"
-    strictTemplating: false
+    workingDir: "."
     argsTemplate: [
       "-c",
-      "path={json}; " +
-        "path=${path#\\\"}; " +
-        "path=${path%\\\"}; " +
-        "npx maat-ostraca analyse " +
-        "--in \"$path\" " +
-        "--rules 'import_files_list,package_imports_list' " +
-        "--language go " +
-        "--json",
+      "npx maat-ostraca analyse " +
+      "--in '{locator}' " +
+      "--rules 'import_files_list,function_map' " +
+      "--language go " +
+      "--json",
     ]
   }
 
   postMap: {
-    inline:
-      "local function pick(json, key) " +
-      "local body = string.match(" +
-      "json or \"\", " +
-      "\"\\\"\" .. key .. \"\\\":%[(.-)%]\") " +
-      "local out = {} " +
-      "if not body then return out end " +
-      "for item in string.gmatch(body, \"\\\"([^\\\"]+)\\\"\") do " +
-      "out[#out + 1] = item " +
-      "end " +
-      "return out " +
-      "end; " +
-      "local raw = shell and shell.stdout or \"\"; " +
-      "return { " +
-      "locator = locator, " +
-      "nextMeta = { " +
-      "language = (meta and meta.language) or \"go\", " +
-      "import_files_list = pick(raw, \"import_files_list\"), " +
-      "package_imports_list = pick(raw, \"package_imports_list\") " +
-      "} " +
-      "}"
+    inline: """
+      local rules = shell and shell.json and shell.json.rules or {}
+      return {
+        meta = {
+          language = mapped and mapped.language or "go",
+          import_files_list = rules.import_files_list or {},
+          function_list = thoth.sort_keys(rules.function_map or {}),
+        },
+      }
+      """
+  }
+
+  persistMeta: {
+    enabled: true
+    outDir: "./thoth-meta/go"
   }
 
   output: {
     out: "./temp/pipeline-go-maat.json"
     pretty: true
     lines: false
+  }
+
+  ui: {
+    progress: true
+    progressIntervalMs: 250
   }
 }

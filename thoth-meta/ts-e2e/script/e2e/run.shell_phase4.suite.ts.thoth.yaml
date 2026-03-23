@@ -1,0 +1,19 @@
+locator: script/e2e/run.shell_phase4.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:child_process
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - phase4 shell canonical schema on success and non-zero exit
+    - phase4 shell capture truncates stdout at maxBytes
+    - phase4 shell determinism across reruns and workers
+    - phase4 shell keep-going timeout and capture-disabled schema
+    - phase4 shell strict templating enforces unknown placeholders
+    - phase4 shell supports sh/bash/zsh (skip if unavailable)
+    - phase4 shell timeout terminates and returns stable error
+    - phase4 shell uses configured workingDir and env overlay

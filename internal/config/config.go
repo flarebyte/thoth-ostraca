@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Own the top-level config loading and minimal typed extraction for thoth CUE configs.
+// Responsibilities:
+// - Validate required top-level fields and config version support.
+// - Parse the full Minimal config by delegating each subsection to the dedicated parser file.
+// - Define the shared typed config structs consumed by downstream stages.
+// Architecture notes:
+// - This file is intentionally the orchestration hub; subsection parsing logic lives in sibling parse_* files.
+// - The Minimal struct carries presence flags so validation can distinguish defaults from explicit config.
+// - LoadAndValidate stays narrower than ParseMinimal on purpose for cheap early config checks.
 package config
 
 import (
@@ -61,6 +71,7 @@ type Minimal struct {
 	Shell         Shell
 	PostMap       PostMap
 	Reduce        Reduce
+	PersistMeta   PersistMeta
 	UpdateMeta    UpdateMeta
 	DiffMeta      DiffMeta
 	Output        Output
@@ -94,7 +105,10 @@ func ParseMinimal(path string) (Minimal, error) {
 		return Minimal{}, fmt.Errorf("invalid value for action: %v", err)
 	}
 	// Optional sections
-	m.Discovery = parseDiscoverySection(v)
+	m.Discovery, err = parseDiscoverySection(v)
+	if err != nil {
+		return Minimal{}, err
+	}
 	m.Validation = parseValidationSection(v)
 	m.Limits = parseLimitsSection(v)
 	m.LuaSandbox = parseLuaSandboxSection(v)
@@ -106,6 +120,7 @@ func ParseMinimal(path string) (Minimal, error) {
 	m.Shell = parseShellSection(v)
 	m.PostMap = parsePostMapSection(v)
 	m.Reduce = parseReduceSection(v)
+	m.PersistMeta = parsePersistMetaSection(v)
 	m.UpdateMeta, err = parseUpdateMetaSection(v)
 	if err != nil {
 		return Minimal{}, err
@@ -164,9 +179,13 @@ type LuaSandbox struct {
 // Discovery holds optional discovery config and presence flags.
 type Discovery struct {
 	Root             string
+	Include          []string
+	Exclude          []string
 	NoGitignore      bool
 	FollowSymlinks   bool
 	HasRoot          bool
+	HasInclude       bool
+	HasExclude       bool
 	HasNoGitignore   bool
 	HasFollowSymlink bool
 }
@@ -186,6 +205,7 @@ type Map struct {
 // Shell holds optional shell execution configuration.
 type Shell struct {
 	Enabled          bool
+	DecodeJSONStdout bool
 	Program          string
 	ArgsTemplate     []string
 	WorkingDir       string
@@ -199,6 +219,7 @@ type Shell struct {
 	TermGraceMs      int
 	HasSection       bool
 	HasEnabled       bool
+	HasDecodeJSON    bool
 	HasProgram       bool
 	HasArgs          bool
 	HasWorkingDir    bool
@@ -223,6 +244,17 @@ type PostMap struct {
 type Reduce struct {
 	Inline    string
 	HasInline bool
+}
+
+// PersistMeta enables sidecar persistence from the input pipeline.
+type PersistMeta struct {
+	Enabled    bool
+	DryRun     bool
+	OutDir     string
+	HasSection bool
+	HasEnabled bool
+	HasDryRun  bool
+	HasOutDir  bool
 }
 
 // UpdateMeta holds optional update-meta patch config.

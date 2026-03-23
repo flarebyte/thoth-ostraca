@@ -1,0 +1,17 @@
+locator: internal/testutil/copytree.go
+meta:
+  architecture_notes:
+    - This helper is intentionally minimal and test-only; it does not preserve permissions, symlinks, or special files.
+    - The destructive destination cleanup is expected in tests and should not be copied into production code paths.
+  function_list:
+    - CopyTree
+  import_files_list:
+    - io/fs
+    - os
+    - path/filepath
+  language: go
+  purpose: Provide a tiny recursive fixture-copy helper for tests that need isolated writable repos.
+  responsibilities:
+    - Remove any existing destination tree before copying.
+    - Recreate directories and files under a new root.
+    - Preserve simple test fixture contents without extra metadata handling.

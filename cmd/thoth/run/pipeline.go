@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Orchestrate `thoth run` from config validation through action dispatch and any special-case streaming pipeline behavior.
+// Responsibilities:
+// - Validate the config first and derive the requested action and runtime metadata.
+// - Dispatch to the correct action pipeline and stage order.
+// - Enforce buffered versus streaming output constraints for meta-file pipelines.
+// Architecture notes:
+// - Config validation always runs first so later stage selection can depend on normalized runtime metadata rather than reparsing config in multiple places.
+// - Streaming NDJSON is limited to the legacy meta pipeline because reduce and file-persistence paths need buffered envelope state.
 package run
 
 import (
@@ -16,7 +25,10 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	if err != nil {
 		return stage.Envelope{}, err
 	}
-	ctx = withProgressReporter(ctx, newProgressReporter(out.Meta, os.Stderr))
+	ctx = stage.WithProgressReporter(
+		ctx,
+		newProgressReporter(out.Meta, os.Stderr),
+	)
 	action := "pipeline"
 	if out.Meta != nil && out.Meta.Config != nil && out.Meta.Config.Action != "" {
 		action = out.Meta.Config.Action
@@ -24,7 +36,7 @@ func executePipeline(ctx context.Context, cfgPath string) (stage.Envelope, error
 	switch action {
 	case "pipeline", "nop":
 		return executeMetaPipeline(ctx, out)
-	case "validate", "create-meta", "update-meta", "diff-meta":
+	case "input-pipeline", "validate", "create-meta", "update-meta", "diff-meta":
 		stages, err := PreparedActionStages(action, out.Meta)
 		if err != nil {
 			return stage.Envelope{}, err

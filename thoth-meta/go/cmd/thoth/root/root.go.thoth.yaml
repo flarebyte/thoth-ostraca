@@ -1,0 +1,19 @@
+locator: cmd/thoth/root/root.go
+meta:
+  architecture_notes:
+    - The root command is intentionally thin and declarative so most behavior remains inside subcommand packages.
+    - Help-on-no-subcommand is implemented here rather than in main so tests and alternate entrypoints can reuse the same root behavior.
+  function_list:
+    - Execute
+    - NewRootCmd
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/diagnose
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/run
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/version
+    - github.com/spf13/cobra
+  language: go
+  purpose: Define the root Cobra command and wire the top-level thoth subcommands together.
+  responsibilities:
+    - Build the root command with its default help behavior.
+    - Register the diagnose, run, and version subcommands.
+    - Execute the configured root command with caller-provided args.

@@ -113,6 +113,174 @@ func TestDeterminism_Pipeline_MultiRuns(t *testing.T) {
 	assertStable(t, runs)
 }
 
+func TestDeterminism_InputPipeline_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputDiscoverySafeDefault_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_discovery_safe_default.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputPipelineJSON_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_json1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputPipelineTemplate_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_template1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputPipelineProgress_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_progress1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputPipelineLuaLoop_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_lua_loop1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputPipelineReduce_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	cfg := filepath.Join(
+		root,
+		"testdata",
+		"configs",
+		"input_pipeline_reduce1.cue",
+	)
+	var runs []runResult
+	for i := 0; i < 5; i++ {
+		runs = append(runs, runCmd(t, bin, "run", "--config", cfg))
+	}
+	assertStable(t, runs)
+}
+
+func TestDeterminism_InputPipelinePersist_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	src := filepath.Join(root, "testdata", "repos", "input_pipeline1")
+	repo := filepath.Join(root, "temp", "input_pipeline_persist_det_repo")
+	cfgT := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  discovery: { root: \"%s\" }\n" +
+		"  filter: { inline: \"return string.sub(locator, -3) == '.go' and string.sub(locator, -8) ~= '_test.go'\" }\n" +
+		"  map: { inline: \"return { locator = locator, kind = 'go' }\" }\n" +
+		"  shell: { enabled: true, decodeJsonStdout: true, program: \"sh\", argsTemplate: [\"-c\", \"printf '%%s\\\\n' '{json}'\"] }\n" +
+		"  postMap: { inline: \"return { meta = { kind = shell and shell.json and shell.json.kind, shellLocator = shell and shell.json and shell.json.locator } }\" }\n" +
+		"  persistMeta: { enabled: true }\n}\n"
+	assertInputPipelinePersistDeterminism(t, bin, src, repo, cfgT)
+}
+
+func TestDeterminism_InputPipelinePersistOutDir_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	src := filepath.Join(root, "testdata", "repos", "input_pipeline1")
+	repo := filepath.Join(root, "temp", "input_pipeline_outdir_det_repo")
+	outDir := filepath.Join(root, "temp", "input_pipeline_outdir_det_sidecars")
+	cfgT := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  discovery: { root: \"%s\" }\n" +
+		"  filter: { inline: \"return string.sub(locator, -3) == '.go' and string.sub(locator, -8) ~= '_test.go'\" }\n" +
+		"  map: { inline: \"return { locator = locator, kind = 'go' }\" }\n" +
+		"  shell: { enabled: true, decodeJsonStdout: true, program: \"sh\", argsTemplate: [\"-c\", \"printf '%%s\\\\n' '{json}'\"] }\n" +
+		"  postMap: { inline: \"return { meta = { kind = shell and shell.json and shell.json.kind, shellLocator = shell and shell.json and shell.json.locator } }\" }\n" +
+		"  persistMeta: { enabled: true, outDir: \"%s\" }\n}\n"
+	assertInputPipelinePersistOutDirDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		outDir,
+		cfgT,
+	)
+}
+
+func TestDeterminism_InputPipelinePersistDryRun_MultiRuns(t *testing.T) {
+	root := repoRoot()
+	bin := buildThoth(t)
+	src := filepath.Join(root, "testdata", "repos", "input_pipeline1")
+	repo := filepath.Join(root, "temp", "input_pipeline_dryrun_det_repo")
+	cfgT := "{\n  configVersion: \"" +
+		config.CurrentConfigVersion +
+		"\"\n  action: \"input-pipeline\"\n  discovery: { root: \"%s\" }\n" +
+		"  filter: { inline: \"return string.sub(locator, -3) == '.go' and string.sub(locator, -8) ~= '_test.go'\" }\n" +
+		"  map: { inline: \"return { locator = locator, kind = 'go' }\" }\n" +
+		"  shell: { enabled: true, decodeJsonStdout: true, program: \"sh\", argsTemplate: [\"-c\", \"printf '%%s\\\\n' '{json}'\"] }\n" +
+		"  postMap: { inline: \"return { meta = { kind = shell and shell.json and shell.json.kind, shellLocator = shell and shell.json and shell.json.locator } }\" }\n" +
+		"  persistMeta: { enabled: true, dryRun: true }\n}\n"
+	assertInputPipelinePersistDryRunDeterminism(t, bin, src, repo, cfgT)
+}
+
 func TestDeterminism_Pipeline_Workers(t *testing.T) {
 	root := repoRoot()
 	bin := buildThoth(t)
@@ -184,26 +352,199 @@ func TestDeterminism_UpdateMeta(t *testing.T) {
 
 func assertMetaActionDeterminism(t *testing.T, bin, src, repo, cfgTemplate string) {
 	t.Helper()
+	assertStdoutDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		func() string { return fmtSprintf(cfgTemplate, filepath.ToSlash(repo)) },
+		nil,
+		nil,
+	)
+}
+
+func assertInputPipelinePersistDeterminism(
+	t *testing.T,
+	bin, src, repo, cfgTemplate string,
+) {
+	t.Helper()
+	assertPersistSidecarDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		repo,
+		func() string {
+			return fmtSprintf(cfgTemplate, filepath.ToSlash(repo))
+		},
+		nil,
+	)
+}
+
+func assertInputPipelinePersistOutDirDeterminism(
+	t *testing.T,
+	bin, src, repo, outDir, cfgTemplate string,
+) {
+	t.Helper()
+	assertPersistSidecarDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		outDir,
+		func() string {
+			return fmt.Sprintf(
+				cfgTemplate,
+				filepath.ToSlash(repo),
+				"../input_pipeline_outdir_det_sidecars",
+			)
+		},
+		func() {
+			_ = os.RemoveAll(outDir)
+		},
+	)
+}
+
+func assertInputPipelinePersistDryRunDeterminism(
+	t *testing.T,
+	bin, src, repo, cfgTemplate string,
+) {
+	t.Helper()
+	assertStdoutDeterminism(
+		t,
+		bin,
+		src,
+		repo,
+		func() string { return fmtSprintf(cfgTemplate, filepath.ToSlash(repo)) },
+		nil,
+		func() {
+			if _, err := os.Stat(filepath.Join(repo, "a.go.thoth.yaml")); !os.IsNotExist(err) {
+				t.Fatalf("a sidecar should not exist in dry-run")
+			}
+			if _, err := os.Stat(filepath.Join(repo, "sub", "c.go.thoth.yaml")); !os.IsNotExist(err) {
+				t.Fatalf("c sidecar should not exist in dry-run")
+			}
+		},
+	)
+}
+
+func assertPersistSidecarDeterminism(
+	t *testing.T,
+	bin, src, repo, sidecarRoot string,
+	cfgBody func() string,
+	beforeRun func(),
+) {
+	t.Helper()
 	var baseOut []byte
+	var baseA []byte
+	var baseC []byte
 	for i := 0; i < 5; i++ {
-		if err := testutil.CopyTree(src, repo); err != nil {
-			t.Fatalf("copy: %v", err)
-		}
-		cfg := filepath.Join(repo, "tmp.cue")
-		data := []byte(fmtSprintf(cfgTemplate, filepath.ToSlash(repo)))
-		if err := os.WriteFile(cfg, data, 0o644); err != nil {
-			t.Fatalf("write cfg: %v", err)
-		}
-		r := runCmd(t, bin, "run", "--config", cfg)
+		r := runDeterminismConfigRun(
+			t,
+			bin,
+			src,
+			repo,
+			cfgBody(),
+			beforeRun,
+		)
+		aBytes, cBytes := readTwoSidecars(
+			t,
+			filepath.Join(sidecarRoot, "a.go.thoth.yaml"),
+			filepath.Join(sidecarRoot, "sub", "c.go.thoth.yaml"),
+		)
 		if i == 0 {
 			baseOut = r.stdout
+			baseA = aBytes
+			baseC = cBytes
 		}
-		if !bytes.Equal(r.stdout, baseOut) {
-			t.Fatalf("stdout drift run %d", i)
+		assertStableStdout(t, i, r.stdout, &baseOut)
+		assertStableBytes(t, i, "a sidecar", aBytes, baseA)
+		assertStableBytes(t, i, "c sidecar", cBytes, baseC)
+	}
+}
+
+func assertStdoutDeterminism(
+	t *testing.T,
+	bin, src, repo string,
+	cfgBody func() string,
+	beforeRun func(),
+	afterRun func(),
+) {
+	t.Helper()
+	var baseOut []byte
+	for i := 0; i < 5; i++ {
+		r := runDeterminismConfigRun(
+			t,
+			bin,
+			src,
+			repo,
+			cfgBody(),
+			beforeRun,
+		)
+		if afterRun != nil {
+			afterRun()
 		}
-		if r.code != 0 || len(r.stderr) != 0 {
-			t.Fatalf("unexpected status/stderr")
-		}
+		assertStableStdout(t, i, r.stdout, &baseOut)
+	}
+}
+
+func runDeterminismConfigRun(
+	t *testing.T,
+	bin, src, repo, cfgBody string,
+	beforeRun func(),
+) runResult {
+	t.Helper()
+	if err := testutil.CopyTree(src, repo); err != nil {
+		t.Fatalf("copy: %v", err)
+	}
+	if beforeRun != nil {
+		beforeRun()
+	}
+	cfg := filepath.Join(repo, "tmp.cue")
+	if err := os.WriteFile(cfg, []byte(cfgBody), 0o644); err != nil {
+		t.Fatalf("write cfg: %v", err)
+	}
+	r := runCmd(t, bin, "run", "--config", cfg)
+	if r.code != 0 || len(r.stderr) != 0 {
+		t.Fatalf(
+			"unexpected status/stderr code=%d stderr=%s",
+			r.code,
+			r.stderr,
+		)
+	}
+	return r
+}
+
+func readTwoSidecars(t *testing.T, aPath, cPath string) ([]byte, []byte) {
+	t.Helper()
+	aBytes, err := os.ReadFile(aPath)
+	if err != nil {
+		t.Fatalf("read a sidecar: %v", err)
+	}
+	cBytes, err := os.ReadFile(cPath)
+	if err != nil {
+		t.Fatalf("read c sidecar: %v", err)
+	}
+	return aBytes, cBytes
+}
+
+func assertStableStdout(t *testing.T, run int, got []byte, base *[]byte) {
+	t.Helper()
+	if run == 0 {
+		*base = got
+	}
+	assertStableBytes(t, run, "stdout", got, *base)
+}
+
+func assertStableBytes(
+	t *testing.T,
+	run int,
+	label string,
+	got, want []byte,
+) {
+	t.Helper()
+	if !bytes.Equal(got, want) {
+		t.Fatalf("%s drift run %d", label, run)
 	}
 }
 

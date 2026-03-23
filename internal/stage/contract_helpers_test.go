@@ -79,14 +79,16 @@ func selectStages(action string) ([]string, error) {
 	switch action {
 	case "pipeline", "nop":
 		return []string{"discover-meta-files", "parse-validate-yaml", "validate-locators", "lua-filter", "lua-map", "shell-exec", "lua-postmap", "lua-reduce"}, nil
+	case "input-pipeline":
+		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "lua-filter", "lua-map", "shell-exec", "lua-postmap", "lua-reduce"}, nil
 	case "validate":
 		return []string{"discover-meta-files", "parse-validate-yaml", "validate-locators"}, nil
 	case "create-meta":
-		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "write-meta-files"}, nil
+		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "lua-filter", "write-meta-files"}, nil
 	case "update-meta":
-		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "load-existing-meta", "merge-meta", "write-updated-meta-files"}, nil
+		return []string{"discover-input-files", "enrich-fileinfo", "enrich-git", "lua-filter", "load-existing-meta", "merge-meta", "write-updated-meta-files"}, nil
 	case "diff-meta":
-		return []string{"discover-input-files", "discover-meta-files", "parse-validate-yaml", "validate-locators", "compute-meta-diff"}, nil
+		return []string{"discover-input-files", "lua-filter", "discover-meta-files", "parse-validate-yaml", "validate-locators", "compute-meta-diff"}, nil
 	default:
 		return nil, errors.New("unknown action: " + action)
 	}

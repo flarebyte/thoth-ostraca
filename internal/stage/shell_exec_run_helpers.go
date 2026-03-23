@@ -1,3 +1,13 @@
+// File Guide for dev/ai agents:
+// Purpose: Spawn and supervise the actual OS process for one shell-exec record run.
+// Responsibilities:
+// - Start the command with rendered args, env overlay, output capture, and timeout control.
+// - Terminate timed-out processes and optionally their process group.
+// - Return low-level shellRunResult details used by higher-level shell processing.
+// Architecture notes:
+// - Timeout handling is per record, not per stage, and the `-2` exit code convention for timeouts is intentional.
+// - Process-group termination is deliberate to avoid leaving child processes behind for shell commands that spawn subcommands.
+// - Diagnostic context is captured here because the low-level spawn path knows the final program, args, and working directory.
 package stage
 
 import (
@@ -46,15 +56,45 @@ type shellRunResult struct {
 	stderrTruncated bool
 	timedOut        bool
 	errorMsg        string
+	program         string
+	workingDir      string
+	args            []string
 }
 
 func strPtr(s string) *string { return &s }
 
 // runCommand executes the command with timeout/termination and returns result or error.
-func runCommand(ctx context.Context, opts shellOptions, mapped any) (shellRunResult, error) {
-	args, err := renderArgs(opts.argsT, mapped, opts.strictTemplating)
+func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunResult, error) {
+	args, err := renderArgs(opts.argsT, rec, opts.strictTemplating)
 	if err != nil {
 		return shellRunResult{}, err
+	}
+	baseRes := shellRunResult{
+		program:    opts.program,
+		workingDir: opts.workingDir,
+		args:       append([]string(nil), args...),
+	}
+	if opts.workingDir != "" {
+		info, statErr := os.Stat(opts.workingDir)
+		if statErr != nil {
+			baseRes.exitCode = -1
+			baseRes.errorMsg = fmt.Sprintf(
+				"program %s start failed: workingDir %s: %v",
+				opts.program,
+				opts.workingDir,
+				statErr,
+			)
+			return baseRes, nil
+		}
+		if !info.IsDir() {
+			baseRes.exitCode = -1
+			baseRes.errorMsg = fmt.Sprintf(
+				"program %s start failed: workingDir %s: not a directory",
+				opts.program,
+				opts.workingDir,
+			)
+			return baseRes, nil
+		}
 	}
 	cmd := exec.Command(opts.program, args...)
 	cmd.Dir = opts.workingDir
@@ -79,9 +119,21 @@ func runCommand(ctx context.Context, opts shellOptions, mapped any) (shellRunRes
 	if err := cmd.Start(); err != nil {
 		var ee *exec.Error
 		if errors.As(err, &ee) {
-			return shellRunResult{exitCode: -1, errorMsg: fmt.Sprintf("program %s not found", opts.program)}, nil
+			baseRes.exitCode = -1
+			baseRes.errorMsg = fmt.Sprintf(
+				"program %s not found: %v",
+				opts.program,
+				err,
+			)
+			return baseRes, nil
 		}
-		return shellRunResult{exitCode: -1, errorMsg: fmt.Sprintf("program %s start failed", opts.program)}, nil
+		baseRes.exitCode = -1
+		baseRes.errorMsg = fmt.Sprintf(
+			"program %s start failed: %v",
+			opts.program,
+			err,
+		)
+		return baseRes, nil
 	}
 
 	done := make(chan error, 1)
@@ -114,6 +166,9 @@ func runCommand(ctx context.Context, opts shellOptions, mapped any) (shellRunRes
 		stdoutTruncated: outBuf.truncated,
 		stderrTruncated: errBuf.truncated,
 		timedOut:        timedOut,
+		program:         opts.program,
+		workingDir:      opts.workingDir,
+		args:            append([]string(nil), args...),
 	}
 	if opts.captureStdout {
 		res.stdout = strPtr(outBuf.String())
@@ -132,7 +187,11 @@ func runCommand(ctx context.Context, opts shellOptions, mapped any) (shellRunRes
 			return res, nil
 		}
 		res.exitCode = -1
-		res.errorMsg = fmt.Sprintf("program %s execution failed", opts.program)
+		res.errorMsg = fmt.Sprintf(
+			"program %s execution failed: %v",
+			opts.program,
+			runErr,
+		)
 		return res, nil
 	}
 	return res, nil

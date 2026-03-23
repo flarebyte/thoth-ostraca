@@ -1,0 +1,12 @@
+locator: script/e2e/run.lua_phase4.suite.ts
+meta:
+  import_files_list:
+    - ./helpers
+    - ./test_utils
+    - bun:test
+    - node:fs
+    - node:path
+  language: typescript
+  testcase_titles_list:
+    - phase4 lua deterministic random is stable across workers
+    - phase4 lua fail-fast infinite loop triggers timeout

@@ -1,0 +1,18 @@
+locator: internal/config/parse_discovery_validation_limits.go
+meta:
+  architecture_notes:
+    - These sections are grouped here because they are global execution controls rather than action-specific features.
+    - Each parser records Has* flags so later validation can distinguish omitted values from explicit settings.
+  function_list:
+    - parseDiscoverySection
+    - parseLimitsSection
+    - parseValidationSection
+  import_files_list:
+    - cuelang.org/go/cue
+    - fmt
+  language: go
+  purpose: Parse the discovery, validation, and limits sections that shape broad run behavior.
+  responsibilities:
+    - Decode discovery root and include/exclude controls.
+    - Decode validation flags for config strictness.
+    - Decode processing limits such as YAML size and in-memory record caps.
