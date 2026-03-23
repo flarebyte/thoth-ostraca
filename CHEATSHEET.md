@@ -10,7 +10,7 @@ Recipes-first quick reference. See `README.md` for full concepts.
 | `input-pipeline`   | arbitrary input files             |    yes | yes |   yes |     yes |    yes |              yes |         yes |
 | `validate`         | existing `.thoth.yaml` meta files |     no |  no |    no |      no |     no |               no |         yes |
 | `create-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
-| `update-meta`      | arbitrary input files             |     no |  no |    no |      no |     no |              yes |         yes |
+| `update-meta`      | arbitrary input files             |    yes |  no |    no |      no |     no |              yes |         yes |
 | `diff-meta`        | input files + existing meta files |     no |  no |    no |      no |     no |               no |         yes |
 
 Notes:
@@ -22,6 +22,7 @@ Notes:
   persistence, and dedicated sidecar output directories.
 - `create-meta` and `update-meta` are narrower metadata maintenance actions.
   `create-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
+  `update-meta` now supports `lua-filter`, but not `map`, `shell`, or `reduce`.
 
 ## Top 10 Commands / Workflows
 

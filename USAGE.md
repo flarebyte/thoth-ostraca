@@ -42,6 +42,7 @@ thoth run --config ./update-meta-project.thoth.cue
 What it does:
 
 - discovers input files under `discovery.root`
+- can filter them with `lua-filter`
 - loads existing sidecars when present
 - merges configured metadata changes
 - writes updated `.thoth.yaml` files back alongside the source files
@@ -55,7 +56,6 @@ What it can modify:
 
 What it cannot do:
 
-- it cannot filter discovered input files with `lua-filter`
 - it cannot map records with `lua-map`
 - it cannot run `shell-exec`
 - it cannot write sidecars to a separate output folder

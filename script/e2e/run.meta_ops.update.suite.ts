@@ -521,6 +521,48 @@ test('update-meta: preserves existing meta and creates missing', () => {
   expect(run.stdout).toBe(expectedOut);
 });
 
+test('update-meta: lua-filter limits which files are updated', () => {
+  const root = projectRoot();
+  const bin = buildBinary(root);
+  const srcRepo = path.join(root, 'testdata/repos/update1');
+  const tempRepo = path.join(root, 'temp', 'update1_repo_filtered');
+  fs.rmSync(tempRepo, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(tempRepo), { recursive: true });
+  fs.cpSync(srcRepo, tempRepo, { recursive: true });
+  const cfgPath = path.join(root, 'temp', 'update1_filtered_tmp.cue');
+  const cfgContent = `{
+  configVersion: "1"
+  action: "update-meta"
+  discovery: { root: "${path.join('temp', 'update1_repo_filtered').replaceAll('\\', '\\\\')}" }
+  filter: {
+    inline: """
+return locator == "b.txt"
+"""
+  }
+}`;
+  fs.writeFileSync(cfgPath, cfgContent, 'utf8');
+  const run = runThoth(bin, ['run', '--config', cfgPath], root);
+  saveOutputs(root, 'run-update-meta-filtered', run);
+  expect(run.status).toBe(0);
+  expect(run.stderr).toBe('');
+
+  const metaA = path.join(tempRepo, 'a.txt.thoth.yaml');
+  const metaB = path.join(tempRepo, 'b.txt.thoth.yaml');
+  expect(fs.readFileSync(metaA, 'utf8')).toBe(
+    'locator: a.txt\nmeta: { x: 1 }\n\n',
+  );
+  expect(fs.existsSync(metaB)).toBe(true);
+  expect(fs.readFileSync(metaB, 'utf8')).toBe('locator: b.txt\nmeta: {}\n');
+
+  const out = JSON.parse(run.stdout) as {
+    records: Array<{ locator: string; post?: { metaPath?: string } }>;
+  };
+  expect(out.records.map((r) => r.locator)).toEqual(['b.txt']);
+  expect(out.records.map((r) => r.post?.metaPath)).toEqual([
+    'b.txt.thoth.yaml',
+  ]);
+});
+
 test('update-meta: invalid existing meta embeds errors in keep-going and still creates others', () => {
   const root = projectRoot();
   const bin = buildBinary(root);

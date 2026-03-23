@@ -75,6 +75,9 @@ func PreparedActionStages(action string, meta *stage.Meta) ([]string, error) {
 		if gitEnabled(meta) {
 			stages = append(stages, "enrich-git")
 		}
+		if filterEnabled(meta) {
+			stages = append(stages, "lua-filter")
+		}
 		stages = append(stages, "load-existing-meta", "merge-meta", "write-updated-meta-files", "write-output")
 		return stages, nil
 	case "diff-meta":
