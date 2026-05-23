@@ -1355,38 +1355,31 @@ Validate top-level meta schema [validate.meta.top_level]
 
 #### Search Command Semantics
 
-| area | key | value |
-| --- | --- | --- |
-| command | name | thoth search |
-| config | requires_cue_config | false |
-| discovery | root_flag | --root |
-| discovery | root_default | . |
-| discovery | recursive | true |
-| discovery | file_pattern | *.thoth.yaml |
-| term | flag | --term |
-| term | optional | true |
-| term | case_sensitive | false |
-| term | scope | whole meta object |
-| term | matching_domain | stringified JSON of meta including keys and values |
-| term | matching_mode | substring |
-| term | when_missing | all discovered records match |
-| fields | flag | --fields |
-| fields | type | string-list (comma-separated) |
-| fields | purpose | project selected keys inside meta in returned items |
-| fields | unknown_requested_keys | error=false |
-| fields | missing_key_in_record | omit key in that record |
-| result | shape | { locator, meta } |
-| ordering | primary | locator ascending lexicographic |
-| output | format | json array |
-| output | default_destination | stdout |
-| output | file_flag | --out |
-| output | file_behavior | write JSON array to the provided path |
-| output | style | pretty-printed JSON |
-| output | key_ordering | deterministic key ordering |
-| errors | policy | fail-fast |
-| errors | root_invalid | non-zero exit |
-| errors | unreadable_file | non-zero exit |
-| errors | invalid_yaml | non-zero exit with locator context |
+| category | example | rule | topic |
+| --- | --- | --- | --- |
+| Command | thoth search --root . --term parser | Use `thoth search` without a CUE config file. | Invocation |
+| Discovery | thoth search --root docs | `--root` selects the folder to search and defaults to `.`. | Root folder |
+| Discovery | No recursion flag is required | Search is always recursive. | Recursion |
+| Discovery | docs/a.thoth.yaml | Only files ending with `.thoth.yaml` are scanned. | File scope |
+| Term matching | thoth search --term pipeline | Search term is optional and passed with `--term`. | Term flag |
+| Term matching | thoth search --root docs | If `--term` is omitted all discovered records are considered matches. | When term missing |
+| Term matching | `Pipeline` matches `pipeline` | Matching is case-insensitive. | Case handling |
+| Term matching | `--term purpose` can match a meta key name | Term is matched against the whole `meta` object (keys and values). | Match scope |
+| Term matching | `flow` matches `workflow` | Matching uses substring semantics on normalized text. | Match method |
+| Returned data | {"locator":"a.go","meta":{"language":"go"}} | Each result item is `{ locator, meta }`. | Result shape |
+| Returned data | --fields language,purpose | `--fields` filters which keys are returned inside `meta`. | Field projection |
+| Returned data | --fields unknownKey | Unknown keys in `--fields` do not fail the command. | Unknown projected fields |
+| Returned data | meta contains language but not purpose | If a requested key is missing in one record it is omitted for that record. | Missing projected fields |
+| Ordering | a.go before b.go | Results are sorted by `locator` ascending (lexicographic). | Deterministic ordering |
+| Output | [ { ... }, { ... } ] | Output is a JSON array. | Format |
+| Output | thoth search --term lua | Output is written to stdout by default. | Default destination |
+| Output | thoth search --out temp/search.json | `--out` writes the JSON array to a file. | File destination |
+| Output | Indented JSON | JSON output is pretty-printed. | Style |
+| Output | Stable output across runs | Object keys are emitted in deterministic order. | Key ordering |
+| Errors | Stops at first fatal error | The command is fail-fast. | Error policy |
+| Errors | --root does-not-exist | A non-existent or invalid root returns a non-zero exit. | Invalid root |
+| Errors | Permission denied while reading file | Unreadable files return a non-zero exit. | Unreadable file |
+| Errors | parse error with file path | Invalid `.thoth.yaml` returns non-zero and includes locator context. | Invalid YAML |
 
 ## Shell Execution Spec
 

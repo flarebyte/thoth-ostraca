@@ -1,31 +1,24 @@
-area,key,value
-command,name,thoth search
-config,requires_cue_config,false
-discovery,root_flag,--root
-discovery,root_default,.
-discovery,recursive,true
-discovery,file_pattern,*.thoth.yaml
-term,flag,--term
-term,optional,true
-term,case_sensitive,false
-term,scope,whole meta object
-term,matching_domain,stringified JSON of meta including keys and values
-term,matching_mode,substring
-term,when_missing,all discovered records match
-fields,flag,--fields
-fields,type,string-list (comma-separated)
-fields,purpose,project selected keys inside meta in returned items
-fields,unknown_requested_keys,error=false
-fields,missing_key_in_record,omit key in that record
-result,shape,"{ locator, meta }"
-ordering,primary,locator ascending lexicographic
-output,format,json array
-output,default_destination,stdout
-output,file_flag,--out
-output,file_behavior,write JSON array to the provided path
-output,style,pretty-printed JSON
-output,key_ordering,deterministic key ordering
-errors,policy,fail-fast
-errors,root_invalid,non-zero exit
-errors,unreadable_file,non-zero exit
-errors,invalid_yaml,non-zero exit with locator context
+category,topic,rule,example
+Command,Invocation,Use `thoth search` without a CUE config file.,thoth search --root . --term parser
+Discovery,Root folder,`--root` selects the folder to search and defaults to `.`.,thoth search --root docs
+Discovery,Recursion,Search is always recursive.,No recursion flag is required
+Discovery,File scope,Only files ending with `.thoth.yaml` are scanned.,docs/a.thoth.yaml
+Term matching,Term flag,Search term is optional and passed with `--term`.,thoth search --term pipeline
+Term matching,When term missing,If `--term` is omitted all discovered records are considered matches.,thoth search --root docs
+Term matching,Case handling,Matching is case-insensitive.,`Pipeline` matches `pipeline`
+Term matching,Match scope,Term is matched against the whole `meta` object (keys and values).,`--term purpose` can match a meta key name
+Term matching,Match method,Matching uses substring semantics on normalized text.,`flow` matches `workflow`
+Returned data,Result shape,"Each result item is `{ locator, meta }`.","{""locator"":""a.go"",""meta"":{""language"":""go""}}"
+Returned data,Field projection,`--fields` filters which keys are returned inside `meta`.,"--fields language,purpose"
+Returned data,Unknown projected fields,Unknown keys in `--fields` do not fail the command.,--fields unknownKey
+Returned data,Missing projected fields,If a requested key is missing in one record it is omitted for that record.,meta contains language but not purpose
+Ordering,Deterministic ordering,Results are sorted by `locator` ascending (lexicographic).,a.go before b.go
+Output,Format,Output is a JSON array.,"[ { ... }, { ... } ]"
+Output,Default destination,Output is written to stdout by default.,thoth search --term lua
+Output,File destination,`--out` writes the JSON array to a file.,thoth search --out temp/search.json
+Output,Style,JSON output is pretty-printed.,Indented JSON
+Output,Key ordering,Object keys are emitted in deterministic order.,Stable output across runs
+Errors,Error policy,The command is fail-fast.,Stops at first fatal error
+Errors,Invalid root,A non-existent or invalid root returns a non-zero exit.,--root does-not-exist
+Errors,Unreadable file,Unreadable files return a non-zero exit.,Permission denied while reading file
+Errors,Invalid YAML,Invalid `.thoth.yaml` returns non-zero and includes locator context.,parse error with file path
