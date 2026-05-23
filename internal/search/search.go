@@ -7,8 +7,10 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
+	"sync"
 
 	"github.com/flarebyte/thoth-ostraca/internal/stage"
 )
@@ -65,32 +67,109 @@ func Execute(ctx context.Context, opts Options) ([]ResultItem, error) {
 	term := strings.ToLower(strings.TrimSpace(opts.Term))
 	fields := normalizeFields(opts.Fields)
 
-	results := make([]ResultItem, 0, len(out.Records))
-	for _, rec := range out.Records {
-		if rec.Meta == nil {
-			continue
-		}
-		if term != "" {
-			metaBlob, err := json.Marshal(rec.Meta)
-			if err != nil {
-				return nil, fmt.Errorf("marshal meta for locator %q: %w", rec.Locator, err)
-			}
-			if !strings.Contains(strings.ToLower(string(metaBlob)), term) {
-				continue
-			}
-		}
-
-		projected := projectMeta(rec.Meta, fields)
-		results = append(results, ResultItem{
-			Locator: rec.Locator,
-			Meta:    projected,
-		})
+	results, err := searchParallel(ctx, out.Records, term, fields)
+	if err != nil {
+		return nil, err
 	}
 
 	sort.Slice(results, func(i, j int) bool {
 		return results[i].Locator < results[j].Locator
 	})
 	return results, nil
+}
+
+func searchParallel(ctx context.Context, records []stage.Record, term string, fields []string) ([]ResultItem, error) {
+	type jobResult struct {
+		item *ResultItem
+		err  error
+	}
+	workers := runtime.GOMAXPROCS(0)
+	if workers < 1 {
+		workers = 1
+	}
+	if workers > len(records) && len(records) > 0 {
+		workers = len(records)
+	}
+
+	jobs := make(chan stage.Record)
+	resultsCh := make(chan jobResult, len(records))
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	var wg sync.WaitGroup
+	workerFn := func() {
+		defer wg.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case rec, ok := <-jobs:
+				if !ok {
+					return
+				}
+				item, err := searchRecord(rec, term, fields)
+				select {
+				case resultsCh <- jobResult{item: item, err: err}:
+				case <-ctx.Done():
+					return
+				}
+				if err != nil {
+					cancel()
+					return
+				}
+			}
+		}
+	}
+
+	for i := 0; i < workers; i++ {
+		wg.Add(1)
+		go workerFn()
+	}
+	go func() {
+		defer close(jobs)
+		for _, rec := range records {
+			select {
+			case <-ctx.Done():
+				return
+			case jobs <- rec:
+			}
+		}
+	}()
+	go func() {
+		wg.Wait()
+		close(resultsCh)
+	}()
+
+	out := make([]ResultItem, 0, len(records))
+	for rr := range resultsCh {
+		if rr.err != nil {
+			return nil, rr.err
+		}
+		if rr.item != nil {
+			out = append(out, *rr.item)
+		}
+	}
+	return out, nil
+}
+
+func searchRecord(rec stage.Record, term string, fields []string) (*ResultItem, error) {
+	if rec.Meta == nil {
+		return nil, nil
+	}
+	if term != "" {
+		metaBlob, err := json.Marshal(rec.Meta)
+		if err != nil {
+			return nil, fmt.Errorf("marshal meta for locator %q: %w", rec.Locator, err)
+		}
+		if !strings.Contains(strings.ToLower(string(metaBlob)), term) {
+			return nil, nil
+		}
+	}
+
+	return &ResultItem{
+		Locator: rec.Locator,
+		Meta:    projectMeta(rec.Meta, fields),
+	}, nil
 }
 
 // WriteJSON writes results to stdout when outPath is empty, otherwise to outPath.

@@ -2,8 +2,11 @@ package search
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -115,6 +118,44 @@ func TestWriteJSON_ToFile(t *testing.T) {
 	}
 	if !strings.Contains(s, `"locator": "a"`) {
 		t.Fatalf("missing locator in output: %q", s)
+	}
+}
+
+func TestExecute_DeterministicAcrossRuns(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	for i := 0; i < 40; i++ {
+		name := fmt.Sprintf("f%02d.thoth.yaml", i)
+		locator := fmt.Sprintf("src/f%02d.go", 39-i)
+		body := fmt.Sprintf("locator: %s\nmeta:\n  language: go\n  purpose: item-%02d\n", locator, i)
+		mustWrite(t, filepath.Join(root, "nested", name), body)
+	}
+
+	first, err := Execute(context.Background(), Options{Root: root, Term: "GO"})
+	if err != nil {
+		t.Fatalf("Execute() first run error = %v", err)
+	}
+	firstJSON, err := json.Marshal(first)
+	if err != nil {
+		t.Fatalf("marshal first result: %v", err)
+	}
+
+	for i := 0; i < 5; i++ {
+		got, err := Execute(context.Background(), Options{Root: root, Term: "GO"})
+		if err != nil {
+			t.Fatalf("Execute() run %d error = %v", i+2, err)
+		}
+		if !reflect.DeepEqual(first, got) {
+			t.Fatalf("run %d produced non-deterministic result", i+2)
+		}
+		gotJSON, err := json.Marshal(got)
+		if err != nil {
+			t.Fatalf("marshal run %d result: %v", i+2, err)
+		}
+		if string(firstJSON) != string(gotJSON) {
+			t.Fatalf("run %d produced non-deterministic JSON", i+2)
+		}
 	}
 }
 
