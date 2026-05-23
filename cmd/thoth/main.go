@@ -10,6 +10,7 @@
 package main
 
 import (
+	"io"
 	"os"
 	"strings"
 
@@ -20,21 +21,28 @@ type exitCoder interface {
 	ExitCode() int
 }
 
+var osExit = os.Exit
+
 func main() {
-	if err := root.Execute(os.Args[1:]); err != nil {
+	osExit(run(os.Args[1:], os.Stderr))
+}
+
+func run(args []string, stderr io.Writer) int {
+	if err := root.Execute(args); err != nil {
 		// Print a short, single-line error to stderr on failures.
 		// Do not print usage or stack traces.
 		msg := strings.Join(strings.Fields(err.Error()), " ")
 		if msg == "" {
 			msg = "error"
 		}
-		_, _ = os.Stderr.WriteString(msg + "\n")
+		_, _ = stderr.Write([]byte(msg + "\n"))
 		code := 1
 		if ec, ok := err.(exitCoder); ok {
 			if c := ec.ExitCode(); c != 0 {
 				code = c
 			}
 		}
-		os.Exit(code)
+		return code
 	}
+	return 0
 }
