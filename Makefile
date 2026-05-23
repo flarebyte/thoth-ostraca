@@ -3,13 +3,14 @@
 ## Build artifacts are produced under ./build by build-go.ts.
 ## Release publishing is handled by release-go.ts.
 
-.PHONY: lint format test test-race gen docs-gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check
+.PHONY: lint format test test-race gen docs-gen build build-dev e2e release clean help bench perf-smoke contract-snapshots release-check ghf-sync ghf-check ghf-test ghf-cov ghf-format ghf-release
 
 BIOME := npx @biomejs/biome
 BUN := bun
 GO := go
 GOLINT := golangci-lint
 FLYB := flyb
+GHF := gh flarebyte
 
 lint:
 	$(BIOME) check
@@ -21,9 +22,7 @@ format:
 	$(BIOME) format --write .
 	$(BIOME) check --unsafe --write
 
-test: gen
-	$(GO) test -coverprofile=coverage.out ./...
-	$(GO) tool cover -func=coverage.out
+test: gen ghf-test
 
 test-race: gen
 	$(GO) test -race ./...
@@ -57,6 +56,24 @@ e2e:
 release: release-check
 	$(BUN) run release-go.ts
 
+ghf-sync:
+	$(GHF) sync
+
+ghf-check:
+	$(GHF) check
+
+ghf-test:
+	$(GHF) test
+
+ghf-cov:
+	$(GHF) cov
+
+ghf-format:
+	$(GHF) format
+
+ghf-release:
+	$(GHF) release
+
 release-check: lint test contract-snapshots
 
 clean:
@@ -72,7 +89,7 @@ dup:
 	npx jscpd --format go --min-lines 10 --gitignore .
 	npx jscpd --format typescript --min-lines 15 --gitignore .
 
-review: format test e2e lint
+review: format test ghf-cov e2e lint
 
 thoth-meta-go:
 	./.e2e-bin/thoth run --config ./pipeline-go-maat.thoth.cue
@@ -95,7 +112,7 @@ help:
 	@printf "  (requires: go, bun, golangci-lint, biome)\n"
 	@printf "  lint               Run linters (Biome + go vet + golangci-lint).\n"
 	@printf "  format             Apply formatting (gofmt + Biome).\n"
-	@printf "  test               Run Go tests + coverage summary.\n"
+	@printf "  test               Run Go unit tests.\n"
 	@printf "  test-race          Run Go tests with race detector.\n"
 	@printf "  bench              Run Go benchmarks.\n"
 	@printf "  perf-smoke         Run performance smoke tests.\n"
@@ -111,3 +128,10 @@ help:
 	@printf "  complexity         Show top file complexity (Go/TS).\n"
 	@printf "  sec                Run security scan (semgrep).\n"
 	@printf "  dup                Run duplication scans (go/typescript).\n"
+	@printf "  review             Run format, tests, coverage, e2e, and lint.\n"
+	@printf "  ghf-sync           Sync repository governance/config via gh-flarebyte.\n"
+	@printf "  ghf-check          Run gh-flarebyte checks.\n"
+	@printf "  ghf-test           Run gh-flarebyte test workflow.\n"
+	@printf "  ghf-cov            Run gh-flarebyte coverage workflow.\n"
+	@printf "  ghf-format         Run gh-flarebyte formatting workflow.\n"
+	@printf "  ghf-release        Run gh-flarebyte release workflow.\n"
