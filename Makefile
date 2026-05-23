@@ -44,7 +44,7 @@ docs-gen:
 	$(FLYB) generate markdown --config docs/design-meta
 
 build:
-	$(BUN) run build-go.ts
+	$(GHF) build
 
 build-dev:
 	mkdir -p .e2e-bin
@@ -120,7 +120,7 @@ help:
 	@printf "  release-check      Run lint + tests + contract snapshots.\n"
 	@printf "  gen                Generate repo artifacts.\n"
 	@printf "  docs-gen           Generate design docs from flyb config.\n"
-	@printf "  build              Build release binaries into ./build.\n"
+	@printf "  build              Run gh-flarebyte build workflow.\n"
 	@printf "  build-dev          Build local dev binary into .e2e-bin/.\n"
 	@printf "  e2e                Run Bun-powered end-to-end tests.\n"
 	@printf "  release            Run release checks, build artifacts, publish GitHub release.\n"

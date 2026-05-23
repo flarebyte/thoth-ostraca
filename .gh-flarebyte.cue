@@ -84,6 +84,7 @@ repository: {
 build: {
   language:             "go"
   mode:                 "binary"
+  mainPackage:          "./cmd/thoth"
   outputDir:            "build"
   checksumFile:         "build/checksums.txt"
   artifactTargetSuffix: true
