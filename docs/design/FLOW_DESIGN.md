@@ -1291,6 +1291,79 @@ Validate top-level meta schema [validate.meta.top_level]
 - Meta object: unknown keys are allowed (user data)
 - Locator: accept file paths (relative/absolute) and URLs (http/https)
 
+## Search Command
+
+### Details
+
+#### Search Command
+
+- Subcommand: `thoth search`
+- Config-free command for recursive search on `*.thoth.yaml` metadata.
+- See the flags and semantics tables for normative behavior.
+
+### Flags
+
+#### Search Command Flags
+
+| default | description | flag | kind | required |
+| --- | --- | --- | --- | --- |
+| . | Search root folder. Discovery walks this root recursively. | --root | path | no |
+|  | Comma-separated meta field keys projected into `meta` for each returned result item. | --fields | string-list | no |
+|  | Optional output file path. If omitted, JSON is written to stdout. | --out | path | no |
+|  | Optional case-insensitive search term matched against the whole meta object. | term | positional | no |
+
+### Implementation Recommendations
+
+#### Search Implementation Recommendations
+
+| area | recommendation | why |
+| --- | --- | --- |
+| reuse | Reuse existing .thoth.yaml discovery helpers (discover_meta_files helpers) | Preserves gitignore/symlink behavior and deterministic traversal already used by pipeline/validate flows. |
+| reuse | Reuse existing YAML parsing/validation helpers for sidecar schema checks | Avoids divergent parser behavior and keeps locator/meta validation consistent. |
+| matching | Stringify meta to stable JSON then lowercase for case-insensitive substring matching | Simple deterministic whole-meta matching aligned with spec and easy to test. |
+| projection | Apply --fields projection after a record matches | Keeps matching semantics independent from output-shape decisions. |
+| ordering | Collect all matches then sort by locator ascending before output | Ensures deterministic output regardless of worker scheduling. |
+| parallelism | Parse and match files in parallel with bounded worker pool (respecting existing workers defaults) | Improves performance on large repos while controlling resource usage. |
+| parallelism | Keep final aggregation/sort single-threaded after worker phase | Simplifies determinism and output consistency. |
+| errors | Use fail-fast behavior for invalid root unreadable file or invalid YAML | Matches search spec and avoids partial/ambiguous outputs. |
+| io | Support stdout by default and atomic file write for --out | Prevents partial output files and keeps CLI-friendly defaults. |
+| testing | Add tests for deterministic ordering projection behavior and case-insensitive matching | Covers main correctness risks and prevents regressions. |
+
+### Semantics
+
+#### Search Command Semantics
+
+| area | key | value |
+| --- | --- | --- |
+| command | name | thoth search |
+| config | requires_cue_config | false |
+| discovery | root_flag | --root |
+| discovery | root_default | . |
+| discovery | recursive | true |
+| discovery | file_pattern | *.thoth.yaml |
+| term | argument | positional term |
+| term | optional | true |
+| term | case_sensitive | false |
+| term | scope | whole meta object |
+| term | matching_domain | stringified JSON of meta including keys and values |
+| term | matching_mode | substring |
+| term | when_missing | all discovered records match |
+| fields | flag | --fields |
+| fields | type | string-list (comma-separated) |
+| fields | purpose | project selected keys inside meta in returned items |
+| fields | unknown_requested_keys | error=false |
+| fields | missing_key_in_record | omit key in that record |
+| result | shape | { locator, meta } |
+| ordering | primary | locator ascending lexicographic |
+| output | format | json array |
+| output | default_destination | stdout |
+| output | file_flag | --out |
+| output | file_behavior | write JSON array to the provided path |
+| errors | policy | fail-fast |
+| errors | root_invalid | non-zero exit |
+| errors | unreadable_file | non-zero exit |
+| errors | invalid_yaml | non-zero exit with locator context |
+
 ## Shell Execution Spec
 
 ### Details

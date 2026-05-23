@@ -234,6 +234,14 @@ reports: [{
           title: "Flags"
           notes: ["flow.search-command-flags"]
         },
+        {
+          title: "Semantics"
+          notes: ["flow.search-command-semantics"]
+        },
+        {
+          title: "Implementation Recommendations"
+          notes: ["flow.search-implementation-recommendations"]
+        },
       ]
     },
     {
