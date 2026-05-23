@@ -74,6 +74,16 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 		workingDir: opts.workingDir,
 		args:       append([]string(nil), args...),
 	}
+	resolvedProgram, ok := resolveAllowedShellProgram(opts.program)
+	if !ok {
+		baseRes.exitCode = -1
+		baseRes.errorMsg = fmt.Sprintf(
+			"program %s is not allowed; supported programs: sh, bash, zsh",
+			opts.program,
+		)
+		return baseRes, nil
+	}
+	baseRes.program = resolvedProgram
 	if opts.workingDir != "" {
 		info, statErr := os.Stat(opts.workingDir)
 		if statErr != nil {
@@ -96,7 +106,22 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 			return baseRes, nil
 		}
 	}
-	cmd := exec.Command(opts.program, args...)
+	var cmd *exec.Cmd
+	switch resolvedProgram {
+	case "/bin/sh":
+		cmd = exec.Command("/bin/sh", args...)
+	case "/bin/bash":
+		cmd = exec.Command("/bin/bash", args...)
+	case "/bin/zsh":
+		cmd = exec.Command("/bin/zsh", args...)
+	default:
+		baseRes.exitCode = -1
+		baseRes.errorMsg = fmt.Sprintf(
+			"program %s is not allowed; supported programs: sh, bash, zsh",
+			opts.program,
+		)
+		return baseRes, nil
+	}
 	cmd.Dir = opts.workingDir
 	cmd.Env = applyEnvOverlay(os.Environ(), opts.env)
 	if opts.killProcessGroup {
@@ -166,7 +191,7 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 		stdoutTruncated: outBuf.truncated,
 		stderrTruncated: errBuf.truncated,
 		timedOut:        timedOut,
-		program:         opts.program,
+		program:         resolvedProgram,
 		workingDir:      opts.workingDir,
 		args:            append([]string(nil), args...),
 	}
@@ -195,6 +220,19 @@ func runCommand(ctx context.Context, opts shellOptions, rec Record) (shellRunRes
 		return res, nil
 	}
 	return res, nil
+}
+
+func resolveAllowedShellProgram(program string) (string, bool) {
+	switch program {
+	case "sh", "/bin/sh":
+		return "/bin/sh", true
+	case "bash", "/bin/bash":
+		return "/bin/bash", true
+	case "zsh", "/bin/zsh":
+		return "/bin/zsh", true
+	default:
+		return "", false
+	}
 }
 
 func signalProcess(cmd *exec.Cmd, killGroup bool, sig syscall.Signal) {

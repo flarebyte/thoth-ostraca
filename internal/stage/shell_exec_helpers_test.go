@@ -51,6 +51,9 @@ func TestRunCommand_SuccessCanonical(t *testing.T) {
 	if r.stderr == nil || *r.stderr != "" {
 		t.Fatalf("unexpected stderr: %#v", r.stderr)
 	}
+	if r.program != "/bin/sh" {
+		t.Fatalf("expected resolved shell program path, got %q", r.program)
+	}
 	if r.stdoutTruncated || r.stderrTruncated {
 		t.Fatalf("unexpected truncation flags: %+v", r)
 	}
@@ -159,6 +162,21 @@ func TestRunCommand_StartFailurePreservesUnderlyingError(t *testing.T) {
 	}
 	if !strings.Contains(r.errorMsg, "does-not-exist") {
 		t.Fatalf("expected working dir in error, got %q", r.errorMsg)
+	}
+}
+
+func TestRunCommand_DisallowedProgramRejected(t *testing.T) {
+	opts := baseShellOpts()
+	opts.program = "python3"
+	r, err := runCommand(context.Background(), opts, Record{})
+	if err != nil {
+		t.Fatalf("runCommand err: %v", err)
+	}
+	if r.exitCode != -1 {
+		t.Fatalf("expected exitCode=-1, got %+v", r)
+	}
+	if !strings.Contains(r.errorMsg, "is not allowed") {
+		t.Fatalf("expected allowlist rejection message, got %q", r.errorMsg)
 	}
 }
 
