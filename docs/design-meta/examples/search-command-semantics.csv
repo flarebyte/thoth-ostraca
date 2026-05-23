@@ -1,0 +1,29 @@
+area,key,value
+command,name,thoth search
+config,requires_cue_config,false
+discovery,root_flag,--root
+discovery,root_default,.
+discovery,recursive,true
+discovery,file_pattern,*.thoth.yaml
+term,argument,positional term
+term,optional,true
+term,case_sensitive,false
+term,scope,whole meta object
+term,matching_domain,stringified JSON of meta including keys and values
+term,matching_mode,substring
+term,when_missing,all discovered records match
+fields,flag,--fields
+fields,type,string-list (comma-separated)
+fields,purpose,project selected keys inside meta in returned items
+fields,unknown_requested_keys,error=false
+fields,missing_key_in_record,omit key in that record
+result,shape,"{ locator, meta }"
+ordering,primary,locator ascending lexicographic
+output,format,json array
+output,default_destination,stdout
+output,file_flag,--out
+output,file_behavior,write JSON array to the provided path
+errors,policy,fail-fast
+errors,root_invalid,non-zero exit
+errors,unreadable_file,non-zero exit
+errors,invalid_yaml,non-zero exit with locator context

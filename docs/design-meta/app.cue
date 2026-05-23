@@ -224,6 +224,19 @@ reports: [{
       }]
     },
     {
+      title: "Search Command"
+      sections: [
+        {
+          title: "Details"
+          notes: ["flow.search-command"]
+        },
+        {
+          title: "Flags"
+          notes: ["flow.search-command-flags"]
+        },
+      ]
+    },
+    {
       title: "Filename Collision & Stability"
       sections: [{
         title: "Details"

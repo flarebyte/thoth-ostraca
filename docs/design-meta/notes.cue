@@ -686,6 +686,45 @@ CLI flags, and good error messages at each stage.
 """
   },
   {
+    name:   "flow.search-command"
+    title:  "Search Command"
+    labels: ["design", "search"]
+    markdown: """
+- Subcommand: `thoth search`
+- Config: no CUE config file is required for this command
+- Root selection: `--root <path>` (optional), default `.`
+- Discovery: recursive by default and always enabled (no recursive flag)
+- Scope: search only `*.thoth.yaml` files discovered under root
+- Search term scope: `<term>` is matched against the whole `meta` section, not
+  a single field
+- Search term: optional positional `<term>`; matching is case-insensitive
+- Term behavior: when `<term>` is omitted, all discovered records match
+- Return fields: `--fields <k1,k2,...>` optionally limits which `meta` keys are
+  included in each output item; when omitted, return full `meta`
+- Result item shape: each array item is an object `{ locator, meta }`
+- `--fields` projection shape: `meta` remains an object and only requested keys
+  are included
+- `--fields` unknown keys: do not error; keys not present in a record are
+  omitted for that record
+- Matching domain: whole `meta` object including keys and values (stringified
+  JSON form)
+- Matching algorithm: case-insensitive substring match on normalized lowercase
+  text
+- Ordering: deterministic sort by `locator` ascending (lexicographic)
+- Output format: JSON array for now
+- Output destination: write JSON to stdout by default, or to a JSON file when
+  `--out <path>` is provided
+- Errors: non-zero on invalid root path, unreadable files, or invalid YAML
+  (fail-fast); include locator context for file-level parse errors
+"""
+  },
+  {
+    name:   "flow.search-command-flags"
+    title:  "Search Command Flags"
+    labels: ["design", "search"]
+    filepath: "examples/search-command-flags.csv"
+  },
+  {
     name:   "flow.filename-collision-stability"
     title:  "Filename Collision & Stability"
     labels: ["design"]
