@@ -1310,7 +1310,7 @@ Validate top-level meta schema [validate.meta.top_level]
 | . | Search root folder. Discovery walks this root recursively. | --root | path | no |
 |  | Comma-separated meta field keys projected into `meta` for each returned result item. | --fields | string-list | no |
 |  | Optional output file path. If omitted, JSON is written to stdout. | --out | path | no |
-|  | Optional case-insensitive search term matched against the whole meta object. | term | positional | no |
+|  | Optional case-insensitive search term matched against the whole meta object. | --term | string | no |
 
 ### Implementation Recommendations
 
@@ -1329,6 +1329,28 @@ Validate top-level meta schema [validate.meta.top_level]
 | io | Support stdout by default and atomic file write for --out | Prevents partial output files and keeps CLI-friendly defaults. |
 | testing | Add tests for deterministic ordering projection behavior and case-insensitive matching | Covers main correctness risks and prevents regressions. |
 
+### Result Example
+
+#### Search Command Result Example
+
+```json
+[
+  {
+    "locator": "internal/stage/parse_validate_yaml.go",
+    "meta": {
+      "language": "go",
+      "purpose": "Parse discovered .thoth.yaml files into validated metadata records"
+    }
+  },
+  {
+    "locator": "docs/design/FLOW_DESIGN.md",
+    "meta": {
+      "language": "markdown"
+    }
+  }
+]
+```
+
 ### Semantics
 
 #### Search Command Semantics
@@ -1341,7 +1363,7 @@ Validate top-level meta schema [validate.meta.top_level]
 | discovery | root_default | . |
 | discovery | recursive | true |
 | discovery | file_pattern | *.thoth.yaml |
-| term | argument | positional term |
+| term | flag | --term |
 | term | optional | true |
 | term | case_sensitive | false |
 | term | scope | whole meta object |
@@ -1359,6 +1381,8 @@ Validate top-level meta schema [validate.meta.top_level]
 | output | default_destination | stdout |
 | output | file_flag | --out |
 | output | file_behavior | write JSON array to the provided path |
+| output | style | pretty-printed JSON |
+| output | key_ordering | deterministic key ordering |
 | errors | policy | fail-fast |
 | errors | root_invalid | non-zero exit |
 | errors | unreadable_file | non-zero exit |

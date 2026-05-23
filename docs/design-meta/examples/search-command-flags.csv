@@ -2,4 +2,4 @@ flag,kind,required,default,description
 --root,path,no,.,Search root folder. Discovery walks this root recursively.
 --fields,string-list,no,,Comma-separated meta field keys projected into `meta` for each returned result item.
 --out,path,no,,"Optional output file path. If omitted, JSON is written to stdout."
-term,positional,no,,Optional case-insensitive search term matched against the whole meta object.
+--term,string,no,,Optional case-insensitive search term matched against the whole meta object.

@@ -714,6 +714,12 @@ CLI flags, and good error messages at each stage.
     filepath: "examples/search-implementation-recommendations.csv"
   },
   {
+    name:   "flow.search-command-result-example"
+    title:  "Search Command Result Example"
+    labels: ["design", "search"]
+    filepath: "examples/search-command-result-example.json"
+  },
+  {
     name:   "flow.filename-collision-stability"
     title:  "Filename Collision & Stability"
     labels: ["design"]

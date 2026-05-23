@@ -242,6 +242,10 @@ reports: [{
           title: "Implementation Recommendations"
           notes: ["flow.search-implementation-recommendations"]
         },
+        {
+          title: "Result Example"
+          notes: ["flow.search-command-result-example"]
+        },
       ]
     },
     {

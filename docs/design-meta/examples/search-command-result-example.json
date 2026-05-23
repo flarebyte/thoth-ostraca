@@ -1,0 +1,15 @@
+[
+  {
+    "locator": "internal/stage/parse_validate_yaml.go",
+    "meta": {
+      "language": "go",
+      "purpose": "Parse discovered .thoth.yaml files into validated metadata records"
+    }
+  },
+  {
+    "locator": "docs/design/FLOW_DESIGN.md",
+    "meta": {
+      "language": "markdown"
+    }
+  }
+]

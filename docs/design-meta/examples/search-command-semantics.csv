@@ -5,7 +5,7 @@ discovery,root_flag,--root
 discovery,root_default,.
 discovery,recursive,true
 discovery,file_pattern,*.thoth.yaml
-term,argument,positional term
+term,flag,--term
 term,optional,true
 term,case_sensitive,false
 term,scope,whole meta object
@@ -23,6 +23,8 @@ output,format,json array
 output,default_destination,stdout
 output,file_flag,--out
 output,file_behavior,write JSON array to the provided path
+output,style,pretty-printed JSON
+output,key_ordering,deterministic key ordering
 errors,policy,fail-fast
 errors,root_invalid,non-zero exit
 errors,unreadable_file,non-zero exit
