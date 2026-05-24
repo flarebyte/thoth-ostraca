@@ -1,5 +1,8 @@
 locator: cmd/thoth/search/search.go
 meta:
+  architecture_notes:
+    - NewCmd returns an isolated command instance with local flag variables so tests and callers do not share mutable flag state.
+    - Business logic stays in internal/search; this file should remain command wiring and argument handling.
   function_list:
     - NewCmd
   import_files_list:
@@ -7,3 +10,8 @@ meta:
     - github.com/flarebyte/thoth-ostraca/internal/search
     - github.com/spf13/cobra
   language: go
+  purpose: Expose the thoth search CLI subcommand so metadata can be queried without a CUE pipeline config.
+  responsibilities:
+    - Define and bind search command flags.
+    - Invoke internal search execution and return CLI-level errors.
+    - Write command output to the configured Cobra stdout stream.

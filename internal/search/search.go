@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Implement deterministic metadata search over discovered `*.thoth.yaml` records for the `thoth search` command.
+// Responsibilities:
+// - Load validated metadata records by reusing stage discovery and YAML/locator validation stages.
+// - Filter records with case-insensitive whole-meta term matching and optional field projection.
+// - Produce stable, pretty JSON output to stdout or atomically to a file path.
+// Architecture notes:
+// - Record evaluation is parallelized with bounded workers, while final ordering is always sorted by locator for deterministic output.
+// - Matching normalizes meta via JSON serialization so key/value text search behavior stays consistent across types.
 package search
 
 import (

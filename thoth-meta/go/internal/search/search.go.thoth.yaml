@@ -1,5 +1,8 @@
 locator: internal/search/search.go
 meta:
+  architecture_notes:
+    - Search evaluation is parallelized with bounded workers, then normalized through a final sort by locator to keep deterministic output.
+    - Term matching serializes meta to JSON and applies case-insensitive substring checks to keep behavior consistent across mixed value types.
   function_list:
     - Execute
     - WriteJSON
@@ -20,3 +23,8 @@ meta:
     - strings
     - sync
   language: go
+  purpose: Provide deterministic metadata search and JSON rendering for records discovered from thoth sidecar files.
+  responsibilities:
+    - Reuse stage-based discovery and YAML/locator validation to load search records.
+    - Filter and project metadata results based on term and fields options.
+    - Emit pretty JSON to stdout or atomically persist JSON output to a file.

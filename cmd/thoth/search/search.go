@@ -1,3 +1,12 @@
+// File Guide for dev/ai agents:
+// Purpose: Expose the `thoth search` CLI subcommand so users can query `*.thoth.yaml` metadata without providing a CUE config.
+// Responsibilities:
+// - Define and parse search flags (`--root`, `--term`, `--fields`, `--out`).
+// - Call the internal search engine and propagate execution errors.
+// - Emit command output through Cobra's configured stdout stream.
+// Architecture notes:
+// - NewCmd returns a fresh command instance with locally scoped flag state to avoid shared global test/runtime mutation.
+// - Search logic is delegated to internal/search so this file remains CLI wiring only.
 package search
 
 import (
