@@ -6,6 +6,7 @@ meta:
     - Diagnostic context is captured here because the low-level spawn path knows the final program, args, and working directory.
   function_list:
     - applyEnvOverlay
+    - resolveAllowedShellProgram
     - runCommand
     - signalProcess
     - strPtr

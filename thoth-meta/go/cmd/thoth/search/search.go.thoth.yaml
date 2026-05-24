@@ -1,0 +1,9 @@
+locator: cmd/thoth/search/search.go
+meta:
+  function_list:
+    - NewCmd
+  import_files_list:
+    - context
+    - github.com/flarebyte/thoth-ostraca/internal/search
+    - github.com/spf13/cobra
+  language: go

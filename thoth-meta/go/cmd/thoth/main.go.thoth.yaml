@@ -5,8 +5,10 @@ meta:
     - Exit code mapping is handled only at the top level so subcommands can return typed errors without depending on os.Exit directly.
   function_list:
     - main
+    - run
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/cmd/thoth/root
+    - io
     - os
     - strings
   language: go

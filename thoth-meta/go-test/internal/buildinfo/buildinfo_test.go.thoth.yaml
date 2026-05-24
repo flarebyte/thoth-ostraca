@@ -1,0 +1,8 @@
+locator: internal/buildinfo/buildinfo_test.go
+meta:
+  function_list:
+    - TestSummary
+  import_files_list:
+    - github.com/flarebyte/thoth-ostraca/cli
+    - testing
+  language: go

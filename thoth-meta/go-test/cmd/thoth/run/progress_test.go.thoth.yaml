@@ -1,0 +1,13 @@
+locator: cmd/thoth/run/progress_test.go
+meta:
+  function_list:
+    - TestProgressReporterHelpers
+    - TestProgressReporterRunStage
+  import_files_list:
+    - bytes
+    - context
+    - errors
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - strings
+    - testing
+  language: go

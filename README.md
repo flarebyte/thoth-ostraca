@@ -41,6 +41,28 @@ CUE
 - `deterministic outputs`: stable sorting and canonical JSON/YAML to keep outputs byte-identical across reruns/workers.
 
 ## Common Workflows
+### Search metadata (`*.thoth.yaml`) without a config file
+Search recursively from `.` by default:
+
+```bash
+./.e2e-bin/thoth search --term purpose
+```
+
+Search in a specific folder and project returned `meta` keys:
+
+```bash
+./.e2e-bin/thoth search \
+  --root ./thoth-meta \
+  --term pipeline \
+  --fields purpose,responsibilities
+```
+
+Write pretty JSON array output to a file:
+
+```bash
+./.e2e-bin/thoth search --root ./thoth-meta --out ./temp/search.json
+```
+
 ### Validate meta files
 ```cue
 // validate.cue
@@ -214,7 +236,7 @@ output: {
 - Keep default machine output on `stdout`; diagnostics/progress/summary are emitted to `stderr` only when enabled.
 
 ## Repository Layout
-- `cmd/thoth/`: CLI entrypoints (`run`, `diagnose`, `version`).
+- `cmd/thoth/`: CLI entrypoints (`run`, `diagnose`, `search`, `version`).
 - `internal/stage/`: pipeline stages and stage tests.
 - `script/e2e/`: end-to-end tests (TypeScript).
 - `testdata/configs/`: config fixtures used in tests.

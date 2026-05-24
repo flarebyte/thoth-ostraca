@@ -1,0 +1,22 @@
+locator: internal/search/search.go
+meta:
+  function_list:
+    - Execute
+    - WriteJSON
+    - normalizeFields
+    - projectMeta
+    - searchParallel
+    - searchRecord
+  import_files_list:
+    - context
+    - encoding/json
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - io
+    - os
+    - path/filepath
+    - runtime
+    - sort
+    - strings
+    - sync
+  language: go

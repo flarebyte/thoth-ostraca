@@ -1,0 +1,14 @@
+locator: cmd/thoth/search/search_test.go
+meta:
+  function_list:
+    - TestSearchCommandOutFile
+    - TestSearchCommandOutputsJSON
+    - TestSearchHelpShowsFlags
+  import_files_list:
+    - bytes
+    - github.com/flarebyte/thoth-ostraca/internal/testutil
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

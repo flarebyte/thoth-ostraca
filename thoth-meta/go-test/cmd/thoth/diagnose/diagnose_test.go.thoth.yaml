@@ -1,0 +1,37 @@
+locator: cmd/thoth/diagnose/diagnose_test.go
+meta:
+  function_list:
+    - TestBaseDiscoveryOverridesAndPreparedPipeline
+    - TestCmdRunEBranches
+    - TestPrepareDiagnoseInputAndPrint
+    - TestPrepareDiagnoseInputInvalidJSON
+    - TestPrintEnvelopeOneLine_JSONRoundTrip
+    - TestPrintEnvelopeOneLine_WriteError
+    - TestRelativizeRoot
+    - TestResolveHelpers
+    - TestRunDiagnoseDefault_MissingStageError
+    - TestRunDiagnoseModes
+    - TestRunDiagnoseWithIn_MissingStageError
+    - TestRunDiagnoseWithPrepare_InvalidModeError
+    - TestRunDiagnoseWithPreparedPipeline_ErrorBranches
+    - TestRunStageSequenceAndRender
+    - TestRunStageSequence_DumpBoundaryError
+    - TestRunStagesAndRender_DumpOutError
+    - TestWriteJSONFileAndMaybeDump
+    - TestWriteJSONFile_MkdirFailure
+    - captureStdout
+    - registerDiagPassStage
+    - resetDiagFlags
+  import_files_list:
+    - bytes
+    - context
+    - encoding/json
+    - errors
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/run
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - github.com/spf13/cobra
+    - os
+    - path/filepath
+    - strings
+    - testing
+  language: go

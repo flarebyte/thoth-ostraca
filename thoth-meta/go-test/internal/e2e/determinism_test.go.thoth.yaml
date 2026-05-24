@@ -10,6 +10,7 @@ meta:
     - TestDeterminism_InputPipelinePersistOutDir_MultiRuns
     - TestDeterminism_InputPipelinePersist_MultiRuns
     - TestDeterminism_InputPipelineProgress_MultiRuns
+    - TestDeterminism_InputPipelineReduce_MultiRuns
     - TestDeterminism_InputPipelineTemplate_MultiRuns
     - TestDeterminism_InputPipeline_MultiRuns
     - TestDeterminism_Pipeline_MultiRuns

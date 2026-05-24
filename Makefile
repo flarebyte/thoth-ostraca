@@ -91,6 +91,8 @@ dup:
 
 review: format test ghf-cov e2e lint
 
+thoth-meta: thoth-meta-go thoth-meta-go-test thoth-meta-ts-e2e
+
 thoth-meta-go:
 	./.e2e-bin/thoth run --config ./pipeline-go-maat.thoth.cue
 
