@@ -9,6 +9,7 @@ meta:
   import_files_list:
     - github.com/flarebyte/thoth-ostraca/cmd/thoth/diagnose
     - github.com/flarebyte/thoth-ostraca/cmd/thoth/run
+    - github.com/flarebyte/thoth-ostraca/cmd/thoth/search
     - github.com/flarebyte/thoth-ostraca/cmd/thoth/version
     - github.com/spf13/cobra
   language: go

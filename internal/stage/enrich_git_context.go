@@ -107,9 +107,8 @@ func hashEq(a, b [20]byte) bool {
 
 func blobHashBytes(content []byte) [20]byte {
 	prefix := fmt.Sprintf("blob %d\x00", len(content))
-	// nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1
-	// Git object IDs are defined with SHA-1 for compatibility with repository data.
-	h := sha1.New()
+	// #nosec G401 -- Git object IDs are SHA-1 by definition; this preserves repository compatibility.
+	h := sha1.New() // nosemgrep: go.lang.security.audit.crypto.use_of_weak_crypto.use-of-sha1
 	_, _ = h.Write([]byte(prefix))
 	_, _ = h.Write(content)
 	var out [20]byte

@@ -1,0 +1,12 @@
+locator: internal/config/parse_sections_test.go
+meta:
+  function_list:
+    - TestCompileCUEBranches
+    - TestParseMinimal_AllSections
+    - TestParseSectionErrors
+    - writeCue
+  import_files_list:
+    - os
+    - path/filepath
+    - testing
+  language: go

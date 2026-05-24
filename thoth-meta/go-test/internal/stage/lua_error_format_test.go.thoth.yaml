@@ -1,0 +1,9 @@
+locator: internal/stage/lua_error_format_test.go
+meta:
+  function_list:
+    - TestFormatLuaError_WithLineExcerpt
+    - TestFormatLuaError_WithoutLineExcerpt
+  import_files_list:
+    - strings
+    - testing
+  language: go

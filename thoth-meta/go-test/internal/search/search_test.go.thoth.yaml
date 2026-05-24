@@ -1,0 +1,24 @@
+locator: internal/search/search_test.go
+meta:
+  function_list:
+    - TestExecute_DeterministicAcrossRuns
+    - TestExecute_InvalidRootErrors
+    - TestExecute_InvalidYAMLFails
+    - TestExecute_NoTermReturnsAll
+    - TestExecute_SearchProjectionAndOrdering
+    - TestSearchRecordBranches
+    - TestWriteJSON_ErrorBranches
+    - TestWriteJSON_ToFile
+  import_files_list:
+    - context
+    - encoding/json
+    - fmt
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - github.com/flarebyte/thoth-ostraca/internal/testutil
+    - io
+    - os
+    - path/filepath
+    - reflect
+    - strings
+    - testing
+  language: go

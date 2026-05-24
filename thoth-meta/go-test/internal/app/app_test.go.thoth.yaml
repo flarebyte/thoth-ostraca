@@ -1,0 +1,11 @@
+locator: internal/app/app_test.go
+meta:
+  function_list:
+    - TestRunHello
+  import_files_list:
+    - bytes
+    - io
+    - os
+    - strings
+    - testing
+  language: go

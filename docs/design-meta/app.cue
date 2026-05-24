@@ -224,6 +224,31 @@ reports: [{
       }]
     },
     {
+      title: "Search Command"
+      sections: [
+        {
+          title: "Details"
+          notes: ["flow.search-command"]
+        },
+        {
+          title: "Flags"
+          notes: ["flow.search-command-flags"]
+        },
+        {
+          title: "Semantics"
+          notes: ["flow.search-command-semantics"]
+        },
+        {
+          title: "Implementation Recommendations"
+          notes: ["flow.search-implementation-recommendations"]
+        },
+        {
+          title: "Result Example"
+          notes: ["flow.search-command-result-example"]
+        },
+      ]
+    },
+    {
       title: "Filename Collision & Stability"
       sections: [{
         title: "Details"

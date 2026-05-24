@@ -17,6 +17,7 @@ meta:
     - 'diff-meta: failOnChange=true with keep-going parse errors exits 1'
     - 'diff-meta: json-patch deterministic workers=1 vs workers=8'
     - 'diff-meta: json-patch format includes deterministic RFC6902 patch ops'
+    - 'diff-meta: lua-filter limits paired inputs while keeping root orphan scan'
     - 'diff-meta: only=changed + summary=true reflects filtered report counts'
     - 'diff-meta: only=changed filters details deterministically'
     - 'diff-meta: only=orphans omits paired details and keeps sorted orphans'

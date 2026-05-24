@@ -686,6 +686,40 @@ CLI flags, and good error messages at each stage.
 """
   },
   {
+    name:   "flow.search-command"
+    title:  "Search Command"
+    labels: ["design", "search"]
+    markdown: """
+- Subcommand: `thoth search`
+- Config-free command for recursive search on `*.thoth.yaml` metadata.
+- See the flags and semantics tables for normative behavior.
+"""
+  },
+  {
+    name:   "flow.search-command-flags"
+    title:  "Search Command Flags"
+    labels: ["design", "search"]
+    filepath: "examples/search-command-flags.csv"
+  },
+  {
+    name:   "flow.search-command-semantics"
+    title:  "Search Command Semantics"
+    labels: ["design", "search"]
+    filepath: "examples/search-command-semantics.csv"
+  },
+  {
+    name:   "flow.search-implementation-recommendations"
+    title:  "Search Implementation Recommendations"
+    labels: ["design", "search", "implementation"]
+    filepath: "examples/search-implementation-recommendations.csv"
+  },
+  {
+    name:   "flow.search-command-result-example"
+    title:  "Search Command Result Example"
+    labels: ["design", "search"]
+    filepath: "examples/search-command-result-example.json"
+  },
+  {
     name:   "flow.filename-collision-stability"
     title:  "Filename Collision & Stability"
     labels: ["design"]

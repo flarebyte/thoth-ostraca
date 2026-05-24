@@ -23,6 +23,7 @@ meta:
     - thoth run input-pipeline fails on invalid shell JSON when decoding is enabled
     - thoth run input-pipeline fails on invalid shell placeholder in strict mode
     - thoth run input-pipeline supports direct shell field interpolation
+    - thoth run input-pipeline supports reduce
     - thoth run input-pipeline works on source files
     - thoth run maps records via Lua transform
     - thoth run reduces to count and prints full envelope

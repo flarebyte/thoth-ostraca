@@ -1,0 +1,7 @@
+locator: cmd/thoth/root/root_test.go
+meta:
+  function_list:
+    - TestNewRootCmdAndExecuteHelp
+  import_files_list:
+    - testing
+  language: go

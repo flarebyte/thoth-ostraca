@@ -1,0 +1,13 @@
+locator: cmd/thoth/run/pipeline_test.go
+meta:
+  function_list:
+    - TestExecuteMetaPipelineAndStreaming
+    - TestExecutePipelineBranches
+    - TestPipelineHelpers
+    - registerPipelineStubs
+  import_files_list:
+    - context
+    - errors
+    - github.com/flarebyte/thoth-ostraca/internal/stage
+    - testing
+  language: go

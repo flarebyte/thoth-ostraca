@@ -1,0 +1,29 @@
+locator: internal/stage/lua_thoth_lib_test.go
+meta:
+  function_list:
+    - TestInstallThothLib
+    - TestLuaThothAll
+    - TestLuaThothAllFalse
+    - TestLuaThothAny
+    - TestLuaThothContains
+    - TestLuaThothCopy
+    - TestLuaThothDeepCopy
+    - TestLuaThothEndsWith
+    - TestLuaThothFilter
+    - TestLuaThothFind
+    - TestLuaThothFindNotFound
+    - TestLuaThothFlatten
+    - TestLuaThothIsEmpty
+    - TestLuaThothMap
+    - TestLuaThothPush
+    - TestLuaThothReduce
+    - TestLuaThothSortKeys
+    - TestLuaThothSortValues
+    - TestLuaThothSplit
+    - TestLuaThothStartsWith
+    - TestLuaThothTrim
+    - newLuaStateWithThothLib
+  import_files_list:
+    - github.com/yuin/gopher-lua
+    - testing
+  language: go

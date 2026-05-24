@@ -8,6 +8,7 @@ meta:
   language: typescript
   testcase_titles_list:
     - 'create-meta: creates .thoth.yaml files and prints expected envelope'
+    - 'create-meta: lua-filter limits which sidecars are created'
     - 'create-meta: second run fails-fast when meta exists'
     - 'input-pipeline: dry-run reports intended writes and creates no sidecars'
     - 'input-pipeline: invalid persistMeta.outDir config fails early'
@@ -21,5 +22,6 @@ meta:
     - 'update-meta: invalid existing meta embeds errors in keep-going and still creates others'
     - 'update-meta: invalid existing meta fails fast'
     - 'update-meta: keep-going with invalid existing meta still updates valid file with patch'
+    - 'update-meta: lua-filter limits which files are updated'
     - 'update-meta: preserves existing meta and creates missing'
     - 'update-meta: rewrite-stable canonical YAML (run twice, exact golden)'

@@ -1291,6 +1291,96 @@ Validate top-level meta schema [validate.meta.top_level]
 - Meta object: unknown keys are allowed (user data)
 - Locator: accept file paths (relative/absolute) and URLs (http/https)
 
+## Search Command
+
+### Details
+
+#### Search Command
+
+- Subcommand: `thoth search`
+- Config-free command for recursive search on `*.thoth.yaml` metadata.
+- See the flags and semantics tables for normative behavior.
+
+### Flags
+
+#### Search Command Flags
+
+| default | description | flag | kind | required |
+| --- | --- | --- | --- | --- |
+| . | Search root folder. Discovery walks this root recursively. | --root | path | no |
+|  | Comma-separated meta field keys projected into `meta` for each returned result item. | --fields | string-list | no |
+|  | Optional output file path. If omitted, JSON is written to stdout. | --out | path | no |
+|  | Optional case-insensitive search term matched against the whole meta object. | --term | string | no |
+
+### Implementation Recommendations
+
+#### Search Implementation Recommendations
+
+| area | recommendation | why |
+| --- | --- | --- |
+| reuse | Reuse existing .thoth.yaml discovery helpers (discover_meta_files helpers) | Preserves gitignore/symlink behavior and deterministic traversal already used by pipeline/validate flows. |
+| reuse | Reuse existing YAML parsing/validation helpers for sidecar schema checks | Avoids divergent parser behavior and keeps locator/meta validation consistent. |
+| matching | Stringify meta to stable JSON then lowercase for case-insensitive substring matching | Simple deterministic whole-meta matching aligned with spec and easy to test. |
+| projection | Apply --fields projection after a record matches | Keeps matching semantics independent from output-shape decisions. |
+| ordering | Collect all matches then sort by locator ascending before output | Ensures deterministic output regardless of worker scheduling. |
+| parallelism | Parse and match files in parallel with bounded worker pool (respecting existing workers defaults) | Improves performance on large repos while controlling resource usage. |
+| parallelism | Keep final aggregation/sort single-threaded after worker phase | Simplifies determinism and output consistency. |
+| errors | Use fail-fast behavior for invalid root unreadable file or invalid YAML | Matches search spec and avoids partial/ambiguous outputs. |
+| io | Support stdout by default and atomic file write for --out | Prevents partial output files and keeps CLI-friendly defaults. |
+| testing | Add tests for deterministic ordering projection behavior and case-insensitive matching | Covers main correctness risks and prevents regressions. |
+
+### Result Example
+
+#### Search Command Result Example
+
+```json
+[
+  {
+    "locator": "internal/stage/parse_validate_yaml.go",
+    "meta": {
+      "language": "go",
+      "purpose": "Parse discovered .thoth.yaml files into validated metadata records"
+    }
+  },
+  {
+    "locator": "docs/design/FLOW_DESIGN.md",
+    "meta": {
+      "language": "markdown"
+    }
+  }
+]
+```
+
+### Semantics
+
+#### Search Command Semantics
+
+| category | example | rule | topic |
+| --- | --- | --- | --- |
+| Command | thoth search --root . --term parser | Use `thoth search` without a CUE config file. | Invocation |
+| Discovery | thoth search --root docs | `--root` selects the folder to search and defaults to `.`. | Root folder |
+| Discovery | No recursion flag is required | Search is always recursive. | Recursion |
+| Discovery | docs/a.thoth.yaml | Only files ending with `.thoth.yaml` are scanned. | File scope |
+| Term matching | thoth search --term pipeline | Search term is optional and passed with `--term`. | Term flag |
+| Term matching | thoth search --root docs | If `--term` is omitted all discovered records are considered matches. | When term missing |
+| Term matching | `Pipeline` matches `pipeline` | Matching is case-insensitive. | Case handling |
+| Term matching | `--term purpose` can match a meta key name | Term is matched against the whole `meta` object (keys and values). | Match scope |
+| Term matching | `flow` matches `workflow` | Matching uses substring semantics on normalized text. | Match method |
+| Returned data | {"locator":"a.go","meta":{"language":"go"}} | Each result item is `{ locator, meta }`. | Result shape |
+| Returned data | --fields language,purpose | `--fields` filters which keys are returned inside `meta`. | Field projection |
+| Returned data | --fields unknownKey | Unknown keys in `--fields` do not fail the command. | Unknown projected fields |
+| Returned data | meta contains language but not purpose | If a requested key is missing in one record it is omitted for that record. | Missing projected fields |
+| Ordering | a.go before b.go | Results are sorted by `locator` ascending (lexicographic). | Deterministic ordering |
+| Output | [ { ... }, { ... } ] | Output is a JSON array. | Format |
+| Output | thoth search --term lua | Output is written to stdout by default. | Default destination |
+| Output | thoth search --out temp/search.json | `--out` writes the JSON array to a file. | File destination |
+| Output | Indented JSON | JSON output is pretty-printed. | Style |
+| Output | Stable output across runs | Object keys are emitted in deterministic order. | Key ordering |
+| Errors | Stops at first fatal error | The command is fail-fast. | Error policy |
+| Errors | --root does-not-exist | A non-existent or invalid root returns a non-zero exit. | Invalid root |
+| Errors | Permission denied while reading file | Unreadable files return a non-zero exit. | Unreadable file |
+| Errors | parse error with file path | Invalid `.thoth.yaml` returns non-zero and includes locator context. | Invalid YAML |
+
 ## Shell Execution Spec
 
 ### Details

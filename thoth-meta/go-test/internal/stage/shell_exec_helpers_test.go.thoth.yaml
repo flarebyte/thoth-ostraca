@@ -7,6 +7,7 @@ meta:
     - TestRenderArgs_MissingMappedValueFailsClearly
     - TestRenderArgs_StrictTemplatingRejectsUnknownPlaceholder
     - TestRunCommand_CaptureDisabledOmitsStream
+    - TestRunCommand_DisallowedProgramRejected
     - TestRunCommand_NonZeroExitNoErrorField
     - TestRunCommand_StartFailurePreservesUnderlyingError
     - TestRunCommand_SuccessCanonical

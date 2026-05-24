@@ -1,0 +1,8 @@
+locator: cmd/thoth/version/json_test.go
+meta:
+  function_list:
+    - TestEncodeJSON
+  import_files_list:
+    - bytes
+    - testing
+  language: go

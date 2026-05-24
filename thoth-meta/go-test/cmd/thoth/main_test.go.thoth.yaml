@@ -1,0 +1,11 @@
+locator: cmd/thoth/main_test.go
+meta:
+  function_list:
+    - TestMainCallsOsExit
+    - TestRunMissingCommandReturnsErrorCode
+    - TestRunSuccessAndErrorFormatting
+  import_files_list:
+    - bytes
+    - os
+    - testing
+  language: go
