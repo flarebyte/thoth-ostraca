@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
 func TestExecute_SearchProjectionAndOrdering(t *testing.T) {
@@ -16,18 +18,18 @@ func TestExecute_SearchProjectionAndOrdering(t *testing.T) {
 
 	root := t.TempDir()
 
-	mustWrite(t, filepath.Join(root, "b.thoth.yaml"), `locator: src/b.go
+	testutil.MustWriteFile(t, filepath.Join(root, "b.thoth.yaml"), `locator: src/b.go
 meta:
   language: go
   purpose: parser
   score: 7
 `)
-	mustWrite(t, filepath.Join(root, "a.thoth.yaml"), `locator: src/a.go
+	testutil.MustWriteFile(t, filepath.Join(root, "a.thoth.yaml"), `locator: src/a.go
 meta:
   language: Go
   purpose: workflow
 `)
-	mustWrite(t, filepath.Join(root, "sub", "c.thoth.yaml"), `locator: src/c.go
+	testutil.MustWriteFile(t, filepath.Join(root, "sub", "c.thoth.yaml"), `locator: src/c.go
 meta:
   language: markdown
 `)
@@ -64,11 +66,11 @@ func TestExecute_NoTermReturnsAll(t *testing.T) {
 	t.Parallel()
 
 	root := t.TempDir()
-	mustWrite(t, filepath.Join(root, "a.thoth.yaml"), `locator: x/a.go
+	testutil.MustWriteFile(t, filepath.Join(root, "a.thoth.yaml"), `locator: x/a.go
 meta:
   language: go
 `)
-	mustWrite(t, filepath.Join(root, "b.thoth.yaml"), `locator: x/b.go
+	testutil.MustWriteFile(t, filepath.Join(root, "b.thoth.yaml"), `locator: x/b.go
 meta:
   language: ts
 `)
@@ -86,7 +88,7 @@ func TestExecute_InvalidYAMLFails(t *testing.T) {
 	t.Parallel()
 
 	root := t.TempDir()
-	mustWrite(t, filepath.Join(root, "bad.thoth.yaml"), `locator: x/a.go
+	testutil.MustWriteFile(t, filepath.Join(root, "bad.thoth.yaml"), `locator: x/a.go
 meta: [
 `)
 
@@ -129,7 +131,7 @@ func TestExecute_DeterministicAcrossRuns(t *testing.T) {
 		name := fmt.Sprintf("f%02d.thoth.yaml", i)
 		locator := fmt.Sprintf("src/f%02d.go", 39-i)
 		body := fmt.Sprintf("locator: %s\nmeta:\n  language: go\n  purpose: item-%02d\n", locator, i)
-		mustWrite(t, filepath.Join(root, "nested", name), body)
+		testutil.MustWriteFile(t, filepath.Join(root, "nested", name), body)
 	}
 
 	first, err := Execute(context.Background(), Options{Root: root, Term: "GO"})
@@ -156,15 +158,5 @@ func TestExecute_DeterministicAcrossRuns(t *testing.T) {
 		if string(firstJSON) != string(gotJSON) {
 			t.Fatalf("run %d produced non-deterministic JSON", i+2)
 		}
-	}
-}
-
-func mustWrite(t *testing.T, path, body string) {
-	t.Helper()
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
-		t.Fatalf("write: %v", err)
 	}
 }

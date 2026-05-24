@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
 func TestSearchHelpShowsFlags(t *testing.T) {
@@ -29,7 +31,7 @@ func TestSearchHelpShowsFlags(t *testing.T) {
 
 func TestSearchCommandOutputsJSON(t *testing.T) {
 	root := t.TempDir()
-	mustWrite(t, filepath.Join(root, "a.thoth.yaml"), `locator: src/a.go
+	testutil.MustWriteFile(t, filepath.Join(root, "a.thoth.yaml"), `locator: src/a.go
 meta:
   language: go
   purpose: parser
@@ -60,7 +62,7 @@ meta:
 func TestSearchCommandOutFile(t *testing.T) {
 	root := t.TempDir()
 	outPath := filepath.Join(root, "out", "search.json")
-	mustWrite(t, filepath.Join(root, "a.thoth.yaml"), `locator: src/a.go
+	testutil.MustWriteFile(t, filepath.Join(root, "a.thoth.yaml"), `locator: src/a.go
 meta:
   language: go
 `)
@@ -84,15 +86,5 @@ meta:
 	}
 	if !strings.Contains(string(b), `"locator": "src/a.go"`) {
 		t.Fatalf("output file missing locator: %s", string(b))
-	}
-}
-
-func mustWrite(t *testing.T, path, body string) {
-	t.Helper()
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		t.Fatalf("mkdir: %v", err)
-	}
-	if err := os.WriteFile(path, []byte(body), 0o644); err != nil {
-		t.Fatalf("write: %v", err)
 	}
 }
