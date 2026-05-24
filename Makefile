@@ -54,7 +54,7 @@ e2e:
 	cd script/e2e && $(BUN) test
 
 release: release-check
-	$(BUN) run release-go.ts
+	$(GHF) release
 
 ghf-sync:
 	$(GHF) sync
@@ -125,7 +125,7 @@ help:
 	@printf "  build              Run gh-flarebyte build workflow.\n"
 	@printf "  build-dev          Build local dev binary into .e2e-bin/.\n"
 	@printf "  e2e                Run Bun-powered end-to-end tests.\n"
-	@printf "  release            Run release checks, build artifacts, publish GitHub release.\n"
+	@printf "  release            Run release checks and gh-flarebyte release workflow.\n"
 	@printf "  clean              Remove build artifacts.\n"
 	@printf "  complexity         Show top file complexity (Go/TS).\n"
 	@printf "  sec                Run security scan (semgrep).\n"
