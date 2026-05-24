@@ -4,12 +4,14 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
+	"github.com/flarebyte/thoth-ostraca/internal/stage"
 	"github.com/flarebyte/thoth-ostraca/internal/testutil"
 )
 
@@ -120,6 +122,77 @@ func TestWriteJSON_ToFile(t *testing.T) {
 	}
 	if !strings.Contains(s, `"locator": "a"`) {
 		t.Fatalf("missing locator in output: %q", s)
+	}
+}
+
+func TestExecute_InvalidRootErrors(t *testing.T) {
+	t.Parallel()
+
+	if _, err := Execute(context.Background(), Options{Root: "/definitely/not/existing/path"}); err == nil {
+		t.Fatalf("expected invalid root error")
+	}
+
+	root := t.TempDir()
+	filePath := filepath.Join(root, "notdir")
+	testutil.MustWriteFile(t, filePath, "x")
+	if _, err := Execute(context.Background(), Options{Root: filePath}); err == nil {
+		t.Fatalf("expected not-a-directory error")
+	}
+}
+
+func TestSearchRecordBranches(t *testing.T) {
+	t.Parallel()
+
+	if item, err := searchRecord(stage.Record{Locator: "a"}, "", nil); err != nil || item != nil {
+		t.Fatalf("expected nil result for nil meta, got item=%+v err=%v", item, err)
+	}
+
+	if item, err := searchRecord(stage.Record{Locator: "a", Meta: map[string]any{"k": "v"}}, "zzz", nil); err != nil || item != nil {
+		t.Fatalf("expected term miss, got item=%+v err=%v", item, err)
+	}
+
+	if item, err := searchRecord(stage.Record{Locator: "a", Meta: map[string]any{"k": "v"}}, "v", []string{"k"}); err != nil || item == nil || item.Meta["k"] != "v" {
+		t.Fatalf("expected projected match item, got item=%+v err=%v", item, err)
+	}
+
+	// json.Marshal should fail on function values.
+	if _, err := searchRecord(stage.Record{Locator: "a", Meta: map[string]any{"bad": func() {}}}, "x", nil); err == nil {
+		t.Fatalf("expected marshal error")
+	}
+}
+
+type errWriter struct{}
+
+func (errWriter) Write(_ []byte) (int, error) { return 0, io.ErrClosedPipe }
+
+func TestWriteJSON_ErrorBranches(t *testing.T) {
+	t.Parallel()
+
+	// stdout writer error
+	if err := WriteJSON([]ResultItem{{Locator: "a", Meta: map[string]any{"k": "v"}}}, "", errWriter{}); err == nil {
+		t.Fatalf("expected stdout write error")
+	}
+
+	// marshal error for unsupported value
+	if err := WriteJSON([]ResultItem{{Locator: "a", Meta: map[string]any{"bad": func() {}}}}, "", os.Stdout); err == nil {
+		t.Fatalf("expected marshal error")
+	}
+
+	// mkdir failure: parent is a file
+	root := t.TempDir()
+	blocker := filepath.Join(root, "blocker")
+	testutil.MustWriteFile(t, blocker, "x")
+	if err := WriteJSON([]ResultItem{{Locator: "a", Meta: map[string]any{"k": "v"}}}, filepath.Join(blocker, "out.json"), os.Stdout); err == nil {
+		t.Fatalf("expected mkdir failure")
+	}
+
+	// rename failure: destination path is an existing directory
+	outDir := filepath.Join(root, "dirdest")
+	if err := os.MkdirAll(outDir, 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	if err := WriteJSON([]ResultItem{{Locator: "a", Meta: map[string]any{"k": "v"}}}, outDir, os.Stdout); err == nil {
+		t.Fatalf("expected rename failure")
 	}
 }
 
